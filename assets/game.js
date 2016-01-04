@@ -31,6 +31,9 @@ var Game = {
     return Game.DISPLAYS[displayName].o;
   },
   renderMain: function() {
-      this.DISPLAYS.main.o.drawText(2,5,"Hello, world!");
+    for (var i = 0; i < 5; i++) {
+      this.DISPLAYS.main.o.drawText(2,3 +i,"Hello, world!");
+    }
+
   }
 };
