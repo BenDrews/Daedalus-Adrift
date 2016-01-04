@@ -24,9 +24,13 @@ var Game = {
   },
   init: function () {
     console.log("RogueLike initialization");
-    Game.DISPLAYS.main.o = new ROT.Display({width:Game.DISPLAYS.main.w, height:Game.DISPLAYS.main.h});
+    this.DISPLAYS.main.o = new ROT.Display({width:Game.DISPLAYS.main.w, height:Game.DISPLAYS.main.h});
+    this.renderMain();
   },
   getDisplay: function(displayName){
     return Game.DISPLAYS[displayName].o;
+  },
+  renderMain: function() {
+      this.DISPLAYS.main.o.drawText(2,5,"Hello, world!");
   }
 };
