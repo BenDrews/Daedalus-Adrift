@@ -15,6 +15,8 @@ window.onload = function() {
         document.getElementById('wsrl-message-display').appendChild(   Game.getDisplay('message').getContainer());
 
         Game.Message.sendMessage("Welcome to WSRL");
+        Game.switchUIMode(Game.UIMode.gameStart);
+        Game.renderMain();
     }
 };
 
@@ -37,12 +39,22 @@ var Game = {
     }
   },
   init: function () {
+    _currUIMode = null;
     console.log("RogueLike initialization");
     for (var displayName in this.DISPLAYS) {
       if(this.DISPLAYS.hasOwnProperty(displayName)){
         this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
       }
     }
+
+    var bindEventToScreen = function(eventType) {
+      window.addEventListener(eventType, function(evt) {
+        Game.eventHandler(eventType, evt);
+      });
+    };
+    bindEventToScreen('keypress');
+    bindEventToScreen('keydown');
+    this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
   },
   getDisplay: function(displayName){
@@ -54,15 +66,38 @@ var Game = {
     this.renderMessage();
   },
   renderAvatar: function() {
-      this.DISPLAYS.avatar.o.drawText(2,3,"Avatar Display");
+    if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnAvatar')) {
+      this._curUIMode.renderOnAvatar(this.DISPLAYS.avatar.o);
+    } else {
+      this.DISPLAYS.avatar.o.drawText(2, 1, "avatar display");
+    }
   },
   renderMain: function() {
-    for (var i = 0; i < 5; i++) {
-      this.DISPLAYS.main.o.drawText(2,3 +i,"Hello, world!");
+    if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnMain')) {
+      this._curUIMode.renderOnMain(this.DISPLAYS.main.o);
+    } else {
+      this.DISPLAYS.main.o.drawText(2, 1, "main display");
     }
   },
   renderMessage: function() {
   //    this.DISPLAYS.message.o.drawText(2,3,"Message Display");
   Game.Message.renderOn(this.DISPLAYS.message.o);
+},
+switchUIMode: function(newMode) {
+  if(this._curUIMode) {
+    this._curUIMode.exit();
+  }
+  this._curUIMode = newMode;
+  if(this._curUIMode){
+    this._curUIMode.enter();
+  }
+  this.renderAll();
+},
+  eventHandler: function(eventType, evt) {
+    console.log(eventType);
+    console.dir(evt);
+    if (this._curUIMode && this._curUIMode.hasOwnProperty('handleInput')) {
+      this._curUIMode.handleInput(eventType, evt);
+    }
   }
 };
