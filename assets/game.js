@@ -38,15 +38,21 @@ var Game = {
       o: null
     }
   },
+  _PERSISTANCE_NAMESPACE: 'wsrlgame',
+  _game: null,
+  _curUIMode: null,
+  _randomSeed: 0,
   init: function () {
-    _currUIMode = null;
+    this._game = this;
+
+    Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
+
     console.log("RogueLike initialization");
     for (var displayName in this.DISPLAYS) {
       if(this.DISPLAYS.hasOwnProperty(displayName)){
         this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
       }
     }
-
     var bindEventToScreen = function(eventType) {
       window.addEventListener(eventType, function(evt) {
         Game.eventHandler(eventType, evt);
@@ -56,6 +62,18 @@ var Game = {
     bindEventToScreen('keydown');
     this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
+  },
+  toJSON: function() {
+      var json = {"_randomSeed":this._randomSeed};
+      return json;
+  },
+  getRandomSeed: function () {
+    return this._randomSeed;
+  },
+  setRandomSeed: function (s) {
+    this._randomSeed = s;
+    console.log("using random seed " +this._randomSeed);
+    ROT.RNG.setSeed(this._randomSeed);
   },
   getDisplay: function(displayName){
     return Game.DISPLAYS[displayName].o;
