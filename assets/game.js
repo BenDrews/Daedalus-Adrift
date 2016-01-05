@@ -38,7 +38,7 @@ var Game = {
       o: null
     }
   },
-  _PERSISTANCE_NAMESPACE: 'wsrlgame',
+  _PERSISTENCE_NAMESPACE: 'wsrlgame',
   _game: null,
   _curUIMode: null,
   _randomSeed: 0,

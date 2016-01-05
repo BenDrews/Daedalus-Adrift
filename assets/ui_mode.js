@@ -93,8 +93,8 @@ Game.UIMode.gamePersistence = {
      var fg = Game.UIMode.DEFAULT_COLOR_FG;
      var bg = Game.UIMode.DEFAULT_COLOR_BG;
      display.drawText(1,3,"press S to save the current game, L to load the saved game, or N start a new one",fg,bg);
-     console.log('TODO: check whether local storage has a game before offering restore');
-     console.log('TODO: check whether a game is in progress before offering restore');
+  //   console.log('TODO: check whether local storage has a game before offering restore');
+  //   console.log('TODO: check whether a game is in progress before offering restore');
    },
    handleInput: function (inputType,inputData) {
   //  console.log('gameStart inputType:');
@@ -110,21 +110,39 @@ Game.UIMode.gamePersistence = {
       this.newGame();
     }
   },
-  restoreGame: function () {
-    var  json_state_data = '{"randomSeed":12}';
-    console.log('TODO: implement recovering game state from local storage');
-    var state_data = JSON.parse(json_state_data);
-    console.dir(state_data);
-    Game.setRandomSeed(state_data.randomSeed);
-    console.log("post-restore: using random seed "+Game.getRandomSeed());
-    Game.switchUiMode(Game.UIMode.gamePlay);
-  },
+
   saveGame: function (json_state_data) {
-    console.log('TODO: implement saving game state to local storage');
+    if (this.localStorageAvailable()) {
+      window.localStorage.setItem(Game._PERSISTENCE_NAMESPACE, JSON.stringify(Game._game));
+      Game.switchUIMode(Game.UIMode.gamePlay);
+    }
+  },
+
+  restoreGame: function () {
+    if (this.localStorageAvailable()) {
+      var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
+      var state_data = JSON.parse(json_state_data);
+      console.dir(state_data);
+      Game.setRandomSeed(state_data.randomSeed);
+      Game.switchUiMode(Game.UIMode.gamePlay);
+    }
+  },
+
+  newGame: function () {
+    Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
     Game.switchUiMode(Game.UIMode.gamePlay);
   },
-  newGame: function () {
-    Game.setRandomSeed(5 + Math.floor(Math.random()*100000));
-    Game.switchUiMode(Game.UIMode.gamePlay);
+
+  localStorageAvailable: function () { // NOTE: see https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
+     	try {
+     		var x = '__storage_test__';
+     		window.localStorage.setItem(x, x);
+     		window.localStorage.removeItem(x);
+     		return true;
+     	}
+     	catch(e) {
+         Game.Message.send('Sorry, no local data storage is available for this browser');
+     		return false;
+     	}
   }
 };
