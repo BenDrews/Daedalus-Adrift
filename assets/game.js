@@ -15,6 +15,8 @@ window.onload = function() {
         document.getElementById('wsrl-message-display').appendChild(   Game.getDisplay('message').getContainer());
 
         Game.Message.sendMessage("Welcome to WSRL");
+        Game.switchUIMode(Game.UIMode.gameStart);
+        Game.renderMain();
     }
 };
 
@@ -37,6 +39,7 @@ var Game = {
     }
   },
   init: function () {
+    _currUIMode = null;
     console.log("RogueLike initialization");
     for (var displayName in this.DISPLAYS) {
       if(this.DISPLAYS.hasOwnProperty(displayName)){
@@ -57,12 +60,23 @@ var Game = {
       this.DISPLAYS.avatar.o.drawText(2,3,"Avatar Display");
   },
   renderMain: function() {
-    for (var i = 0; i < 5; i++) {
-      this.DISPLAYS.main.o.drawText(2,3 +i,"Hello, world!");
+    if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnMain')) {
+      this._curUIMode.renderOnMain(this.DISPLAYS.main.o);
+    } else {
+      this.DISPLAYS.main.o.drawText(2, 1, "main display");
     }
   },
   renderMessage: function() {
   //    this.DISPLAYS.message.o.drawText(2,3,"Message Display");
   Game.Message.renderOn(this.DISPLAYS.message.o);
+},
+switchUIMode: function(newMode) {
+  if(this._curUIMode) {
+    this._curUIMode.exit();
   }
+  this._curUIMode = newMode;
+  if(this._curUIMode){
+    this._curUIMode.enter();
+  }
+}
 };
