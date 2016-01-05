@@ -7,14 +7,15 @@ Game.UIMode.gameStart = {
   exit: function () {
     console.log("Game.UIMode.gameStart exit");
   },
-  handleInput: function () {
+  handleInput: function (eventType, evt) {
     console.log("Game.UIMode.gameStart handleInput");
+    Game.switchUIMode(Game.UIMode.gamePlay);
   },
   renderOnMain: function (display) {
     display.clear();
     display.drawText(4,4, "Welcome to WSRL");
     display.drawText(4, 6, "Press any key to continue");
-console.log("Game.UIMode.gameStart renderOnMain");
+    console.log("Game.UIMode.gameStart renderOnMain");
   }
 };
 
@@ -25,12 +26,19 @@ Game.UIMode.gamePlay = {
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
   },
-  handleInput: function () {
+  handleInput: function (eventType, evt) {
     console.log("Game.UIMode.gamePlay handleInput");
+    if(eventType == 'keypress' && evt.keyCode == 13){
+      Game.switchUIMode(Game.UIMode.gameWin);
+    }
+    if(eventType == 'keydown' && evt.keyCode == 27) {
+      Game.switchUIMode(Game.UIMode.gameLose);
+    }
   },
   renderOnMain: function (display) {
-console.log("Game.UIMode.gamePlay renderOnMain");
-
+    display.clear();
+    display.drawText(4,4, "Press [Enter] to win and [Esc] to lose");
+    console.log("Game.UIMode.gamePlay renderOnMain");
   }
 };
 
@@ -41,11 +49,13 @@ Game.UIMode.gameLose = {
   exit: function () {
     console.log("Game.UIMode.gameLose exit");
   },
-  handleInput: function () {
+  handleInput: function (eventType, evt) {
     console.log("Game.UIMode.gameLose handleInput");
   },
   renderOnMain: function (display) {
-console.log("Game.UIMode.gameLose renderOnMain");
+    display.clear();
+    display.drawText(4,4, "Defeat");
+    console.log("Game.UIMode.gamePlay renderOnMain");
 
   }
 };
@@ -57,11 +67,13 @@ Game.UIMode.gameWin = {
   exit: function () {
     console.log("Game.UIMode.gameWin exit");
   },
-  handleInput: function () {
-    console.log("Game.UIMode.gameWing handleInput");
+  handleInput: function (eventType, evt) {
+    console.log("Game.UIMode.gameWin handleInput");
   },
   renderOnMain: function (display) {
-console.log("Game.UIMode.gameWin renderOnMain");
+    display.clear();
+    display.drawText(4,4, "Victory");
+    console.log("Game.UIMode.gamePlay renderOnMain");
 
   }
 };

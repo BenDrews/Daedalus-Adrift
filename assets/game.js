@@ -46,6 +46,15 @@ var Game = {
         this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
       }
     }
+
+    var bindEventToScreen = function(eventType) {
+      window.addEventListener(eventType, function(evt) {
+        Game.eventHandler(eventType, evt);
+      });
+    };
+    bindEventToScreen('keypress');
+    bindEventToScreen('keydown');
+    this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
   },
   getDisplay: function(displayName){
@@ -57,7 +66,11 @@ var Game = {
     this.renderMessage();
   },
   renderAvatar: function() {
-      this.DISPLAYS.avatar.o.drawText(2,3,"Avatar Display");
+    if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnAvatar')) {
+      this._curUIMode.renderOnAvatar(this.DISPLAYS.avatar.o);
+    } else {
+      this.DISPLAYS.avatar.o.drawText(2, 1, "avatar display");
+    }
   },
   renderMain: function() {
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnMain')) {
@@ -78,5 +91,13 @@ switchUIMode: function(newMode) {
   if(this._curUIMode){
     this._curUIMode.enter();
   }
-}
+  this.renderAll();
+},
+  eventHandler: function(eventType, evt) {
+    console.log(eventType);
+    console.dir(evt);
+    if (this._curUIMode && this._curUIMode.hasOwnProperty('handleInput')) {
+      this._curUIMode.handleInput(eventType, evt);
+    }
+  }
 };
