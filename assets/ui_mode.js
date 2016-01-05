@@ -89,9 +89,10 @@ Game.UIMode.gamePersistence = {
    },
    exit: function () {
    },
-   render: function (display) {
+   renderOnMain: function (display) {
      var fg = Game.UIMode.DEFAULT_COLOR_FG;
      var bg = Game.UIMode.DEFAULT_COLOR_BG;
+     display.clear();
      display.drawText(1,3,"press S to save the current game, L to load the saved game, or N start a new one",fg,bg);
   //   console.log('TODO: check whether local storage has a game before offering restore');
   //   console.log('TODO: check whether a game is in progress before offering restore');
@@ -112,6 +113,7 @@ Game.UIMode.gamePersistence = {
   },
 
   saveGame: function (json_state_data) {
+    console.log("save");
     if (this.localStorageAvailable()) {
       window.localStorage.setItem(Game._PERSISTENCE_NAMESPACE, JSON.stringify(Game._game));
       Game.switchUIMode(Game.UIMode.gamePlay);
@@ -119,18 +121,20 @@ Game.UIMode.gamePersistence = {
   },
 
   restoreGame: function () {
+    console.log("restore");
     if (this.localStorageAvailable()) {
       var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
       var state_data = JSON.parse(json_state_data);
-      console.dir(state_data);
-      Game.setRandomSeed(state_data.randomSeed);
-      Game.switchUiMode(Game.UIMode.gamePlay);
+      console.dir(JSON.parse(JSON.stringify(state_data)));
+      Game.setRandomSeed(state_data._randomSeed);
+      Game.switchUIMode(Game.UIMode.gamePlay);
     }
   },
 
   newGame: function () {
+    console.log("newGame");
     Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
-    Game.switchUiMode(Game.UIMode.gamePlay);
+    Game.switchUIMode(Game.UIMode.gamePlay);
   },
 
   localStorageAvailable: function () { // NOTE: see https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
