@@ -103,11 +103,11 @@ Game.UIMode.gamePersistence = {
   //  console.log('gameStart inputData:');
   //  console.dir(inputData);
     var inputChar = String.fromCharCode(inputData.charCode);
-    if (inputChar == 'S') { // ignore the various modding keys - control, shift, etc.
+    if (inputChar == 'S' || inputChar == 's') { // ignore the various modding keys - control, shift, etc.
       this.saveGame();
-    } else if (inputChar == 'L') {
+    } else if (inputChar == 'L' || inputChar == 'l') {
       this.restoreGame();
-    } else if (inputChar == 'N') {
+    } else if (inputChar == 'N' || inputChar == 'n') {
       this.newGame();
     }
   },
