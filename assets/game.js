@@ -63,10 +63,6 @@ var Game = {
     this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
   },
-  toJSON: function() {
-      var json = {"_randomSeed":this._randomSeed};
-      return json;
-  },
   getRandomSeed: function () {
     return this._randomSeed;
   },
@@ -78,12 +74,16 @@ var Game = {
   getDisplay: function(displayName){
     return Game.DISPLAYS[displayName].o;
   },
+  refresh: function () {
+    this.renderAll();
+  },
   renderAll: function() {
     this.renderAvatar();
     this.renderMain();
     this.renderMessage();
   },
   renderAvatar: function() {
+    this.DISPLAYS.avatar.o.clear();
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnAvatar')) {
       this._curUIMode.renderOnAvatar(this.DISPLAYS.avatar.o);
     } else {
@@ -91,6 +91,7 @@ var Game = {
     }
   },
   renderMain: function() {
+    this.DISPLAYS.main.o.clear();
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnMain')) {
       this._curUIMode.renderOnMain(this.DISPLAYS.main.o);
     } else {
@@ -117,5 +118,11 @@ switchUIMode: function(newMode) {
     if (this._curUIMode && this._curUIMode.hasOwnProperty('handleInput')) {
       this._curUIMode.handleInput(eventType, evt);
     }
+  },
+  toJSON: function () {
+    var json = {};
+    json._randomSeed = this._randomSeed;
+        json[Game.UIMode.gamePlay.JSON_KEY] = Game.UIMode.gamePlay.toJSON();
+    return json;
   }
 };
