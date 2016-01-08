@@ -38,15 +38,29 @@ var Game = {
       o: null
     }
   },
+  _PERSISTENCE_NAMESPACE: 'wsrlgame',
+  _game: null,
+  _curUIMode: null,
+  _randomSeed: 0,
   init: function () {
-    _currUIMode = null;
+    this._game = this;
+    Game.tileSet = document.createElement("img");
+    Game.tileSet.src = "assets/oryx_16bit_scifi_world.png";
+    Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
+
     console.log("RogueLike initialization");
     for (var displayName in this.DISPLAYS) {
       if(this.DISPLAYS.hasOwnProperty(displayName)){
-        this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
+        console.log(displayName);
+        if (displayName === 'main') {
+          this.DISPLAYS[displayName].o = new ROT.Display({  width: Game.DISPLAYS.main.w,
+            height: Game.DISPLAYS.main.h});
+          console.log("Made it");
+        } else {
+          this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
+        }
       }
     }
-
     var bindEventToScreen = function(eventType) {
       window.addEventListener(eventType, function(evt) {
         Game.eventHandler(eventType, evt);
@@ -57,8 +71,19 @@ var Game = {
     this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
   },
+  getRandomSeed: function () {
+    return this._randomSeed;
+  },
+  setRandomSeed: function (s) {
+    this._randomSeed = s;
+    console.log("using random seed " +this._randomSeed);
+    ROT.RNG.setSeed(this._randomSeed);
+  },
   getDisplay: function(displayName){
     return Game.DISPLAYS[displayName].o;
+  },
+  refresh: function () {
+    this.renderAll();
   },
   renderAll: function() {
     this.renderAvatar();
@@ -66,6 +91,7 @@ var Game = {
     this.renderMessage();
   },
   renderAvatar: function() {
+    this.DISPLAYS.avatar.o.clear();
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnAvatar')) {
       this._curUIMode.renderOnAvatar(this.DISPLAYS.avatar.o);
     } else {
@@ -73,6 +99,7 @@ var Game = {
     }
   },
   renderMain: function() {
+    this.DISPLAYS.main.o.clear();
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnMain')) {
       this._curUIMode.renderOnMain(this.DISPLAYS.main.o);
     } else {
@@ -99,5 +126,11 @@ switchUIMode: function(newMode) {
     if (this._curUIMode && this._curUIMode.hasOwnProperty('handleInput')) {
       this._curUIMode.handleInput(eventType, evt);
     }
+  },
+  toJSON: function () {
+    var json = {};
+    json._randomSeed = this._randomSeed;
+        json[Game.UIMode.gamePlay.JSON_KEY] = Game.UIMode.gamePlay.toJSON();
+    return json;
   }
 };
