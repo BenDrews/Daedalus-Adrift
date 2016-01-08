@@ -144,15 +144,10 @@ Game.UIMode.gamePlay = {
 
   // create map from the tiles
   this.attr._map =  new Game.Map(mapTiles);
-  console.log("new map is ");
-  console.dir(JSON.parse(JSON.stringify(this.attr._map)));
 
   this.attr._avatar = new Game.Entity(Game.EntityTemplates.Avatar);
 //  console.log(this.attr._avatar.mixins);
   // restore anything else if the data is available
-  console.log("restoriation data is");
-  console.dir(restorationData);
-
   if (restorationData !== undefined && restorationData.hasOwnProperty(Game.UIMode.gamePlay.JSON_KEY)) {
     this.fromJSON(restorationData[Game.UIMode.gamePlay.JSON_KEY]);
   } else {
