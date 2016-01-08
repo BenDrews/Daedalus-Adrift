@@ -24,12 +24,12 @@ Game.UIMode.gameStart = {
 Game.UIMode.gamePlay = {
   attr: {
     _map: null,
-    _mapWidth: 300,
-    _mapHeight: 200,
-    _cameraX: 100,
-    _cameraY: 100,
-    _avatarX: 100,
-    _avatarY: 100
+    _mapWidth: 169,
+    _mapHeight: 169,
+    _cameraX: 84,
+    _cameraY: 84,
+    _avatarX: 84,
+    _avatarY: 84
   },
   JSON_KEY: 'uiMode_gamePlay',
   enter: function () {
