@@ -14,5 +14,5 @@ Game.Tile.prototype.getName = function () {
 //-----------------------------------------------------------------------------
 
 Game.Tile.nullTile = new Game.Tile('nullTile',new Game.Symbol());
-Game.Tile.floorTile = new Game.Tile('floor',new Game.Symbol('.'));
-Game.Tile.wallTile = new Game.Tile('wall',new Game.Symbol('#'));
+Game.Tile.floorTile = new Game.Tile('floor',new Game.Symbol("a"));
+Game.Tile.wallTile = new Game.Tile('wall',new Game.Symbol("#"));
