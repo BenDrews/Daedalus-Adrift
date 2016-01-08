@@ -28,8 +28,7 @@ Game.UIMode.gamePlay = {
     _mapHeight: 200,
     _cameraX: 100,
     _cameraY: 100,
-    _avatarX: 100,
-    _avatarY: 100
+    _avatar: null
   },
   JSON_KEY: 'uiMode_gamePlay',
   enter: function () {
@@ -150,10 +149,20 @@ Game.UIMode.gamePlay = {
   // restore anything else if the data is available
   if (restorationData !== undefined && restorationData.hasOwnProperty(Game.UIMode.gamePlay.JSON_KEY)) {
     this.fromJSON(restorationData[Game.UIMode.gamePlay.JSON_KEY]);
+  } else {
+    this.attr_avatar.setPos(this.attr._map.getRandomWalkableLocation());
   }
 
   this.setCameraToAvatar();
 },
+
+toJSON: function() {
+  return Game.UIMode.gamePersistence.BASE_toJSON.call(this);
+},
+fromJSON: function (json) {
+  Game.UIMode.gamePersistence.BASE_fromJSON.call(this,json);
+},
+
 BASE_toJSON: function(state_hash_name) {
   var state = this.attr;
   if (state_hash_name) {
@@ -185,7 +194,6 @@ BASE_fromJSON: function (json,state_hash_name) {
       }
     }
   }
-  Game.UIMode.gamePersistence.BASE_fromJSON.call(this,json);
 }
 };
 
