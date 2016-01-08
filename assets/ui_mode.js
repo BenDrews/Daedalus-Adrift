@@ -110,24 +110,7 @@ Game.UIMode.gamePlay = {
     this.setCamera(this.attr._avatarX,this.attr._avatarY);
   },
   setupPlay: function (restorationData) {
-  var mapTiles = Game.util.init2DArray(this.attr._mapWidth,this.attr._mapHeight,Game.Tile.nullTile);
-  var generator = new ROT.Map.Cellular(this.attr._mapWidth,this.attr._mapHeight);
-  generator.randomize(0.5);
-
-  // repeated cellular automata process
-  var totalIterations = 3;
-  for (var i = 0; i < totalIterations - 1; i++) {
-    generator.create();
-  }
-
-  // run again then update map
-  generator.create(function(x,y,v) {
-    if (v === 1) {
-      mapTiles[x][y] = Game.Tile.floorTile;
-    } else {
-      mapTiles[x][y] = Game.Tile.wallTile;
-    }
-  });
+  var mapTiles = Game.mapgen.generate();
 
   // create map from the tiles
   this.attr._map =  new Game.Map(mapTiles);
