@@ -90,7 +90,7 @@ Game.UIMode.gamePlay = {
             "#": [0, 14],
             "a": [14, 0],
             "!": [14, 14]
-        }});
+        }, width: 57, height: 26});
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
     this.attr._map.renderOn(display, this.attr._cameraX, this.attr._cameraY);
@@ -214,7 +214,7 @@ Game.UIMode.gamePersistence = {
      var fg = Game.UIMode.DEFAULT_COLOR_FG;
      var bg = Game.UIMode.DEFAULT_COLOR_BG;
      display.clear();
-     display.setOptions({bg: "#000", tileWidth: 32, tileHeight: 32, tileMap: {}, tileSet: null, layout: "rect"});
+     display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
      display.drawText(1,3,"press S to save the current game, L to load the saved game, or N start a new one",fg,bg);
   //   console.log('TODO: check whether local storage has a game before offering restore');
   //   console.log('TODO: check whether a game is in progress before offering restore');

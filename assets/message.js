@@ -6,7 +6,7 @@ Game.Message = {
   },
   sendMessage: function(msg) {
     this._curMessage = msg;
-    Game.renderMessage(); 
+    Game.renderMessage();
   },
   clearMessages: function() {
     this._curMessage = '';
