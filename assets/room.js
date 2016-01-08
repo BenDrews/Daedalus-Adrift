@@ -24,14 +24,13 @@ Game.Room.prototype.clone = function () {
 
 Game.Room.prototype.checkGrid = function (roomGrid, x, y) {
   console.log("" + x + " " + y);
-  console.dir(roomGrid[y - 1]);
   if(this.attr._doors.north && roomGrid[x][y-1] && !(roomGrid[x][y - 1].getDoors().south)) {
     return false;
-  } if(this.attr._doors.east && roomGrid[x + 1][y] && !(roomGrid[x + 1][y].getDoors().west)) {
+  } if(this.attr._doors.east && roomGrid[x + 1] && roomGrid[x + 1][y] && !(roomGrid[x + 1][y].getDoors().west)) {
     return false;
   } if(this.attr._doors.south && roomGrid[x][y + 1] && !(roomGrid[x][y + 1].getDoors().north)) {
     return false;
-  } if(this.attr._doors.west && roomGrid[x - 1][y] && !(roomGrid[x - 1][y].getDoors().east)) {
+  } if(this.attr._doors.west && roomGrid[x - 1] && roomGrid[x - 1][y] && !(roomGrid[x - 1][y].getDoors().east)) {
     return false;
   }
   return true;
@@ -41,11 +40,11 @@ Game.Room.prototype.closeAdjDoors = function (roomGrid, x, y) {
   console.log("" + x + " " + y);
   if(this.attr._doors.north && roomGrid[x][y-1] && (roomGrid[x][y - 1].getDoors().south)) {
     roomGrid[x][y - 1].closeDoor('south');
-  } if(this.attr._doors.east && roomGrid[x + 1][y] && (roomGrid[x + 1][y].getDoors().west)) {
+  } if(this.attr._doors.east && roomGrid[x + 1] && roomGrid[x + 1][y] && (roomGrid[x + 1][y].getDoors().west)) {
     roomGrid[x + 1][y].closeDoor('west');
   } if(this.attr._doors.south && roomGrid[x][y + 1] && (roomGrid[x][y + 1].getDoors().north)) {
     roomGrid[x][y + 1].closeDoor('north');
-  } if(this.attr._doors.west && roomGrid[x - 1][y] && (roomGrid[x - 1][y].getDoors().east)) {
+  } if(this.attr._doors.west && roomGrid[x - 1] && roomGrid[x - 1][y] && (roomGrid[x - 1][y].getDoors().east)) {
     roomGrid[x - 1][y].closeDoor('east');
   }
 };
