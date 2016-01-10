@@ -24,12 +24,12 @@ Game.UIMode.gameStart = {
 Game.UIMode.gamePlay = {
   attr: {
     _map: null,
-    _mapWidth: 300,
-    _mapHeight: 200,
-    _cameraX: 100,
-    _cameraY: 100,
-    _avatarX: 100,
-    _avatarY: 100
+    _mapWidth: 169,
+    _mapHeight: 169,
+    _cameraX: 84,
+    _cameraY: 84,
+    _avatarX: 84,
+    _avatarY: 84
   },
   JSON_KEY: 'uiMode_gamePlay',
   enter: function () {
@@ -88,8 +88,8 @@ Game.UIMode.gamePlay = {
         tileMap: {
             "@": [28, 14],
             "#": [0, 14],
-            "a": [14, 0],
-            "!": [14, 14]
+            "+": [14, 0],
+            " ": [14, 14]
         }, width: 57, height: 26});
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
@@ -98,7 +98,7 @@ Game.UIMode.gamePlay = {
     this.renderAvatar(display);
   },
   renderAvatar: function (display) {
-    Game.Symbol.AVATAR.draw(display, this.attr._avatarX-this.attr._cameraX+display._options.width/2, this.attr._avatarY-this.attr._cameraY+display._options.height/2);
+    Game.Symbol.AVATAR.draw(display, Math.round(this.attr._avatarX-this.attr._cameraX+display._options.width/2), Math.round(this.attr._avatarY-this.attr._cameraY+display._options.height/2));
   },
   renderAvatarInfo: function(display) {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
@@ -122,24 +122,7 @@ Game.UIMode.gamePlay = {
     this.setCamera(this.attr._avatarX,this.attr._avatarY);
   },
   setupPlay: function (restorationData) {
-  var mapTiles = Game.util.init2DArray(this.attr._mapWidth,this.attr._mapHeight,Game.Tile.nullTile);
-  var generator = new ROT.Map.Cellular(this.attr._mapWidth,this.attr._mapHeight);
-  generator.randomize(0.5);
-
-  // repeated cellular automata process
-  var totalIterations = 3;
-  for (var i = 0; i < totalIterations - 1; i++) {
-    generator.create();
-  }
-
-  // run again then update map
-  generator.create(function(x,y,v) {
-    if (v === 1) {
-      mapTiles[x][y] = Game.Tile.floorTile;
-    } else {
-      mapTiles[x][y] = Game.Tile.wallTile;
-    }
-  });
+  var mapTiles = Game.mapgen.generate();
 
   // create map from the tiles
   this.attr._map =  new Game.Map(mapTiles);
