@@ -88,8 +88,8 @@ Game.UIMode.gamePlay = {
         tileMap: {
             "@": [28, 14],
             "#": [0, 14],
-            "a": [14, 0],
-            "!": [14, 14]
+            "+": [14, 0],
+            " ": [14, 14]
         }, width: 57, height: 26});
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
@@ -98,7 +98,7 @@ Game.UIMode.gamePlay = {
     this.renderAvatar(display);
   },
   renderAvatar: function (display) {
-    Game.Symbol.AVATAR.draw(display, this.attr._avatarX-this.attr._cameraX+display._options.width/2, this.attr._avatarY-this.attr._cameraY+display._options.height/2);
+    Game.Symbol.AVATAR.draw(display, Math.round(this.attr._avatarX-this.attr._cameraX+display._options.width/2), Math.round(this.attr._avatarY-this.attr._cameraY+display._options.height/2));
   },
   renderAvatarInfo: function(display) {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
