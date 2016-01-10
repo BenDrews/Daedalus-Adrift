@@ -1,0 +1,31 @@
+dungeon generation/map
+
+GAME ENGINE PLS DO THIS
+
+player character
+
+motion
+
+vision
+
+monsters
+
+MONSTER AI 'HARD AF'
+
+hit points
+
+stats
+
+combat
+
+class/job
+
+inventory
+
+items
+
+currency
+
+stores/merchants
+
+bosses
