@@ -35,8 +35,25 @@ Game.Map.prototype.renderOn = function (display,camX,camY) {
       if (tile.getName() == 'nullTile') {
         tile = Game.Tile.wallTile;
       }
-      tile.getSymbol().draw(display,x,y);
+      tile.draw(display, x,y);
     }
   }
 
+};
+
+Game.Map.prototype.getRandomLocation = function(filter_func) {
+  if (filter_func === undefined) {
+    filter_func = function(tile) { return true; };
+  }
+  var tX,tY,t;
+  do {
+    tX = Game.util.randomInt(0,this.attr._width - 1);
+    tY = Game.util.randomInt(0,this.attr._height - 1);
+    t = this.getTile(tX,tY);
+  } while (! filter_func(t));
+  return {x:tX,y:tY};
+};
+
+Game.Map.prototype.getRandomWalkableLocation = function() {
+  return this.getRandomLocation(function(t){ return t.isWalkable(); });
 };
