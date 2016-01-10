@@ -14,8 +14,8 @@ Game.Room.prototype.closeDoor = function (direction) {
   this.attr._doors[direction] = false;
 };
 
-Game.Room.prototype.closeRoom = function () {
-  this.attr._doors = false;
+Game.Room.prototype.hasOpenDoor = function () {
+  return this.attr._doors.north || this.attr._doors.east || this.attr._doors.south || this.attr._doors.west;
 };
 
 Game.Room.prototype.clone = function () {
@@ -23,7 +23,6 @@ Game.Room.prototype.clone = function () {
 };
 
 Game.Room.prototype.checkGrid = function (roomGrid, x, y) {
-  console.log("" + x + " " + y);
   //If any rooms are adjacent to the proposed location, make sure their doors match the current rooms doors.
   if(roomGrid[x][y - 1] && (roomGrid[x][y - 1].getDoors().south != this.attr._doors.north)) {
     return false;
@@ -48,7 +47,6 @@ Game.Room.prototype.checkGrid = function (roomGrid, x, y) {
 };
 
 Game.Room.prototype.closeAdjDoors = function (roomGrid, x, y) {
-  console.log("" + x + " " + y);
   if(this.attr._doors.north && roomGrid[x][y-1] && (roomGrid[x][y - 1].getDoors().south)) {
     roomGrid[x][y - 1].closeDoor('south');
     this.attr._doors.north = false;
