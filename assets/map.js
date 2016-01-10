@@ -38,4 +38,5 @@ Game.Map.prototype.renderOn = function (display,camX,camY) {
       tile.getSymbol().draw(display,x,y);
     }
   }
+
 };

@@ -44,13 +44,21 @@ var Game = {
   _randomSeed: 0,
   init: function () {
     this._game = this;
-
+    Game.tileSet = document.createElement("img");
+    Game.tileSet.src = "assets/oryx_16bit_scifi_world.png";
     Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
 
     console.log("RogueLike initialization");
     for (var displayName in this.DISPLAYS) {
       if(this.DISPLAYS.hasOwnProperty(displayName)){
-        this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
+        console.log(displayName);
+        if (displayName === 'main') {
+          this.DISPLAYS[displayName].o = new ROT.Display({  width: Game.DISPLAYS.main.w,
+            height: Game.DISPLAYS.main.h});
+          console.log("Made it");
+        } else {
+          this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
+        }
       }
     }
     var bindEventToScreen = function(eventType) {
