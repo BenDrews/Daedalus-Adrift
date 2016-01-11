@@ -30,7 +30,14 @@ Game.Tile.prototype.isDiggable = function () {
 //-----------------------------------------------------------------------------
 
 
-Game.Tile.nullTile = new Game.Tile({name: 'nullTile', chr: 'z'});
+Game.Tile.nullTile = new Game.Tile({name: 'nullTile'});
+Game.Tile.bgTiles = [new Game.Tile({name: 'bg1Tile', chr: '1'}),
+  new Game.Tile({name: 'bg2Tile', chr: '2'}),
+  new Game.Tile({name: 'bg3Tile', chr: '3'}),
+  new Game.Tile({name: 'bg4Tile', chr: '4'}),
+  new Game.Tile({name: 'bg5Tile', chr: '5'}),
+  new Game.Tile({name: 'bg6Tile', chr: '6'})];
+
 Game.Tile.floorTile = new Game.Tile({name: 'floor', chr: 'a', walkable: true});
 Game.Tile.blackFloorTile = new Game.Tile({name: 'blackFloor', chr: 'b', walkable: true});
 Game.Tile.blueFloorTile = new Game.Tile({name: 'blueFloor', chr: 'c', walkable: true});

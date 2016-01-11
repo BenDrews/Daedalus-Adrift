@@ -63,9 +63,10 @@ Game.Room.prototype.closeAdjDoors = function (roomGrid, x, y) {
 };
 
 Game.Room.prototype.writeToGrid = function (tilesGrid, x, y) {
+  //TODO: Replace 25 with a variable
   for (var column = 0; column < this.attr._floorPlan.length; column++) {
     for (var row = 0; row < this.attr._floorPlan[0].length; row++) {
-      tilesGrid[x + column][y + row] = this.attr._floorPlan[column][row];
+      tilesGrid[25 + x + column][25 + y + row] = this.attr._floorPlan[column][row];
     }
   }
 };

@@ -16,11 +16,18 @@ Game.mapgen = {
   generate: function() {
     var roomsGenerated = 1;
     var roomGrid = Game.util.init2DArray(this.attr._mapWidth, this.attr._mapHeight, null);
-    var tilesGrid = Game.util.init2DArray(this.attr._roomWidth * this.attr._mapWidth, this.attr._roomHeight * this.attr._mapHeight, Game.Tile.nullTile);
+    //TODO: Replace 50 with a variable
+    var tilesGrid = Game.util.init2DArray(this.attr._roomWidth * this.attr._mapWidth + 50, this.attr._roomHeight * this.attr._mapHeight + 50, Game.Tile.nullTile);
     var roomStack = [];
     var coorStack = [];
     var curRoom = Game.Room.startRoom.clone();
     var curCoor = [this.attr._startX, this.attr._startY];
+
+    for(var x = 0; x < this.attr._roomWidth * this.attr._mapWidth + 50; x++) {
+      for(var y = 0; y < this.attr._roomHeight * this.attr._mapHeight + 50; y++) {
+        tilesGrid[x][y] = Game.Tile.bgTiles[Math.floor(Game.Tile.bgTiles.length * ROT.RNG.getUniform())].clone();
+      }
+    }
 
     roomStack.push(curRoom);
     coorStack.push(curCoor);

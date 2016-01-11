@@ -113,7 +113,12 @@ Game.UIMode.gamePlay = {
             "w": [215, 86],
             "x": [229, 86],
             "y": [85, 115],
-            "z": [472, 0]
+            "1": [486, 0],
+            "2": [472, 0],
+            "3": [458, 0],
+            "4": [486, 14],
+            "5": [486, 28],
+            "6": [486, 42]
         }, width: 57, height: 26});
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
@@ -140,8 +145,8 @@ Game.UIMode.gamePlay = {
   },
   setCamera: function (sx,sy) {
     //TODO: Swap 13 with an attribute
-    this.attr._cameraX = Math.min(Math.max(0,sx - (sx % 13)) + 7,this.attr._mapWidth);
-    this.attr._cameraY = Math.min(Math.max(0,sy - (sy % 13)) + 7,this.attr._mapHeight);
+    this.attr._cameraX = Math.max(0,sx - (sx % 13)) + 7;
+    this.attr._cameraY = Math.max(0,sy - (sy % 13)) + 7;
     Game.refresh();
   },
   setCameraToAvatar: function () {
