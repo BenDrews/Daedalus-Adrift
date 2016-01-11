@@ -5,7 +5,7 @@ Game.EntityGenerator.learn({
   chr:'@',
   fg:'#dda',
   maxHp: 10,
-  mixins: [Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
+  mixins: [Game.EntityMixin.PlayerActor, Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
 });
 
 Game.EntityGenerator.learn({
@@ -14,3 +14,11 @@ Game.EntityGenerator.learn({
   maxHp:1,
   mixins: [Game.EntityMixin.HitPoints]
 });
+
+Game.EntityGenerator.learn = {
+  name: 'enemy',
+  chr:'q',
+  fg:'#dda',
+  maxHp: 10,
+  mixins: [Game.EntityMixin.WanderActor, Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
+};

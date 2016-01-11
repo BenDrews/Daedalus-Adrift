@@ -56,8 +56,18 @@ Game.Entity.prototype.getId = function() {
 Game.Entity.prototype.getMap = function() {
     return Game.DATASTORE.MAP[this.attr._mapId];
 };
+
 Game.Entity.prototype.setMap = function(map) {
     this.attr._mapId = map.getId();
+};
+
+Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
+  for (var i = 0; i < this._mixins.length; i++) {
+    var mixin = this._mixins[i];
+    if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
+      mixin.META.listeners[evtLabel].call(this,evtData);
+    }
+  }
 };
 
 Game.Entity.prototype.getName = function() {
@@ -97,4 +107,13 @@ Game.Entity.prototype.toJSON = function () {
 };
 Game.Entity.prototype.fromJSON = function (json) {
   Game.UIMode.gamePersistence.BASE_fromJSON.call(this,json);
+};
+
+Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
+  for (var i = 0; i < this._mixins.length; i++) {
+    var mixin = this._mixins[i];
+    if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
+      mixin.META.listeners[evtLabel].call(this,evtData);
+    }
+  }
 };

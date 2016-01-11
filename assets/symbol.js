@@ -24,3 +24,4 @@ Game.Symbol.prototype.draw = function (display,disp_x,disp_y) {
 
 Game.Symbol.NULL_SYMBOL = new Game.Symbol();
 Game.Symbol.AVATAR = new Game.Symbol({chr:'@',fg:'#dda'});
+Game.Symbol.ENEMY = new Game.Symbol({chr:'q',fg:'#dda'});

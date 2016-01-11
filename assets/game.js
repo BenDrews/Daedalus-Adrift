@@ -35,7 +35,7 @@ var Game = {
       w: 100,
       h: 6,
       o: null
-    }
+    },
   },
   _PERSISTENCE_NAMESPACE: 'wsrlgame',
   _game: null,
@@ -43,6 +43,8 @@ var Game = {
   _randomSeed: 0,
   TRANSIENT_RNG: null,
   DATASTORE: {},
+  Scheduler: null,
+  TimeEngine: null,
   init: function () {
     this._game = this;
     Game.tileSet = document.createElement("img");
@@ -66,6 +68,11 @@ var Game = {
     bindEventToScreen('keydown');
     this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
+  },
+
+  initializeTimingEngine: function () {
+    Game.Scheduler = new ROT.Scheduler.Action();
+    Game.TimeEngine = new ROT.Engine(Game.Scheduler);
   },
   getRandomSeed: function () {
     return this._randomSeed;

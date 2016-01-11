@@ -26,7 +26,8 @@ Game.UIMode.gamePlay = {
     _mapId: '',
     _cameraX: 84,
     _cameraY: 84,
-    _avatarId: ''
+    _avatarId: '',
+    _enemyId: ''
   },
   JSON_KEY: 'uiMode_gamePlay',
   enter: function () {
@@ -36,10 +37,12 @@ Game.UIMode.gamePlay = {
       this.setCameraToAvatar();
     }
     console.dir(JSON.parse(JSON.stringify(this.getMap())));
+    Game.TimeEngine.unlock();
     Game.refresh();
   },
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
+    Game.TimeEngine.lock();
   },
   getMap: function () {
     return Game.DATASTORE.MAP[this.attr._mapId];
@@ -52,6 +55,12 @@ Game.UIMode.gamePlay = {
   },
   setAvatar: function (a) {
     this.attr._avatarId = a.getId();
+  },
+  getEnemy: function () {
+    return Game.DATASTORE.ENTITY[this.attr._enemyId];
+  },
+  setEnemy:function (e) {
+    this.attr._enemyId = e.getId();
   },
   handleInput: function (eventType, evt) {
     var pressedKey = String.fromCharCode(evt.charCode);
@@ -166,14 +175,21 @@ Game.UIMode.gamePlay = {
   setupNewGame: function (restorationData) {
   this.setMap(new Game.Map('spaceship1'));
   this.setAvatar(Game.EntityGenerator.create('avatar'));
+  this.setEnemy(Game.EntityGenerator.create('enemy'));
 
   this.getMap().addEntity(this.getAvatar(), this.getMap().getRandomWalkableLocation());
+  this.getMap().addEntity(this.getEnemy(), this.getMap().getRandomWalkableLocation());
   this.setCameraToAvatar();
 
   // TODO: delete dev code
   for(var ecount = 0; ecount < 80; ecount++) {
     this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkableLocation());
   }
+
+  Game.Scheduler.add(this.getEnemy(),true, 0.1);
+  Game.Scheduler.add(this.getAvatar(),true,1);
+  Game.Scheduler._queue._time = 1;
+
 },
 
 toJSON: function() {
@@ -267,6 +283,7 @@ Game.UIMode.gamePersistence = {
   restoreGame: function () {
     console.log("restore");
     if (this.localStorageAvailable()) {
+      Game.initializeTimingEngine();
       var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
       setTimeout(function(){
         var state_data = JSON.parse(json_state_data);
@@ -308,6 +325,7 @@ Game.UIMode.gamePersistence = {
   },
 
   newGame: function () {
+    Game.initializeTimingEngine();
     console.log("newGame");
     Game.setRandomSeed(5 + Math.floor(Game.TRANSIENT_RNG.getUniform()*100000));
     Game.UIMode.gamePlay.setupNewGame();
