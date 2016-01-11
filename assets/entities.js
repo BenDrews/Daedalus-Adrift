@@ -7,5 +7,13 @@ Game.EntityTemplates.Avatar = {
   chr:'@',
   fg:'#dda',
   maxHp: 10,
-  mixins: [Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
+  mixins: [Game.EntityMixin.PlayerActor, Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
+};
+
+Game.EntityTemplates.Enemy = {
+  name: 'enemy',
+  chr:'q',
+  fg:'#dda',
+  maxHp: 10,
+  mixins: [Game.EntityMixin.WanderActor, Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
 };

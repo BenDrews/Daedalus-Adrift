@@ -49,6 +49,15 @@ Game.Entity.prototype.hasMixin = function(checkThis) {
     }
 };
 
+Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
+  for (var i = 0; i < this._mixins.length; i++) {
+    var mixin = this._mixins[i];
+    if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
+      mixin.META.listeners[evtLabel].call(this,evtData);
+    }
+  }
+};
+
 Game.Entity.prototype.getName = function() {
     return this.attr._name;
 };
@@ -96,4 +105,13 @@ Game.Entity.prototype.fromJSON = function (json) {
   //     mixin.META.fromJSON.call(this,json['mixin:'+mixin.META.mixinName]);
   //   }
   // }
+};
+
+Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
+  for (var i = 0; i < this._mixins.length; i++) {
+    var mixin = this._mixins[i];
+    if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
+      mixin.META.listeners[evtLabel].call(this,evtData);
+    }
+  }
 };

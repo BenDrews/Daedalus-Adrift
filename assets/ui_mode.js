@@ -28,17 +28,20 @@ Game.UIMode.gamePlay = {
     _mapHeight: 169,
     _cameraX: 84,
     _cameraY: 84,
-    _avatar: null
+    _avatar: null,
+    _enemy: null
   },
   JSON_KEY: 'uiMode_gamePlay',
   enter: function () {
     console.log("Game.UIMode.gamePlay enter");
     Game.Message.clearMessages();
     console.dir(JSON.parse(JSON.stringify(this.attr._map)));
+    Game.TimeEngine.unlock();
     Game.refresh();
   },
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
+    Game.TimeEngine.lock();
   },
   handleInput: function (eventType, evt) {
     var pressedKey = String.fromCharCode(evt.charCode);
@@ -127,7 +130,9 @@ Game.UIMode.gamePlay = {
     this.renderAvatar(display);
   },
   renderAvatar: function (display) {
-    Game.Symbol.AVATAR.draw(display, Math.round(this.attr._avatar.getX()-this.attr._cameraX+display._options.width/2), Math.round(this.attr._avatar.getY()-this.attr._cameraY+display._options.height/2));
+    this.attr._avatar.draw(display, Math.round(this.attr._avatar.getX()-this.attr._cameraX+display._options.width/2), Math.round(this.attr._avatar.getY()-this.attr._cameraY+display._options.height/2));
+    this.attr._enemy.draw(display, Math.round(this.attr._enemy.getX()-this.attr._cameraX+display._options.width/2), Math.round(this.attr._enemy.getY()-this.attr._cameraY+display._options.height/2));
+
   },
   renderAvatarInfo: function(display) {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
@@ -157,15 +162,19 @@ Game.UIMode.gamePlay = {
 
   // create map from the tiles
   this.attr._map =  new Game.Map(mapTiles);
-
   this.attr._avatar = new Game.Entity(Game.EntityTemplates.Avatar);
+  this.attr._enemy = new Game.Entity(Game.EntityTemplates.Enemy);
+  Game.Scheduler.add(this.attr._enemy,true, 0.1);
+  Game.Scheduler.add(this.attr._avatar,true,1);
 //  console.log(this.attr._avatar.mixins);
   // restore anything else if the data is available
   if (restorationData !== undefined && restorationData.hasOwnProperty(Game.UIMode.gamePlay.JSON_KEY)) {
     this.fromJSON(restorationData[Game.UIMode.gamePlay.JSON_KEY]);
   } else {
     this.attr._avatar.setPos(this.attr._map.getRandomWalkableLocation());
+    this.attr._enemy.setPos(this.attr._map.getRandomWalkableLocation());
   }
+  Game.Scheduler._queue._time = 1;
 
   this.setCameraToAvatar();
 },
@@ -259,6 +268,7 @@ Game.UIMode.gamePersistence = {
   restoreGame: function () {
     console.log("restore");
     if (this.localStorageAvailable()) {
+      Game.initializeTimingEngine();
       var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
       setTimeout(function(){
         var state_data = JSON.parse(json_state_data);
@@ -272,6 +282,7 @@ Game.UIMode.gamePersistence = {
   },
 
   newGame: function () {
+    Game.initializeTimingEngine();
     console.log("newGame");
     Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
     Game.UIMode.gamePlay.setupPlay();
