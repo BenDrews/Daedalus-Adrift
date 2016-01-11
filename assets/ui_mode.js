@@ -85,7 +85,7 @@ Game.UIMode.gamePlay = {
         tileHeight: 14,
         tileSet: Game.tileSet,
         tileMap: {
-            "@": [28, 14],
+            "@": [129, 43],
             "#": [0, 14],
             "+": [14, 0],
             " ": [14, 14],
@@ -113,7 +113,7 @@ Game.UIMode.gamePlay = {
             "w": [215, 86],
             "x": [229, 86],
             "y": [85, 115],
-            "z": [486, 0]
+            "z": [472, 0]
         }, width: 57, height: 26});
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
@@ -139,8 +139,9 @@ Game.UIMode.gamePlay = {
   this.setCamera(this.attr._cameraX + dx,this.attr._cameraY + dy);
   },
   setCamera: function (sx,sy) {
-    this.attr._cameraX = Math.min(Math.max(0,sx),this.attr._mapWidth);
-    this.attr._cameraY = Math.min(Math.max(0,sy),this.attr._mapHeight);
+    //TODO: Swap 13 with an attribute
+    this.attr._cameraX = Math.min(Math.max(0,sx - (sx % 13)) + 7,this.attr._mapWidth);
+    this.attr._cameraY = Math.min(Math.max(0,sy - (sy % 13)) + 7,this.attr._mapHeight);
     Game.refresh();
   },
   setCameraToAvatar: function () {
