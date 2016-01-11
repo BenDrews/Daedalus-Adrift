@@ -25,7 +25,7 @@ Game.mapgen = {
 
     for(var x = 0; x < this.attr._roomWidth * this.attr._mapWidth + 50; x++) {
       for(var y = 0; y < this.attr._roomHeight * this.attr._mapHeight + 50; y++) {
-        tilesGrid[x][y] = Game.Tile.bgTiles[Math.floor(Game.Tile.bgTiles.length * ROT.RNG.getUniform())].clone();
+        tilesGrid[x][y] = Game.Tile.bgTiles[Math.floor(Game.Tile.bgTiles.length * ROT.RNG.getUniform())];
       }
     }
 

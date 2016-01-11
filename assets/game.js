@@ -1,7 +1,6 @@
 console.log("hello console");
 
 window.onload = function() {
-    console.log("starting WSRL - window loaded");
     // Check if rot.js can work on this browser
     if (!ROT.isSupported()) {
         alert("The rot.js library isn't supported by your browser.");
@@ -42,11 +41,14 @@ var Game = {
   _game: null,
   _curUIMode: null,
   _randomSeed: 0,
+  TRANSIENT_RNG: null,
+  DATASTORE: {},
   init: function () {
     this._game = this;
     Game.tileSet = document.createElement("img");
     Game.tileSet.src = "assets/oryx_world_sprites.png";
-    Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
+    this.TRANSIENT_RNG = ROT.RNG.clone();
+    Game.setRandomSeed(5 + Math.floor(this.TRANSIENT_RNG.getUniform()*100000));
 
     console.log("RogueLike initialization");
     for (var displayName in this.DISPLAYS) {
@@ -71,6 +73,7 @@ var Game = {
   setRandomSeed: function (s) {
     this._randomSeed = s;
     console.log("using random seed " +this._randomSeed);
+    this.DATASTORE[Game.UIMode.gamePersistence.RANDOM_SEED_KEY] = this._randomSeed;
     ROT.RNG.setSeed(this._randomSeed);
   },
   getDisplay: function(displayName){
@@ -119,11 +122,6 @@ switchUIMode: function(newMode) {
     if (this._curUIMode && this._curUIMode.hasOwnProperty('handleInput')) {
       this._curUIMode.handleInput(eventType, evt);
     }
-  },
-  toJSON: function () {
-    var json = {};
-    json._randomSeed = this._randomSeed;
-        json[Game.UIMode.gamePlay.JSON_KEY] = Game.UIMode.gamePlay.toJSON();
-    return json;
   }
+  //TODO: toJSON method
 };
