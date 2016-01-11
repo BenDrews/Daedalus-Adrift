@@ -8,6 +8,16 @@ Game.Tile = function (properties) {
 };
 Game.Tile.extend(Game.Symbol);
 
+Game.Tile.prototype.clone = function () {
+  clonedTile = new Game.Tile();
+  for (var property in this.attr) {
+    if (this.attr.hasOwnProperty(property)) {
+      clonedTile.attr[property] = this.attr[property];
+    }
+  }
+  return clonedTile;
+};
+
 Game.Tile.prototype.getName = function () {
   return this.attr._name;
 };
@@ -33,7 +43,7 @@ Game.Tile.blackCorner1Tile = new Game.Tile({name:'blackCorner1', chr:'g'});
 Game.Tile.blackCorner2Tile = new Game.Tile({name:'blackCorner2', chr:'h'});
 Game.Tile.blackCorner3Tile = new Game.Tile({name:'blackCorner3', chr:'i'});
 Game.Tile.blackCorner4Tile = new Game.Tile({name:'blackCorner4', chr:'j'});
-Game.Tile.blackDoorTile = new Game.Tile({name:'blackDoor', chr:'k'});
+Game.Tile.blackDoorTile = new Game.Tile({name:'blackDoor', chr:'k', walkable: true});
 
 
 Game.Tile.blueWallHoriTile = new Game.Tile({name:'blueWallHori', chr:'l'});
@@ -42,7 +52,7 @@ Game.Tile.blueCorner1Tile = new Game.Tile({name:'blueCorner1', chr:'n'});
 Game.Tile.blueCorner2Tile = new Game.Tile({name:'blueCorner2', chr:'o'});
 Game.Tile.blueCorner3Tile = new Game.Tile({name:'blueCorner3', chr:'p'});
 Game.Tile.blueCorner4Tile = new Game.Tile({name: 'blueCorner4', chr: 'q'});
-Game.Tile.blueDoorTile = new Game.Tile({name:'blueDoor', chr:'r'});
+Game.Tile.blueDoorTile = new Game.Tile({name:'blueDoor', chr:'r', walkable: true});
 
 Game.Tile.greenWallHoriTile = new Game.Tile({name:'greenWallHori', chr:'s'});
 Game.Tile.greenWallVertiTile = new Game.Tile({name:'greenWallVerti', chr:'t'});
@@ -50,4 +60,4 @@ Game.Tile.greenCorner1Tile = new Game.Tile({name:'greenCorner1', chr:'u'});
 Game.Tile.greenCorner2Tile = new Game.Tile({name:'greenCorner2', chr:'v'});
 Game.Tile.greenCorner3Tile = new Game.Tile({name:'greenCorner3', chr:'w'});
 Game.Tile.greenCorner4Tile = new Game.Tile({name: 'greenCorner4', chr: 'x'});
-Game.Tile.greenDoorTile = new Game.Tile({name:'greenDoor', chr:'y'});
+Game.Tile.greenDoorTile = new Game.Tile({name:'greenDoor', chr:'y', walkable: true});

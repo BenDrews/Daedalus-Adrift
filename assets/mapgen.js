@@ -36,7 +36,7 @@ Game.mapgen = {
         else if(curRoom.getDoors().west) {
           curCoor = [curCoor[0] - 1, curCoor[1]];
         }
-        console.log("Generating room at" + curCoor);
+        console.log("Generating room at " + curCoor);
         do {
           curRoom = Game.Room.palette[Math.floor(Game.Room.palette.length * ROT.RNG.getUniform())].clone();
         } while(!(curRoom.checkGrid(roomGrid, curCoor[0], curCoor[1])));

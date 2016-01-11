@@ -32,9 +32,6 @@ Game.Map.prototype.renderOn = function (display,camX,camY) {
     for (var y = 0; y < dispH; y++) {
       // Fetch the glyph for the tile and render it to the screen - sub in wall tiles for nullTiles / out-of-bounds
       var tile = this.getTile(x+xStart, y+yStart);
-      if (tile.getName() == 'nullTile') {
-        tile = Game.Tile.wallTile;
-      }
       tile.draw(display, x,y);
     }
   }
