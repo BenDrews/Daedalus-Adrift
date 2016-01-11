@@ -39,8 +39,7 @@ Game.UIMode.gamePlay = {
     }
     console.dir(JSON.parse(JSON.stringify(this.getMap())));
     Game.TimeEngine.start();
-    this.paceMaker = setInterval(function() {Game.TimeEngine.unlock();},50);
-    Game.refresh();
+    this.paceMaker = setInterval(function() {Game.refresh(); Game.TimeEngine.unlock();},10);
   },
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
@@ -73,33 +72,35 @@ Game.UIMode.gamePlay = {
       if (evt.keyCode == 13) {
         Game.switchUIMode(Game.UIMode.gameWin);
         return;
-      } else if (pressedKey == '1') {
-        this.moveAvatar(-1,1);
-      } else if (pressedKey == '2') {
-        this.moveAvatar(0,1);
-      } else if (pressedKey == '3') {
-        this.moveAvatar(1,1);
-      } else if (pressedKey == '4') {
-        this.moveAvatar(-1,0);
-      } else if (pressedKey == '5') {
-        // do nothing / stay still
-      } else if (pressedKey == '6') {
-        this.moveAvatar(1,0);
-      } else if (pressedKey == '7') {
-        this.moveAvatar(-1,-1);
-      } else if (pressedKey == '8') {
-        this.moveAvatar(0,-1);
-      } else if (pressedKey == '9') {
-        this.moveAvatar(1,-1);
       }
-    }
+  }
     if(eventType == 'keydown') {
       if (evt.keyCode == 27) {
         Game.switchUIMode(Game.UIMode.gameLose);
       } else if (evt.keyCode == 187) { // '='
         Game.switchUIMode(Game.UIMode.gamePersistence);
+      } else if (evt.keyCode == 38) {
+        this.getAvatar().setDirection(1);
+      } else if (evt.keyCode == 39) {
+        this.getAvatar().setDirection(2);
+      } else if (evt.keyCode == 40) {
+        this.getAvatar().setDirection(4);
+      } else if (evt.keyCode == 37) {
+        this.getAvatar().setDirection(8);
       }
     }
+
+    if(eventType == 'keyup') {
+      if (evt.keyCode == 38) {
+        this.getAvatar().unsetDirection(1);
+      } else if (evt.keyCode == 39) {
+        this.getAvatar().unsetDirection(2);
+      } else if (evt.keyCode == 40) {
+        this.getAvatar().unsetDirection(4);
+      } else if (evt.keyCode == 37) {
+        this.getAvatar().unsetDirection(8);
+    }
+  }
   },
   renderOnMain: function (display) {
     display.clear();

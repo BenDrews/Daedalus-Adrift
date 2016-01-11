@@ -9,7 +9,9 @@ Game.EntityMixin.PlayerActor = {
     stateModel:  {
       baseActionDuration: 1000,
       actingState: false,
-      currentActionDuration: 1000
+      currentActionDuration: 1000,
+      direction: 0,
+      canMove: true
     },
     init: function (template) {
       Game.Scheduler.add(this,true,1);
@@ -18,8 +20,6 @@ Game.EntityMixin.PlayerActor = {
       'actionDone': function(evtData) {
         Game.Scheduler.setDuration(this.getCurrentActionDuration());
         this.setCurrentActionDuration(this.getBaseActionDuration());
-      //  setTimeout(function() {Game.TimeEngine.unlock();},0.01); // NOTE: this tiny delay ensures console output happens in the right order, which in turn means I have confidence in the turn-taking order of the various entities
-        // console.log("end player acting");
       }
     }
   },
@@ -41,14 +41,42 @@ Game.EntityMixin.PlayerActor = {
     }
     return this.attr._PlayerActor_attr.actingState;
   },
+  setMovable: function (canMove) {
+    this.attr._PlayerActor_attr.canMove = canMove;
+  },
+  setDirection: function (dir) {
+    this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction | dir;
+  },
+  unsetDirection: function (dir) {
+    this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction & (~dir);
+  },
   act: function () {
-    // console.log("begin player acting");
-    // console.log("player pre-lock engine lock state is "+Game.TimeEngine._lock);
     if (this.isActing()) { return; } // a gate to deal with JS timing issues
     this.isActing(true);
-    Game.refresh();
+    if(this.attr._PlayerActor_attr.canMove && this.hasOwnProperty('tryWalk')) {
+        var dx = 0;
+        var dy = 0;
+        if(this.attr._PlayerActor_attr.direction & 1) {
+          dy--;
+        }
+        if(this.attr._PlayerActor_attr.direction & 2) {
+          dx++;
+        }
+        if(this.attr._PlayerActor_attr.direction & 4) {
+          dy++;
+        }
+        if(this.attr._PlayerActor_attr.direction & 8) {
+          dx--;
+        }
+        Game.UIMode.gamePlay.moveAvatar(dx,dy);
+        this.setMovable(false);
+        if(Math.abs(dx) + Math.abs(dy) == 2) {
+          setTimeout(function () {Game.UIMode.gamePlay.getAvatar().setMovable(true);},75 * Math.sqrt(2));
+        } else {
+          setTimeout(function () {Game.UIMode.gamePlay.getAvatar().setMovable(true);},75);
+        }
+    }
     Game.TimeEngine.lock();
-    // console.log("player post-lock engine lock state is "+Game.TimeEngine._lock);
     this.raiseEntityEvent('actionDone');
     this.isActing(false);
   }
@@ -177,6 +205,5 @@ Game.EntityMixin.WanderActor = {
     this.raiseEntityEvent('actionDone');
     // console.log("end wander acting");
     //Game.TimeEngine.unlock();
-    setTimeout(function(){this.act();},500);
   }
 };

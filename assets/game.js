@@ -66,6 +66,7 @@ var Game = {
     };
     bindEventToScreen('keypress');
     bindEventToScreen('keydown');
+    bindEventToScreen('keyup');
     this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
   },
