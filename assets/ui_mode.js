@@ -129,11 +129,12 @@ Game.UIMode.gamePlay = {
   renderAvatar: function (display) {
     Game.Symbol.AVATAR.draw(display, Math.round(this.attr._avatar.getX()-this.attr._cameraX+display._options.width/2), Math.round(this.attr._avatar.getY()-this.attr._cameraY+display._options.height/2));
   },
-  renderAvatarInfo: function(display) {
+  renderOnAvatar: function(display) {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
-    display.drawText(1,2,"avatar x: "+this.attr._avatar.getX(),fg,bg); // DEV
-    display.drawText(1,3,"avatar y: "+this.attr._avatar.getY(),fg,bg);
+    display.drawText(1,2,"Avatar X: "+this.attr._avatar.getX(),fg,bg); // DEV
+    display.drawText(1,3,"Avatar Y: "+this.attr._avatar.getY(),fg,bg);
+    display.drawText(1,4,"Turns taken: "+this.attr._avatar.getTurns(),fg,bg);
   },
   moveAvatar: function (dx, dy) {
     if (this.attr._avatar.tryWalk(this.attr._map,dx,dy)) {
