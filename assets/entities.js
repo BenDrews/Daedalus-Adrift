@@ -15,10 +15,10 @@ Game.EntityGenerator.learn({
   mixins: [Game.EntityMixin.HitPoints]
 });
 
-Game.EntityGenerator.learn = {
+Game.EntityGenerator.learn({
   name: 'enemy',
   chr:'q',
   fg:'#dda',
   maxHp: 10,
   mixins: [Game.EntityMixin.WanderActor, Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
-};
+});

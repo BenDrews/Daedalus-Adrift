@@ -22,6 +22,7 @@ Game.UIMode.gameStart = {
 };
 
 Game.UIMode.gamePlay = {
+  paceMaker: null,
   attr: {
     _mapId: '',
     _cameraX: 84,
@@ -37,11 +38,13 @@ Game.UIMode.gamePlay = {
       this.setCameraToAvatar();
     }
     console.dir(JSON.parse(JSON.stringify(this.getMap())));
-    Game.TimeEngine.unlock();
+    Game.TimeEngine.start();
+    this.paceMaker = setInterval(function() {Game.TimeEngine.unlock();},50);
     Game.refresh();
   },
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
+    clearInterval(this.paceMaker);
     Game.TimeEngine.lock();
   },
   getMap: function () {
@@ -154,6 +157,8 @@ Game.UIMode.gamePlay = {
     display.drawText(1,2,"Avatar X: "+this.getAvatar().getX(),fg,bg); // DEV
     display.drawText(1,3,"Avatar Y: "+this.getAvatar().getY(),fg,bg);
     display.drawText(1,4,"Turns taken: "+this.getAvatar().getTurns(),fg,bg);
+    display.drawText(1,5,"Enemy X: "+this.getEnemy().getX(),fg,bg);
+    display.drawText(1,6,"Enemy Y: "+this.getEnemy().getY(),fg,bg);
   },
   moveAvatar: function (dx, dy) {
     if (this.getAvatar().tryWalk(this.getMap(),dx,dy)) {
@@ -186,9 +191,9 @@ Game.UIMode.gamePlay = {
     this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkableLocation());
   }
 
-  Game.Scheduler.add(this.getEnemy(),true, 0.1);
-  Game.Scheduler.add(this.getAvatar(),true,1);
-  Game.Scheduler._queue._time = 1;
+//  Game.Scheduler.add(this.getEnemy(),true, 0.1);
+  //Game.Scheduler.add(this.getAvatar(),true,1);
+  //Game.Scheduler._queue._time = 1;
 
 },
 

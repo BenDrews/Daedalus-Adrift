@@ -17,8 +17,8 @@ Game.EntityMixin.PlayerActor = {
     listeners: {
       'actionDone': function(evtData) {
         Game.Scheduler.setDuration(this.getCurrentActionDuration());
-        this.setCurrentActionDuration(this.getBaseActionDuration()+Game.util.randomInt(-5,5));
-        setTimeout(function() {Game.TimeEngine.unlock();},0.01); // NOTE: this tiny delay ensures console output happens in the right order, which in turn means I have confidence in the turn-taking order of the various entities
+        this.setCurrentActionDuration(this.getBaseActionDuration());
+      //  setTimeout(function() {Game.TimeEngine.unlock();},0.01); // NOTE: this tiny delay ensures console output happens in the right order, which in turn means I have confidence in the turn-taking order of the various entities
         // console.log("end player acting");
       }
     }
@@ -49,8 +49,8 @@ Game.EntityMixin.PlayerActor = {
     Game.refresh();
     Game.TimeEngine.lock();
     // console.log("player post-lock engine lock state is "+Game.TimeEngine._lock);
+    this.raiseEntityEvent('actionDone');
     this.isActing(false);
-    console.log("piss");
   }
 };
 
@@ -145,7 +145,7 @@ Game.EntityMixin.WanderActor = {
       currentActionDuration: 1000
     },
     init: function (template) {
-      Game.Scheduler.add(this,true, Game.util.randomInt(2,this.getBaseActionDuration()));
+      Game.Scheduler.add(this,true, 2);
     }
   },
   getBaseActionDuration: function () {
@@ -164,19 +164,19 @@ Game.EntityMixin.WanderActor = {
     return Game.util.positionsAdjacentTo({x:0,y:0}).random();
   },
   act: function () {
-  //  Game.TimeEngine.lock();
-    // console.log("begin wander acting");
+  Game.TimeEngine.lock();
+     console.log("begin wander acting");
     // console.log('wander for '+this.getName());
     var moveDeltas = this.getMoveDeltas();
     if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
       // console.log('trying to walk to '+moveDeltas.x+','+moveDeltas.y);
-      this.tryWalk(Game.UIMode.gamePlay.attr._map, moveDeltas.x, moveDeltas.y);
+      this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
     }
     Game.Scheduler.setDuration(this.getCurrentActionDuration());
-    this.setCurrentActionDuration(this.getBaseActionDuration()+Game.util.randomInt(-10,10));
+    this.setCurrentActionDuration(this.getBaseActionDuration());
     this.raiseEntityEvent('actionDone');
     // console.log("end wander acting");
-//    Game.TimeEngine.unlock();
-    console.log("poop");
+    //Game.TimeEngine.unlock();
+    setTimeout(function(){this.act();},500);
   }
 };
