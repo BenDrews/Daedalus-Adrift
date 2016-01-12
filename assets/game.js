@@ -47,8 +47,6 @@ var Game = {
   TimeEngine: null,
   init: function () {
     this._game = this;
-    Game.tileSet = document.createElement("img");
-    Game.tileSet.src = "assets/oryx_world_sprites.png";
     this.TRANSIENT_RNG = ROT.RNG.clone();
     Game.setRandomSeed(5 + Math.floor(this.TRANSIENT_RNG.getUniform()*100000));
 
@@ -94,8 +92,6 @@ var Game = {
     this.DISPLAYS.avatar.o.clear();
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnAvatar')) {
       this._curUIMode.renderOnAvatar(this.DISPLAYS.avatar.o);
-    } else {
-      this.DISPLAYS.avatar.o.drawText(2, 1, "Avatar display");
     }
   },
   renderMain: function() {

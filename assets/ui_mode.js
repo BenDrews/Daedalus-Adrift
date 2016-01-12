@@ -51,6 +51,7 @@ Game.UIMode.gamePlay = {
   },
   enter: function () {
     Game.Message.clear();
+    Game.DISPLAYS.main.o.setOptions(Game.tileSet.options);
     if(this.attr._avatarId) {
       this.setCameraToAvatar();
     }
@@ -66,6 +67,7 @@ Game.UIMode.gamePlay = {
   },
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
+    Game.DISPLAYS.main.o.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
     Game._bgMusic.pause();
     Game.UIMode.gamePlay.destroyActLoop();
     clearInterval(this.paceMaker);
@@ -127,60 +129,18 @@ Game.UIMode.gamePlay = {
   },
   renderOnMain: function (display) {
     display.clear();
-    display.setOptions({
-        layout: "tile",
-        bg: "transparent",
-        tileWidth: 14,
-        tileHeight: 14,
-        tileSet: Game.tileSet,
-        tileMap: {
-            "@": [129, 43],
-            "#": [0, 14],
-            "+": [14, 0],
-            "%": [143,43],
-            " ": [14, 14],
-            "b": [0, 0],
-            "c": [0, 172],
-            "d": [14, 129],
-            "e": [115, 0],
-            "f": [158, 0],
-            "g": [186, 0],
-            "h": [200, 0],
-            "i": [215, 0],
-            "j": [229, 0],
-            "k": [85, 29],
-            "l": [115, 172],
-            "m": [158, 172],
-            "n": [186, 172],
-            "o": [200, 172],
-            "p": [215, 172],
-            "q": [229, 172],
-            "r": [85, 200],
-            "s": [115, 86],
-            "t": [158, 86],
-            "u": [186, 86],
-            "v": [200, 86],
-            "w": [215, 86],
-            "x": [229, 86],
-            "y": [85, 115],
-            "1": [486, 0],
-            "2": [472, 0],
-            "3": [458, 0],
-            "4": [486, 14],
-            "5": [486, 28],
-            "6": [486, 42]
-        }, width: 57, height: 26});
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
     this.getMap().renderOn(display, this.attr._cameraX, this.attr._cameraY);
-//    console.log("Game.UIMode.gamePlay renderOnMain");
   },
   renderOnAvatar: function(display) {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
-    display.drawText(1,2,"Avatar X: "+this.getAvatar().getX(),fg,bg); // DEV
-    display.drawText(1,3,"Avatar Y: "+this.getAvatar().getY(),fg,bg);
-    display.drawText(1,4,"Units moved: "+this.getAvatar().getMoves(),fg,bg);
+    if(this.getAvatar()) {
+      display.drawText(1,2,"Avatar X: "+this.getAvatar().getX(),fg,bg); // DEV
+      display.drawText(1,3,"Avatar Y: "+this.getAvatar().getY(),fg,bg);
+      display.drawText(1,4,"Units moved: "+this.getAvatar().getMoves(),fg,bg);
+    }
     if(this.getEnemy()) {
       display.drawText(1,5,"Enemy X: "+this.getEnemy().getX(),fg,bg);
       display.drawText(1,6,"Enemy Y: "+this.getEnemy().getY(),fg,bg);
@@ -278,7 +238,6 @@ Game.UIMode.gamePersistence = {
      var fg = Game.UIMode.DEFAULT_COLOR_FG;
      var bg = Game.UIMode.DEFAULT_COLOR_BG;
      display.clear();
-     display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
      display.drawText(1,3,"press S to save the current game, L to load the saved game, or N start a new one",fg,bg);
   //   console.log('TODO: check whether local storage has a game before offering restore');
   //   console.log('TODO: check whether a game is in progress before offering restore');

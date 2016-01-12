@@ -46,6 +46,9 @@ Game.EntityMixin.PlayerActor = {
       'actionDone': function(evtData) {
   //      Game.Scheduler.setDuration(this.getCurrentActionDuration());
         this.setCurrentActionDuration(this.getBaseActionDuration());
+      },
+      'killed': function(evtData) {
+        Game.switchUIMode(Game.UIMode.gameLose);
       }
     }
   },
