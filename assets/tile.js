@@ -45,7 +45,7 @@ Game.Tile.greenFloorTile = new Game.Tile({name: 'greenFloor', chr: 'd', walkable
 Game.Tile.wallTile = new Game.Tile({name:'wall', chr:'#', opaque: true});
 
 Game.Tile.blackWallHoriTile = new Game.Tile({name:'blackWallHori', chr:'e', opaque: true});
-Game.Tile.blackWallVertiTile = new Game.Tile({name:'blackWallVerti', chr:'f' opaque: true});
+Game.Tile.blackWallVertiTile = new Game.Tile({name:'blackWallVerti', chr:'f', opaque: true});
 Game.Tile.blackCorner1Tile = new Game.Tile({name:'blackCorner1', chr:'g', opaque: true});
 Game.Tile.blackCorner2Tile = new Game.Tile({name:'blackCorner2', chr:'h', opaque: true});
 Game.Tile.blackCorner3Tile = new Game.Tile({name:'blackCorner3', chr:'i', opaque: true});

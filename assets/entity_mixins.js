@@ -7,7 +7,6 @@ Game.EntityMixin.PlayerMessager = {
     listeners: {
       'walkForbidden': function(evtData) {
         Game.Message.send('you can\'t walk into the '+evtData.target.getName());
-        Game.renderDisplayMessage();
       },
       'dealtDamage': function(evtData) {
         Game.Message.send('you hit the '+evtData.damagee.getName()+' for '+evtData.damageAmount);
@@ -20,7 +19,6 @@ Game.EntityMixin.PlayerMessager = {
       },
       'killed': function(evtData) {
         Game.Message.send('you were killed by the '+evtData.killedBy.getName());
-        Game.renderDisplayMessage();
       }
     }
   }
@@ -84,27 +82,20 @@ Game.EntityMixin.PlayerActor = {
     if(this.attr._PlayerActor_attr.canMove && this.hasMixin('WalkerCorporeal')) {
         var dx = 0;
         var dy = 0;
-        var dirMessage = "";
         if(this.attr._PlayerActor_attr.direction & 1) {
           dy--;
-          dirMessage += "N";
         }
         if(this.attr._PlayerActor_attr.direction & 2) {
           dx++;
-          dirMessage += "E";
         }
         if(this.attr._PlayerActor_attr.direction & 4) {
           dy++;
-          dirMessage += "S";
         }
         if(this.attr._PlayerActor_attr.direction & 8) {
           dx--;
-          dirMessage += "W";
         }
-        Game.Message.ageMessages();
         if(dx !== 0 || dy !== 0) {
           Game.UIMode.gamePlay.moveAvatar(dx,dy);
-          Game.Message.send("Walking " + dirMessage);
           this.setMovable(false);
           if(Math.abs(dx) + Math.abs(dy) == 2) {
             setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
@@ -151,6 +142,7 @@ Game.EntityMixin.WalkerCorporeal = {
       }
       return true;
     }
+    this.raiseEntityEvent('walkForbidden',{target:targetTile});
     return false;
   }
 };
