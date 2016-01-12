@@ -182,7 +182,7 @@ Game.UIMode.gamePlay = {
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
     display.drawText(1,2,"Avatar X: "+this.getAvatar().getX(),fg,bg); // DEV
     display.drawText(1,3,"Avatar Y: "+this.getAvatar().getY(),fg,bg);
-    display.drawText(1,4,"Turns taken: "+this.getAvatar().getTurns(),fg,bg);
+    display.drawText(1,4,"Units moved: "+this.getAvatar().getMoves(),fg,bg);
     display.drawText(1,5,"Enemy X: "+this.getEnemy().getX(),fg,bg);
     display.drawText(1,6,"Enemy Y: "+this.getEnemy().getY(),fg,bg);
   },
