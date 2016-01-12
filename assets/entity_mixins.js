@@ -14,11 +14,11 @@ Game.EntityMixin.PlayerActor = {
       canMove: true
     },
     init: function (template) {
-      Game.Scheduler.add(this,true,1);
+  //    Game.Scheduler.add(this,true,1);
     },
     listeners: {
       'actionDone': function(evtData) {
-        Game.Scheduler.setDuration(this.getCurrentActionDuration());
+  //      Game.Scheduler.setDuration(this.getCurrentActionDuration());
         this.setCurrentActionDuration(this.getBaseActionDuration());
       }
     }
@@ -51,6 +51,7 @@ Game.EntityMixin.PlayerActor = {
     this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction & (~dir);
   },
   act: function () {
+    console.log("acting");
     if (this.isActing()) { return; } // a gate to deal with JS timing issues
     this.isActing(true);
     if(this.attr._PlayerActor_attr.canMove && this.hasOwnProperty('tryWalk')) {
@@ -76,9 +77,18 @@ Game.EntityMixin.PlayerActor = {
           setTimeout(function () {Game.UIMode.gamePlay.getAvatar().setMovable(true);},75);
         }
     }
-    Game.TimeEngine.lock();
+  //  Game.TimeEngine.lock();
     this.raiseEntityEvent('actionDone');
     this.isActing(false);
+    var curObj = this;
+    curObj.attr._PlayerActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
+  },
+
+  pauseAction: function() {
+    var curObj = this;
+    if (curObj.attr._PlayerActor_attr.timeout){
+      clearTimeout(curObj.attr._PlayerActor_attr.timeout);
+    }
   }
 };
 
@@ -170,10 +180,11 @@ Game.EntityMixin.WanderActor = {
     stateNamespace: '_WanderActor_attr',
     stateModel:  {
       baseActionDuration: 1000,
-      currentActionDuration: 1000
+      currentActionDuration: 1000,
+      timeout: null
     },
     init: function (template) {
-      Game.Scheduler.add(this,true, 2);
+//      Game.Scheduler.add(this,true, 2);
     }
   },
   getBaseActionDuration: function () {
@@ -192,7 +203,7 @@ Game.EntityMixin.WanderActor = {
     return Game.util.positionsAdjacentTo({x:0,y:0}).random();
   },
   act: function () {
-  Game.TimeEngine.lock();
+//  Game.TimeEngine.lock();
      console.log("begin wander acting");
     // console.log('wander for '+this.getName());
     var moveDeltas = this.getMoveDeltas();
@@ -200,10 +211,19 @@ Game.EntityMixin.WanderActor = {
       // console.log('trying to walk to '+moveDeltas.x+','+moveDeltas.y);
       this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
     }
-    Game.Scheduler.setDuration(this.getCurrentActionDuration());
+  //  Game.Scheduler.setDuration(this.getCurrentActionDuration());
     this.setCurrentActionDuration(this.getBaseActionDuration());
     this.raiseEntityEvent('actionDone');
     // console.log("end wander acting");
     //Game.TimeEngine.unlock();
+    var curObj = this;
+    curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
+  },
+
+  pauseAction: function() {
+    var curObj = this;
+    if (curObj.attr._WanderActor_attr.timeout){
+      clearTimeout(curObj.attr._WanderActor_attr.timeout);
+    }
   }
 };

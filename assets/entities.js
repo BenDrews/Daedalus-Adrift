@@ -12,7 +12,7 @@ Game.EntityGenerator.learn({
   name: 'slime',
   chr: '%',
   maxHp:1,
-  mixins: [Game.EntityMixin.HitPoints]
+  mixins: [Game.EntityMixin.HitPoints,Game.EntityMixin.WanderActor,Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.Chronicle]
 });
 
 Game.EntityGenerator.learn({
