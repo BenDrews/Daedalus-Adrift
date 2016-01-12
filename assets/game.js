@@ -42,6 +42,7 @@ var Game = {
   _curUIMode: null,
   _randomSeed: 0,
   TRANSIENT_RNG: null,
+  _bgMusic: null,
   DATASTORE: {},
   Scheduler: null,
   TimeEngine: null,

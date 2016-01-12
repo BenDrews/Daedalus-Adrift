@@ -31,18 +31,26 @@ Game.UIMode.gamePlay = {
     _enemyId: ''
   },
   JSON_KEY: 'uiMode_gamePlay',
+  _audioSrc: null,
   enter: function () {
     console.log("Game.UIMode.gamePlay enter");
     Game.Message.clearMessages();
     if(this.attr._avatarId) {
       this.setCameraToAvatar();
     }
-    console.dir(JSON.parse(JSON.stringify(this.getMap())));
+    if(!Game._bgMusic || Game._bgMusic.src !== this._audioSrc) {
+      Game._bgMusic = new Audio('assets/Unsettling_Discovery.mp3');
+      Game._bgMusic.loop = true;
+      this._audioSrc = Game._bgMusic.src;
+      console.log('Audio reloaded: src' + Game._bgMusic.src);
+    }
+    Game._bgMusic.play();
     Game.TimeEngine.start();
     this.paceMaker = setInterval(function() {Game.refresh(); Game.TimeEngine.unlock();},10);
   },
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
+    Game._bgMusic.pause();
     clearInterval(this.paceMaker);
     Game.TimeEngine.lock();
   },
