@@ -51,7 +51,7 @@ Game.UIMode.gamePlay = {
   },
   enter: function () {
     console.log("Game.UIMode.gamePlay enter");
-    Game.Message.clearMessages();
+  //  Game.Message.clearMessages();
     if(this.attr._avatarId) {
       this.setCameraToAvatar();
     }
@@ -92,9 +92,8 @@ Game.UIMode.gamePlay = {
   },
   handleInput: function (eventType, evt) {
     var pressedKey = String.fromCharCode(evt.charCode);
-    Game.Message.sendMessage("you pressed the '"+String.fromCharCode(evt.charCode)+"' key");
-    console.log("Game.UIMode.gamePlay handleInput");
     if(eventType == 'keypress'){
+      Game.Message.send("you pressed the '"+String.fromCharCode(inputData.charCode)+"' key");
       if (evt.keyCode == 13) {
         Game.switchUIMode(Game.UIMode.gameWin);
         return;
@@ -107,12 +106,16 @@ Game.UIMode.gamePlay = {
         Game.switchUIMode(Game.UIMode.gamePersistence);
       } else if (evt.keyCode == 38) {
         this.getAvatar().setDirection(1);
+        Game.Message.ageMessages();
       } else if (evt.keyCode == 39) {
         this.getAvatar().setDirection(2);
+        Game.Message.ageMessages();
       } else if (evt.keyCode == 40) {
         this.getAvatar().setDirection(4);
+        Game.Message.ageMessages();
       } else if (evt.keyCode == 37) {
         this.getAvatar().setDirection(8);
+        Game.Message.ageMessages();
       }
     }
 
@@ -289,22 +292,28 @@ Game.UIMode.gamePersistence = {
   //  console.dir(inputType);
   //  console.log('gameStart inputData:');
   //  console.dir(inputData);
-    var inputChar = String.fromCharCode(inputData.charCode);
-    if (inputChar == 'S' || inputChar == 's') { // ignore the various modding keys - control, shift, etc.
-      this.saveGame();
-    } else if (inputChar == 'L' || inputChar == 'l') {
-      this.restoreGame();
-    } else if (inputChar == 'N' || inputChar == 'n') {
-      this.newGame();
-      console.log(Game.DISPLAYS.main.o.getOptions());
-    }
-  },
+  if (inputType == 'keypress') {
+     var inputChar = String.fromCharCode(inputData.charCode);
+     if (inputChar == 'S'|| inputChar == 's') { // ignore the various modding keys - control, shift, etc.
+       this.saveGame();
+     } else if (inputChar == 'L'|| inputChar == 'l') {
+       this.restoreGame();
+     } else if (inputChar == 'N'|| inputChar == 'n') {
+       this.newGame();
+     }
+   } else if (inputType == 'keydown') {
+     if (inputData.keyCode == 27) { // 'Escape'
+       Game.switchUIMode(Game.UIMode.gamePlay);
+     }
+   }
+ },
 
   saveGame: function () {
     console.log("save");
     if (Game.UIMode.gamePlay.getMap() !== null) {
       if (this.localStorageAvailable()) {
         Game.DATASTORE.GAME_PLAY = Game.UIMode.gamePlay.attr;
+        Game.DATASTORE.MESSAGES = Game.Message.attr;
         window.localStorage.setItem(Game._PERSISTENCE_NAMESPACE, JSON.stringify(Game.DATASTORE));
         Game.switchUIMode(Game.UIMode.gamePlay);
       }
@@ -347,8 +356,9 @@ Game.UIMode.gamePersistence = {
           }
         }
 
-        // game play
+        // game play et al
         Game.UIMode.gamePlay.attr = state_data.GAME_PLAY;
+        Game.Message.attr = state_data.MESSAGES;
 
         Game.switchUIMode(Game.UIMode.gamePlay);
       },1);
