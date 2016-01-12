@@ -44,7 +44,6 @@ var Game = {
   TRANSIENT_RNG: null,
   _bgMusic: null,
   DATASTORE: {},
-  Scheduler: null,
   TimeEngine: null,
   init: function () {
     this._game = this;
@@ -70,11 +69,6 @@ var Game = {
     bindEventToScreen('keyup');
     this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
-  },
-
-  initializeTimingEngine: function () {
-    Game.Scheduler = new ROT.Scheduler.Action();
-    Game.TimeEngine = new ROT.Engine(Game.Scheduler);
   },
   getRandomSeed: function () {
     return this._randomSeed;

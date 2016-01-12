@@ -32,6 +32,23 @@ Game.UIMode.gamePlay = {
   },
   JSON_KEY: 'uiMode_gamePlay',
   _audioSrc: null,
+  actLoop: function() {
+    for (var entID in Game.DATASTORE.ENTITY) {
+      var entity = Game.DATASTORE.ENTITY[entID];
+      if (entity.hasOwnProperty('act')) {
+        entity.act();
+      }
+    }
+  },
+  destroyActLoop: function() {
+    for (var entID in Game.DATASTORE.ENTITY) {
+      var entity = Game.DATASTORE.ENTITY[entID];
+      if (entity.hasOwnProperty('pauseAction')) {
+        console.log(entity);
+        entity.pauseAction();
+      }
+    }
+  },
   enter: function () {
     //console.log("Game.UIMode.gamePlay enter");
     Game.Message.clearMessages();
@@ -45,14 +62,15 @@ Game.UIMode.gamePlay = {
       console.log('Audio reloaded: src' + Game._bgMusic.src);
     }
     Game._bgMusic.play();
-    Game.TimeEngine.start();
-    this.paceMaker = setInterval(function() {Game.refresh(); Game.TimeEngine.unlock();},10);
+    Game.UIMode.gamePlay.actLoop();
+    this.paceMaker = setInterval(function() {Game.refresh();},50);
   },
   exit: function () {
     console.log("Game.UIMode.gamePlay exit");
     Game._bgMusic.pause();
+    Game.UIMode.gamePlay.destroyActLoop();
     clearInterval(this.paceMaker);
-    Game.TimeEngine.lock();
+//    Game.TimeEngine.lock();
   },
   getMap: function () {
     return Game.DATASTORE.MAP[this.attr._mapId];
@@ -75,7 +93,6 @@ Game.UIMode.gamePlay = {
   handleInput: function (eventType, evt) {
     var pressedKey = String.fromCharCode(evt.charCode);
     Game.Message.sendMessage("you pressed the '"+String.fromCharCode(evt.charCode)+"' key");
-    console.log("Game.UIMode.gamePlay handleInput");
     if(eventType == 'keypress'){
       if (evt.keyCode == 13) {
         Game.switchUIMode(Game.UIMode.gameWin);
@@ -181,7 +198,6 @@ Game.UIMode.gamePlay = {
     //TODO: Swap 13 with an attribute
     this.attr._cameraX = Math.max(0,sx - (sx % 13)) + 7;
     this.attr._cameraY = Math.max(0,sy - (sy % 13)) + 7;
-    Game.refresh();
   },
   setCameraToAvatar: function () {
     this.setCamera(this.getAvatar().getX(),this.getAvatar().getY());
@@ -297,7 +313,7 @@ Game.UIMode.gamePersistence = {
   restoreGame: function () {
     console.log("restore");
     if (this.localStorageAvailable()) {
-      Game.initializeTimingEngine();
+    //  Game.initializeTimingEngine();
       var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
       setTimeout(function(){
         var state_data = JSON.parse(json_state_data);
@@ -339,7 +355,7 @@ Game.UIMode.gamePersistence = {
   },
 
   newGame: function () {
-    Game.initializeTimingEngine();
+  //  Game.initializeTimingEngine();
     console.log("newGame");
     Game.setRandomSeed(5 + Math.floor(Game.TRANSIENT_RNG.getUniform()*100000));
     Game.UIMode.gamePlay.setupNewGame();
