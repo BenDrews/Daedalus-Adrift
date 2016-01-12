@@ -193,7 +193,7 @@ Game.EntityMixin.WanderActor = {
   },
   act: function () {
   Game.TimeEngine.lock();
-     console.log("begin wander acting");
+     //console.log("begin wander acting");
     // console.log('wander for '+this.getName());
     var moveDeltas = this.getMoveDeltas();
     if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event

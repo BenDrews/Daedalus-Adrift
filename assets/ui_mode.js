@@ -33,7 +33,7 @@ Game.UIMode.gamePlay = {
   JSON_KEY: 'uiMode_gamePlay',
   _audioSrc: null,
   enter: function () {
-    console.log("Game.UIMode.gamePlay enter");
+    //console.log("Game.UIMode.gamePlay enter");
     Game.Message.clearMessages();
     if(this.attr._avatarId) {
       this.setCameraToAvatar();
@@ -158,7 +158,7 @@ Game.UIMode.gamePlay = {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
     this.getMap().renderOn(display, this.attr._cameraX, this.attr._cameraY);
-    console.log("Game.UIMode.gamePlay renderOnMain");
+//    console.log("Game.UIMode.gamePlay renderOnMain");
   },
   renderOnAvatar: function(display) {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
