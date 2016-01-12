@@ -254,11 +254,8 @@ Game.EntityMixin.WanderActor = {
     if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
       this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
     }
-  //  Game.Scheduler.setDuration(this.getCurrentActionDuration());
     this.setCurrentActionDuration(this.getBaseActionDuration());
     this.raiseEntityEvent('actionDone');
-    // console.log("end wander acting");
-    //Game.TimeEngine.unlock();
     var curObj = this;
     curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
   },

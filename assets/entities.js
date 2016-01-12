@@ -5,20 +5,20 @@ Game.EntityGenerator.learn({
   chr:'@',
   fg:'#dda',
   maxHp: 10,
-  mixins: [Game.EntityMixin.PlayerActor, Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle, Game.EntityMixin.MeleeAttacker]
+  mixins: ["PlayerActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker"]
 });
 
 Game.EntityGenerator.learn({
   name: 'slime',
   chr: '%',
   maxHp:1,
-  mixins: [Game.EntityMixin.HitPoints,Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.Chronicle]
+  mixins: ["HitPoints", "Chronicle"]
 });
 
 Game.EntityGenerator.learn({
   name: 'enemy',
   chr:'q',
   fg:'#dda',
-  maxHp: 10,
-  mixins: [Game.EntityMixin.WanderActor, Game.EntityMixin.WalkerCorporeal,Game.EntityMixin.HitPoints,Game.EntityMixin.Chronicle]
+  maxHp: 1,
+  mixins: ["WanderActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker"]
 });

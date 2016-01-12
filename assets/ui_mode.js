@@ -183,8 +183,10 @@ Game.UIMode.gamePlay = {
     display.drawText(1,2,"Avatar X: "+this.getAvatar().getX(),fg,bg); // DEV
     display.drawText(1,3,"Avatar Y: "+this.getAvatar().getY(),fg,bg);
     display.drawText(1,4,"Units moved: "+this.getAvatar().getMoves(),fg,bg);
-    display.drawText(1,5,"Enemy X: "+this.getEnemy().getX(),fg,bg);
-    display.drawText(1,6,"Enemy Y: "+this.getEnemy().getY(),fg,bg);
+    if(this.getEnemy()) {
+      display.drawText(1,5,"Enemy X: "+this.getEnemy().getX(),fg,bg);
+      display.drawText(1,6,"Enemy Y: "+this.getEnemy().getY(),fg,bg);
+    }
   },
   moveAvatar: function (dx, dy) {
     if (this.getAvatar().tryWalk(this.getMap(),dx,dy)) {
@@ -315,6 +317,10 @@ Game.UIMode.gamePersistence = {
     if (this.localStorageAvailable()) {
     //  Game.initializeTimingEngine();
       var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
+      if(json_state_data === null) {
+        Game.Message.sendMessage("No saved game");
+        return false;
+      }
       setTimeout(function(){
         var state_data = JSON.parse(json_state_data);
         console.log('state data: ');
@@ -340,8 +346,8 @@ Game.UIMode.gamePersistence = {
         for (var entityId in state_data.ENTITY) {
           if (state_data.ENTITY.hasOwnProperty(entityId)) {
             var entAttr = JSON.parse(state_data.ENTITY[entityId]);
-            Game.DATASTORE.ENTITY[entityId] = Game.EntityGenerator.create(entAttr._generator_template_key);
-            //Game.DATASTORE.ENTITY[entityId].attr = entAttr;
+            var newE = Game.EntityGenerator.create(entAttr._generator_template_key,entAttr._id);
+            Game.DATASTORE.ENTITY[entityId] = newE;
             Game.DATASTORE.ENTITY[entityId].fromJSON(state_data.ENTITY[entityId]);
           }
         }
@@ -370,7 +376,7 @@ Game.UIMode.gamePersistence = {
      		return true;
      	}
      	catch(e) {
-         Game.Message.send('Sorry, no local data storage is available for this browser');
+         Game.Message.sendMessage('Sorry, no local data storage is available for this browser');
      		return false;
      	}
   },
