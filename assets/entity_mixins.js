@@ -53,7 +53,7 @@ Game.EntityMixin.PlayerActor = {
   act: function () {
     if (this.isActing()) { return; } // a gate to deal with JS timing issues
     this.isActing(true);
-    if(this.attr._PlayerActor_attr.canMove && this.hasOwnProperty('tryWalk')) {
+    if(this.attr._PlayerActor_attr.canMove && this.hasMixin('WalkerCorporeal')) {
         var dx = 0;
         var dy = 0;
         if(this.attr._PlayerActor_attr.direction & 1) {
@@ -90,18 +90,17 @@ Game.EntityMixin.WalkerCorporeal = {
   tryWalk: function (map,dx,dy) {
     var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth());
     var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight());
-    if (map.getEntity(targetX,targetY)) { //Currently cannot walk into tiles occupied by other entities
-      // NOTE: attack/interact handling would go here
-      return false;
+    if (map.getEntity(targetX,targetY) && map.getEntity(targetX,targetY != this)) {
+      this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
     }
     if (map.getTile(targetX,targetY).isWalkable()) {
       this.setPos(targetX,targetY);
       var myMap = this.getMap();
       if (myMap){
+        if ((dx !== 0) || (dy !== 0)) {
+          this.raiseEntityEvent('movedUnit');
+        }
         myMap.updateEntityLocation(this);
-      }
-      if (this.hasMixin('Chronicle')) { // NOTE: this is sub-optimal because it couple this mixin to the Chronicle one (i.e. this needs to know the Chronicle function to call) - the event system will solve this issue
-        this.trackTurn();
       }
       return true;
     }
@@ -115,17 +114,46 @@ Game.EntityMixin.Chronicle = {
     mixinGroup: 'Chronicle',
     stateNamespace: '_Chronicle_attr',
     stateModel:  {
-      turnCounter: 0
+      moveCounter: 0,
+      killLog:{},
+      deathMessage:''
+    },
+    listeners: {
+      'movedUnit': function(evtData) {
+        this.trackMove();
+      },
+      'madeKill': function(evtData) {
+        console.log('chronicle kill');
+        this.addKill(evtData.entKilled);
+      },
+      'killed': function(evtData) {
+        this.attr._Chronicle_attr.deathMessage = 'killed by '+evtData.killedBy.getName();
+      }
     }
   },
-  trackTurn: function () {
-    this.attr._Chronicle_attr.turnCounter++;
+  trackMove: function () {
+    this.attr._Chronicle_attr.moveCounter++;
   },
-  getTurns: function () {
-    return this.attr._Chronicle_attr.turnCounter;
+  getMoves: function () {
+    return this.attr._Chronicle_attr.moveCounter;
   },
-  setTurns: function (n) {
-    this.attr._Chronicle_attr.turnCounter = n;
+  setMoves: function (n) {
+    this.attr._Chronicle_attr.moveCounter = n;
+  },
+  getKills: function () {
+    return this.attr._Chronicle_attr.killLog;
+  },
+  clearKills: function () {
+    this.attr._Chronicle_attr.killLog = {};
+  },
+  addKill: function (entKilled) {
+    var entName = entKilled.getName();
+    console.log('chronicle kill of '+entName);
+    if (this.attr._Chronicle_attr.killLog[entName]) {
+      this.attr._Chronicle_attr.killLog[entName]++;
+  } else {
+      this.attr._Chronicle_attr.killLog[entName] = 1;
+    }
   }
 };
 
@@ -137,11 +165,28 @@ Game.EntityMixin.HitPoints = {
     stateModel:  {
       maxHp: 1,
       curHp: 1
-    },
+    }
+  },
     init: function (template) {
       this.attr._HitPoints_attr.maxHp = template.maxHp || 1;
       this.attr._HitPoints_attr.curHp = template.curHp || this.attr._HitPoints_attr.maxHp;
-    }
+    },
+    listeners: {
+      'attacked': function(evtData) {
+        console.log('HitPoints attacked');
+
+        this.takeHits(evtData.attackPower);
+        this.raiseEntityEvent('damagedBy',{damager:evtData.attacker,damageAmount:evtData.attackPower});
+        evtData.attacker.raiseEntityEvent('dealtDamage',{damagee:this,damageAmount:evtData.attackPower});
+        if (this.getCurHp() <= 0) {
+          this.raiseEntityEvent('killed',{entKilled: this, killedBy: evtData.attacker});
+          evtData.attacker.raiseEntityEvent('madeKill',{entKilled: this, killedBy: evtData.attacker});
+        }
+      },
+      'killed': function(evtData) {
+        console.log('HitPoints killed');
+        this.destroy();
+      }
   },
   getMaxHp: function () {
     return this.attr._HitPoints_attr.maxHp;
@@ -193,17 +238,35 @@ Game.EntityMixin.WanderActor = {
   },
   act: function () {
   Game.TimeEngine.lock();
-     //console.log("begin wander acting");
-    // console.log('wander for '+this.getName());
     var moveDeltas = this.getMoveDeltas();
     if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
-      // console.log('trying to walk to '+moveDeltas.x+','+moveDeltas.y);
       this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
     }
     Game.Scheduler.setDuration(this.getCurrentActionDuration());
     this.setCurrentActionDuration(this.getBaseActionDuration());
     this.raiseEntityEvent('actionDone');
-    // console.log("end wander acting");
-    //Game.TimeEngine.unlock();
+  }
+};
+
+Game.EntityMixin.MeleeAttacker = {
+  META: {
+    mixinName: 'MeleeAttacker',
+    mixinGroup: 'Attacker',
+    stateNamespace: '_MeleeAttacker_attr',
+    stateModel:  {
+      attackPower: 1
+    },
+    init: function (template) {
+      this.attr._MeleeAttacker_attr.attackPower = template.attackPower || 1;
+    },
+    listeners: {
+      'bumpEntity': function(evtData) {
+        console.log('MeleeAttacker bumpEntity');
+        evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor,attackPower:this.getAttackPower()});
+      }
+    }
+  },
+  getAttackPower: function () {
+    return this.attr._MeleeAttacker_attr.attackPower;
   }
 };
