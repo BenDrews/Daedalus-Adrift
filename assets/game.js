@@ -13,7 +13,7 @@ window.onload = function() {
         document.getElementById('wsrl-main-display').appendChild(   Game.getDisplay('main').getContainer());
         document.getElementById('wsrl-message-display').appendChild(   Game.getDisplay('message').getContainer());
 
-        Game.Message.sendMessage("Welcome to WSRL");
+        Game.Message.send("Welcome to WSRL");
         Game.switchUIMode(Game.UIMode.gameStart);
         Game.renderMain();
     }

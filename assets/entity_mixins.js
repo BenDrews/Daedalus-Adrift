@@ -1,5 +1,31 @@
 Game.EntityMixin = {};
 
+Game.EntityMixin.PlayerMessager = {
+  META: {
+    mixinName: 'PlayerMessager',
+    mixinGroup: 'PlayerMessager',
+    listeners: {
+      'walkForbidden': function(evtData) {
+        Game.Message.send('you can\'t walk into the '+evtData.target.getName());
+        Game.renderDisplayMessage();
+      },
+      'dealtDamage': function(evtData) {
+        Game.Message.send('you hit the '+evtData.damagee.getName()+' for '+evtData.damageAmount);
+      },
+      'madeKill': function(evtData) {
+        Game.Message.send('you killed the '+evtData.entKilled.getName());
+      },
+      'damagedBy': function(evtData) {
+        Game.Message.send('the '+evtData.damager.getName()+' hit you for '+evtData.damageAmount);
+      },
+      'killed': function(evtData) {
+        Game.Message.send('you were killed by the '+evtData.killedBy.getName());
+        Game.renderDisplayMessage();
+      }
+    }
+  }
+//    Game.Message.send(msg);
+};
 // Mixins have a META property is is info about/for the mixin itself and then all other properties. The META property is NOT copied into objects for which this mixin is used - all other properies ARE copied in.
 Game.EntityMixin.PlayerActor = {
   META: {
@@ -51,36 +77,41 @@ Game.EntityMixin.PlayerActor = {
     this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction & (~dir);
   },
   act: function () {
-    if (this.isActing()) { return; } // a gate to deal with JS timing issues
-    this.isActing(true);
+    curEntity = this;
     if(this.attr._PlayerActor_attr.canMove && this.hasMixin('WalkerCorporeal')) {
         var dx = 0;
         var dy = 0;
+        var dirMessage = "";
         if(this.attr._PlayerActor_attr.direction & 1) {
           dy--;
+          dirMessage += "N";
         }
         if(this.attr._PlayerActor_attr.direction & 2) {
           dx++;
+          dirMessage += "E";
         }
         if(this.attr._PlayerActor_attr.direction & 4) {
           dy++;
+          dirMessage += "S";
         }
         if(this.attr._PlayerActor_attr.direction & 8) {
           dx--;
+          dirMessage += "W";
         }
-        Game.UIMode.gamePlay.moveAvatar(dx,dy);
-        this.setMovable(false);
-        if(Math.abs(dx) + Math.abs(dy) == 2) {
-          setTimeout(function () {Game.UIMode.gamePlay.getAvatar().setMovable(true);},75 * Math.sqrt(2));
-        } else {
-          setTimeout(function () {Game.UIMode.gamePlay.getAvatar().setMovable(true);},75);
+        Game.Message.ageMessages();
+        if(dx !== 0 || dy !== 0) {
+          Game.UIMode.gamePlay.moveAvatar(dx,dy);
+          Game.Message.send("Walking " + dirMessage);
+          this.setMovable(false);
+          if(Math.abs(dx) + Math.abs(dy) == 2) {
+            setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
+          } else {
+            setTimeout(function () {curEntity.setMovable(true);},75);
+          }
         }
     }
-  //  Game.TimeEngine.lock();
     this.raiseEntityEvent('actionDone');
-    this.isActing(false);
-    var curObj = this;
-    curObj.attr._PlayerActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
+    this.attr._PlayerActor_attr.timeout = setTimeout(function() {curEntity.act();}, 50);
   },
 
   pauseAction: function() {
@@ -105,14 +136,15 @@ Game.EntityMixin.WalkerCorporeal = {
       this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
       return false;
     }
-    if (map.getTile(targetX,targetY).isWalkable()) {
+    var targetTile = map.getTile(targetX,targetY);
+    if (targetTile.isWalkable()) {
       this.setPos(targetX,targetY);
       var myMap = this.getMap();
       if (myMap){
         if ((dx !== 0) || (dy !== 0)) {
           this.raiseEntityEvent('movedUnit');
+          myMap.updateEntityLocation(this);
         }
-        myMap.updateEntityLocation(this);
       }
       return true;
     }
