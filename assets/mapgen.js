@@ -1,11 +1,11 @@
 Game.mapgen = {
   attr: {
-    _mapWidth: 13,
-    _mapHeight: 13,
+    _mapWidth: 3,
+    _mapHeight: 3,
     _roomWidth: 13,
     _roomHeight: 13,
-    _startX: 6,
-    _startY: 6
+    _startX: 1,
+    _startY: 1
   },
   getMapDim: function() {
     return [this.attr._mapWidth,this.attr._mapHeight];

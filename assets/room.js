@@ -36,11 +36,11 @@ Game.Room.prototype.checkGrid = function (roomGrid, x, y) {
   //If the proposed location lies on any border, make sure it does not create a door along that border.
   if(y <= 0 && this.attr._doors.north) {
     return false;
-  } else if(y >= 12 && this.attr._doors.south) {
+  } else if(y >= roomGrid[0].length - 1 && this.attr._doors.south) {
     return false;
   } if(x <= 0 && this.attr._doors.west) {
     return false;
-  } else if(x >= 12 && this.attr._doors.east) {
+  } else if(x >= roomGrid.length - 1 && this.attr._doors.east) {
     return false;
   }
   return true;

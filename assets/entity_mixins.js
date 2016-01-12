@@ -90,7 +90,9 @@ Game.EntityMixin.WalkerCorporeal = {
   tryWalk: function (map,dx,dy) {
     var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth());
     var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight());
-    if (map.getEntity(targetX,targetY) && map.getEntity(targetX,targetY != this)) {
+    var targetEnt = map.getEntity(targetX, targetY);
+    if (targetEnt && targetEnt != this) {
+      console.dir([this, map.getEntity(targetX, targetY)]);
       this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
     }
     if (map.getTile(targetX,targetY).isWalkable()) {
@@ -261,7 +263,7 @@ Game.EntityMixin.MeleeAttacker = {
     },
     listeners: {
       'bumpEntity': function(evtData) {
-        console.log('MeleeAttacker bumpEntity');
+        console.log('MeleeAttacker bumpEntity' + evtData.actor.attr._name + " " + evtData.attr._name);
         evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor,attackPower:this.getAttackPower()});
       }
     }
