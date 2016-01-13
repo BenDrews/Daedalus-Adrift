@@ -24,8 +24,8 @@ Game.Tile.prototype.getName = function () {
 Game.Tile.prototype.isWalkable = function () {
   return this.attr._walkable;
 };
-Game.Tile.prototype.isDiggable = function () {
-  return this.attr._diggable;
+Game.Tile.prototype.isOpaque = function () {
+  return this.attr._opaque;
 };
 //-----------------------------------------------------------------------------
 

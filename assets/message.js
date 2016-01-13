@@ -5,6 +5,7 @@ Game.Message = {
     archivedMessagesQueue: [],
     archiveMessageLimit: 200
   },
+  paceMaker: null,
   renderOn: function (display) {
     //console.dir(this.attr);
     display.clear();
@@ -22,12 +23,14 @@ Game.Message = {
       dispRow += display.drawText(1,dispRow,'%c{#aaa}%b{#000}'+this.attr.staleMessagesQueue[staleMsgIdx]+'%c{}%b{}',79);
     }
   },
+  startMessages: function () {
+    message = this;
+    this.paceMaker = setInterval(function () {message.ageMessages(5);}, 2000);
+  },
+  pauseMessages: function () {
+    clearInterval(this.paceMaker);
+  },
   ageMessages:function (lastStaleMessageIdx) {
-    //console.log('age messages');
-    // always archive the oldest stale message
-    if (this.attr.staleMessagesQueue.length > 0) {
-      this.attr.archivedMessagesQueue.unshift(this.attr.staleMessagesQueue.pop());
-    }
     // archive any additional stale messages that didn't get shown
     while (this.attr.staleMessagesQueue.length > lastStaleMessageIdx) {
       this.attr.archivedMessagesQueue.unshift(this.attr.staleMessagesQueue.pop());
@@ -38,7 +41,7 @@ Game.Message = {
     }
     // move fresh messages to stale messages
     while (this.attr.freshMessagesReverseQueue.length > 0) {
-      this.attr.staleMessagesQueue.unshift(this.attr.freshMessagesReverseQueue.shift());
+      this.attr.staleMessagesQueue.unshift(this.attr.freshMessagesReverseQueue.pop());
     }
   },
   send: function (msg) {
