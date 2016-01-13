@@ -14,7 +14,7 @@ window.onload = function() {
         document.getElementById('wsrl-message-display').appendChild(   Game.getDisplay('message').getContainer());
 
         Game.Message.send("Welcome to WSRL");
-        Game.switchUIMode(Game.UIMode.gameStart);
+        Game.switchUIMode('gameStart');
         Game.renderMain();
     }
 };
@@ -39,7 +39,7 @@ var Game = {
   },
   _PERSISTENCE_NAMESPACE: 'wsrlgame',
   _game: null,
-  _curUIMode: null,
+  _uiModeNameStack: [],
   _randomSeed: 0,
   TRANSIENT_RNG: null,
   _bgMusic: null,
@@ -65,7 +65,7 @@ var Game = {
     bindEventToScreen('keypress');
     bindEventToScreen('keydown');
     bindEventToScreen('keyup');
-    this.switchUIMode(this.UIMode.gameStart);
+    this.switchUIMode('gameStart');
     this.renderAll();
   },
   getRandomSeed: function () {
@@ -90,14 +90,14 @@ var Game = {
   },
   renderAvatar: function() {
     this.DISPLAYS.avatar.o.clear();
-    if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnAvatar')) {
-      this._curUIMode.renderOnAvatar(this.DISPLAYS.avatar.o);
+    if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('renderOnAvatar')) {
+      this.getCurUIMode().renderOnAvatar(this.DISPLAYS.avatar.o);
     }
   },
   renderMain: function() {
     this.DISPLAYS.main.o.clear();
-    if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnMain')) {
-      this._curUIMode.renderOnMain(this.DISPLAYS.main.o);
+    if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('renderOnMain')) {
+      this.getCurUIMode().renderOnMain(this.DISPLAYS.main.o);
     } else {
       this.DISPLAYS.main.o.drawText(2, 1, "Main display");
     }
@@ -105,21 +105,61 @@ var Game = {
   renderMessage: function() {
   Game.Message.renderOn(this.DISPLAYS.message.o);
 },
-switchUIMode: function(newMode) {
-  if(this._curUIMode) {
-    this._curUIMode.exit();
-  }
-  this._curUIMode = newMode;
-  if(this._curUIMode){
-    this._curUIMode.enter();
-  }
-  this.renderAll();
+  hideDisplayMessage: function() {
+    this.DISPLAYS.message.o.clear();
+  },
+  specialMessage: function(msg) {
+    this.DISPLAYS.message.o.clear();
+    this.DISPLAYS.message.o.drawText(1,1,'%c{#fff}%b{#000}'+msg,79);
+  },
+getCurUIMode: function () {
+    var uiModeName = this._uiModeNameStack[0];
+    if (uiModeName) {
+      return Game.UIMode[uiModeName];
+      }
+    return null;
+  },
+  switchUIMode: function (newUiModeName) {
+    if (newUiModeName.startsWith('LAYER_')) {
+      console.log('cannot switchUiMode to layer '+newUiModeName);
+      return;
+    }
+    var curMode = this.getCurUIMode();
+    if (curMode !== null) {
+      curMode.exit();
+    }
+    this._uiModeNameStack[0] = newUiModeName;
+    var newMode = Game.UIMode[newUiModeName];
+    if (newMode) {
+      newMode.enter();
+    }
+    this.renderAll();
+  },
+  pushUIMode: function (newUiModeLayerName) {
+    if (! newUiModeLayerName.startsWith('LAYER_')) {
+      console.log('addUiMode not possible for non-layer '+newUiModeLayerName);
+      return;
+    }
+    this._uiModeNameStack.unshift(newUiModeLayerName);
+    var newMode = Game.UIMode[newUiModeLayerName];
+    if (newMode) {
+      newMode.enter();
+      }
+      this.renderAll();
+  },
+  popUIMode: function () {
+    var curMode = this.getCurUIMode();
+    if (curMode !== null) {
+      curMode.exit();
+    }
+    this._uiModeNameStack.shift();
+    this.renderAll();
 },
   eventHandler: function(eventType, evt) {
     console.log(eventType);
     console.dir(evt);
-    if (this._curUIMode && this._curUIMode.hasOwnProperty('handleInput')) {
-      this._curUIMode.handleInput(eventType, evt);
+    if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('handleInput')) {
+      this.getCurUIMode().handleInput(eventType, evt);
     }
   }
   //TODO: toJSON method
