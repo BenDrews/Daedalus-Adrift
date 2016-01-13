@@ -3,9 +3,10 @@ Game.Message = {
     freshMessagesReverseQueue: [],
     staleMessagesQueue: [],
     archivedMessagesQueue: [],
-    archiveMessageLimit: 200
+    archiveMessageLimit: 200,
+    messageTimeoutQueue: [],
+    relevantTime: 1500
   },
-  paceMaker: null,
   renderOn: function (display) {
     //console.dir(this.attr);
     display.clear();
@@ -23,14 +24,10 @@ Game.Message = {
       dispRow += display.drawText(1,dispRow,'%c{#aaa}%b{#000}'+this.attr.staleMessagesQueue[staleMsgIdx]+'%c{}%b{}',79);
     }
   },
-  startMessages: function () {
-    message = this;
-    this.paceMaker = setInterval(function () {message.ageMessages(5);}, 2000);
-  },
-  pauseMessages: function () {
-    clearInterval(this.paceMaker);
-  },
   ageMessages:function (lastStaleMessageIdx) {
+    while (this.attr.freshMessagesReverseQueue.length > lastStaleMessageIdx) {
+      this.attr.staleMessagesQueue.unshift(this.attr.freshMessagesReverseQueue.pop());
+    }
     // archive any additional stale messages that didn't get shown
     while (this.attr.staleMessagesQueue.length > lastStaleMessageIdx) {
       this.attr.archivedMessagesQueue.unshift(this.attr.staleMessagesQueue.pop());
@@ -40,12 +37,17 @@ Game.Message = {
       this.attr.archivedMessagesQueue.pop();
     }
     // move fresh messages to stale messages
-    while (this.attr.freshMessagesReverseQueue.length > 0) {
+    if (this.attr.freshMessagesReverseQueue.length > 0) {
       this.attr.staleMessagesQueue.unshift(this.attr.freshMessagesReverseQueue.pop());
     }
   },
   send: function (msg) {
     this.attr.freshMessagesReverseQueue.push(msg); // new messages get added to the end of the fresh message queue so that sequential things are in the right order (e.g. you hit the goblin, you kill the goblin)
+    message = this;
+    this.attr.messageTimeoutQueue.unshift(setTimeout(function () {message.ageMessages(5);}, this.attr.relevantTime));
+    while(this.attr.messageTimeoutQueue.length > 5) {
+      clearTimeout(this.attr.messageTimeoutQueue.pop());
+    }
     Game.renderMessage();
   },
   clear: function () {

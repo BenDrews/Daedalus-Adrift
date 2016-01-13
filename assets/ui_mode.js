@@ -3,11 +3,9 @@ Game.UIMode = {};
 Game.UIMode.gameStart = {
   enter: function () {
     console.log("Game.UIMode.gameStart enter");
-    Game.Message.startMessages();
   },
   exit: function () {
     Game.Message.clear();
-    Game.Message.pauseMessages();
     console.log("Game.UIMode.gameStart exit");
   },
   handleInput: function (eventType, evt) {
@@ -54,7 +52,6 @@ Game.UIMode.gamePlay = {
   },
   enter: function () {
     Game.Message.clear();
-    Game.Message.startMessages();
     Game.DISPLAYS.main.o.setOptions(Game.tileSet.options);
     if(this.attr._avatarId) {
       this.setCameraToAvatar();
@@ -75,7 +72,6 @@ Game.UIMode.gamePlay = {
     Game._bgMusic.pause();
     Game.UIMode.gamePlay.destroyActLoop();
     clearInterval(this.paceMaker);
-    Game.Message.pauseMessages();
   },
   getMap: function () {
     return Game.DATASTORE.MAP[this.attr._mapId];
