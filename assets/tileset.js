@@ -1,27 +1,45 @@
-
+Game.tileSet = document.createElement("img");
+Game.tileSet.src = "assets/oryx_world_sprites.png";
 Game.tileSet.options = {
     layout: "tile",
     bg: "transparent",
-    tileWidth: 64,
-    tileHeight: 64,
+    tileWidth: 14,
+    tileHeight: 14,
     tileSet: Game.tileSet,
     tileMap: {
-        "@": [0, 0],
-        "#": [0, 64],
-        "a": [64, 0],
-        "!": [64, 64]
-    },
-    width: Game.DISPLAYS.main.w,
-    height: Game.DISPLAYS.main.h
-};
-
-  Game.tileSet.onload = function(display) {
-      display.draw(3, 3, "@");
-      display.draw(0, 0, "#");
-      display.draw(0, 1, "#");
-      display.draw(1, 0, "#");
-      display.draw(0, 2, "#");
-      display.draw(2, 2, "a");
-      display.draw(2, 0, "!");
-      display.draw(2, 1, "!");
-  };
+        "@": [129, 43],
+        "#": [0, 14],
+        "+": [14, 0],
+        "%": [143,43],
+        " ": [14, 14],
+        "b": [0, 0],
+        "c": [0, 172],
+        "d": [14, 129],
+        "e": [115, 0],
+        "f": [157.5, 0],
+        "g": [186, 0],
+        "h": [200, 0],
+        "i": [215, 0],
+        "j": [229, 0],
+        "k": [86, 29],
+        "l": [115, 172],
+        "m": [158, 172],
+        "n": [186, 172],
+        "o": [200, 172],
+        "p": [215, 172],
+        "q": [229, 172],
+        "r": [85, 200],
+        "s": [115, 86],
+        "t": [158, 86],
+        "u": [186, 86],
+        "v": [200, 86],
+        "w": [215, 86],
+        "x": [229, 86],
+        "y": [85, 115],
+        "1": [486, 0],
+        "2": [472, 0],
+        "3": [458, 0],
+        "4": [486, 14],
+        "5": [486, 28],
+        "6": [486, 42]
+    }, width: 57, height: 26};

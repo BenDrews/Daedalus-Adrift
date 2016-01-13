@@ -1,7 +1,6 @@
 console.log("hello console");
 
 window.onload = function() {
-    console.log("starting WSRL - window loaded");
     // Check if rot.js can work on this browser
     if (!ROT.isSupported()) {
         alert("The rot.js library isn't supported by your browser.");
@@ -14,7 +13,7 @@ window.onload = function() {
         document.getElementById('wsrl-main-display').appendChild(   Game.getDisplay('main').getContainer());
         document.getElementById('wsrl-message-display').appendChild(   Game.getDisplay('message').getContainer());
 
-        Game.Message.sendMessage("Welcome to WSRL");
+        Game.Message.send("Welcome to WSRL");
         Game.switchUIMode(Game.UIMode.gameStart);
         Game.renderMain();
     }
@@ -36,29 +35,26 @@ var Game = {
       w: 100,
       h: 6,
       o: null
-    }
+    },
   },
   _PERSISTENCE_NAMESPACE: 'wsrlgame',
   _game: null,
   _curUIMode: null,
   _randomSeed: 0,
+  TRANSIENT_RNG: null,
+  _bgMusic: null,
+  DATASTORE: {},
+  TimeEngine: null,
   init: function () {
     this._game = this;
-    Game.tileSet = document.createElement("img");
-    Game.tileSet.src = "assets/oryx_16bit_scifi_world.png";
-    Game.setRandomSeed(5 + Math.floor(ROT.RNG.getUniform()*100000));
+    this.TRANSIENT_RNG = ROT.RNG.clone();
+    Game.setRandomSeed(5 + Math.floor(this.TRANSIENT_RNG.getUniform()*100000));
 
     console.log("RogueLike initialization");
     for (var displayName in this.DISPLAYS) {
       if(this.DISPLAYS.hasOwnProperty(displayName)){
-        console.log(displayName);
-        if (displayName === 'main') {
-          this.DISPLAYS[displayName].o = new ROT.Display({  width: Game.DISPLAYS.main.w,
-            height: Game.DISPLAYS.main.h});
-          console.log("Made it");
-        } else {
-          this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
-        }
+        console.log("Initializing display: " + displayName);
+        this.DISPLAYS[displayName].o = new ROT.Display({width:Game.DISPLAYS[displayName].w, height:Game.DISPLAYS[displayName].h});
       }
     }
     var bindEventToScreen = function(eventType) {
@@ -68,6 +64,7 @@ var Game = {
     };
     bindEventToScreen('keypress');
     bindEventToScreen('keydown');
+    bindEventToScreen('keyup');
     this.switchUIMode(this.UIMode.gameStart);
     this.renderAll();
   },
@@ -77,6 +74,7 @@ var Game = {
   setRandomSeed: function (s) {
     this._randomSeed = s;
     console.log("using random seed " +this._randomSeed);
+    this.DATASTORE[Game.UIMode.gamePersistence.RANDOM_SEED_KEY] = this._randomSeed;
     ROT.RNG.setSeed(this._randomSeed);
   },
   getDisplay: function(displayName){
@@ -94,8 +92,6 @@ var Game = {
     this.DISPLAYS.avatar.o.clear();
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnAvatar')) {
       this._curUIMode.renderOnAvatar(this.DISPLAYS.avatar.o);
-    } else {
-      this.DISPLAYS.avatar.o.drawText(2, 1, "avatar display");
     }
   },
   renderMain: function() {
@@ -103,11 +99,10 @@ var Game = {
     if (this._curUIMode && this._curUIMode.hasOwnProperty('renderOnMain')) {
       this._curUIMode.renderOnMain(this.DISPLAYS.main.o);
     } else {
-      this.DISPLAYS.main.o.drawText(2, 1, "main display");
+      this.DISPLAYS.main.o.drawText(2, 1, "Main display");
     }
   },
   renderMessage: function() {
-  //    this.DISPLAYS.message.o.drawText(2,3,"Message Display");
   Game.Message.renderOn(this.DISPLAYS.message.o);
 },
 switchUIMode: function(newMode) {
@@ -126,11 +121,6 @@ switchUIMode: function(newMode) {
     if (this._curUIMode && this._curUIMode.hasOwnProperty('handleInput')) {
       this._curUIMode.handleInput(eventType, evt);
     }
-  },
-  toJSON: function () {
-    var json = {};
-    json._randomSeed = this._randomSeed;
-        json[Game.UIMode.gamePlay.JSON_KEY] = Game.UIMode.gamePlay.toJSON();
-    return json;
   }
+  //TODO: toJSON method
 };
