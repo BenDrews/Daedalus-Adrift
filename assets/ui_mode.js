@@ -174,6 +174,7 @@ Game.UIMode.gamePlay = {
   // TODO: delete dev code
   for(var ecount = 0; ecount < 80; ecount++) {
     this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkableLocation());
+
   }
 
 //  Game.Scheduler.add(this.getEnemy(),true, 0.1);

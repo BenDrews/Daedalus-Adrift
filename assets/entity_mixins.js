@@ -273,6 +273,88 @@ Game.EntityMixin.WanderActor = {
   setCurrentActionDuration: function (n) {
     this.attr._WanderActor_attr.currentActionDuration = n;
   },
+
+  getMoveDeltas: function () {
+    var avatar = Game.UIMode.gamePlay.getAvatar();
+      // build a path instance for the avatar
+      var source = this;
+      var map = this.getMap();
+      if (avatar !== undefined) {
+        var avatarX = avatar.getX();
+        var avatarY = avatar.getY();
+      var path = new ROT.Path.AStar(avatarX, avatarY, function(x, y) {
+          // If an entity is present at the tile, can't move there.
+          var entity = map.getEntity(x, y);
+          if (entity && entity !== avatar && entity !== source) {
+              return false;
+          }
+          return map.getTile(x, y).isWalkable();
+      }, {topology: 8});
+
+      // compute the path from here to there
+      var count = 0;
+      var moveDeltas = {x:0,y:0};
+      path.compute(this.getX(), this.getY(), function(x, y) {
+          if (count == 1) {
+              moveDeltas.x = x - source.getX();
+              moveDeltas.y = y - source.getY();
+          }
+          count++;
+      });
+      return moveDeltas;
+    } else {
+      return {x:0, y:0};
+    }
+  },
+  act: function () {
+    // console.log("begin wander acting");
+    // console.log('wander for '+this.getName());
+    var moveDeltas = this.getMoveDeltas();
+    if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
+      this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
+    }
+    this.setCurrentActionDuration(this.getBaseActionDuration()+Game.util.randomInt(-10,10));
+    this.raiseEntityEvent('actionDone');
+    var curObj = this;
+    curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act();}, 250);
+    // console.log("end wander acting");
+  },
+  pauseAction: function() {
+    var curObj = this;
+    if (curObj.attr._WanderActor_attr.timeout){
+      clearTimeout(curObj.attr._WanderActor_attr.timeout);
+    }
+  }
+
+};
+
+Game.EntityMixin.ShooterActor = {
+  META: {
+    mixinName: 'ShooterActor',
+    mixinGroup: 'Actor',
+    stateNamespace: '_ShooterActor_attr',
+    stateModel:  {
+      baseActionDuration: 1000,
+      currentActionDuration: 1000,
+      timeout: null,
+      integer: 0
+    },
+    init: function (template) {
+//      Game.Scheduler.add(this,true, 2);
+    }
+  },
+  getBaseActionDuration: function () {
+    return this.attr._ShooterActor_attr.baseActionDuration;
+  },
+  setBaseActionDuration: function (n) {
+    this.attr._ShooterActor_attr.baseActionDuration = n;
+  },
+  getCurrentActionDuration: function () {
+    return this.attr._ShooterActor_attr.currentActionDuration;
+  },
+  setCurrentActionDuration: function (n) {
+    this.attr._ShooterActor_attr.currentActionDuration = n;
+  },
   getMoveDeltas: function () {
     return Game.util.positionsAdjacentTo({x:0,y:0}).random();
   },
@@ -281,16 +363,29 @@ Game.EntityMixin.WanderActor = {
     if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
       this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
     }
+    if (this.attr._ShooterActor_attr.integer >= 50) {
+      var projectile = Game.EntityGenerator.create('projectile');
+      Game.UIMode.gamePlay.getMap().addEntity(projectile, this.getPos());
+      projectile.act();
+      projectile.attr._Projectile_attr.firedBy = this;
+      console.log(projectile);
+      this.attr._ShooterActor_attr.integer = 0;
+    } else {
+      this.attr._ShooterActor_attr.integer += 1;
+    }
+  //projectile.attr._Projectile_attr.firedBy = this;
+
+    //projectile.attr._Projectile_attr.firedBy = this;
     this.setCurrentActionDuration(this.getBaseActionDuration());
     this.raiseEntityEvent('actionDone');
     var curObj = this;
-    curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
+    curObj.attr._ShooterActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
   },
 
   pauseAction: function() {
     var curObj = this;
-    if (curObj.attr._WanderActor_attr.timeout){
-      clearTimeout(curObj.attr._WanderActor_attr.timeout);
+    if (curObj.attr._ShooterActor_attr.timeout){
+      clearTimeout(curObj.attr._ShooterActor_attr.timeout);
     }
   }
 };
@@ -315,5 +410,34 @@ Game.EntityMixin.MeleeAttacker = {
   },
   getAttackPower: function () {
     return this.attr._MeleeAttacker_attr.attackPower;
+  }
+};
+
+Game.EntityMixin.Projectile = {
+  META: {
+    mixinName: 'Projectile',
+    mixinGroup: 'Projectile',
+    stateNamespace: '_Projectile_attr',
+    stateModel:  {
+      attackPower: 1,
+      firedBy: null,
+      direction: 0
+    },
+    init: function (template) {
+      this.attr._Projectile_attr.attackPower = template.attackPower || 1;
+    },
+    listeners: {
+      'bumpEntity': function(evtData) {
+        if (this.attr._Projectile_attr.firedBy!== evtData.recipient) {
+        console.log('Projectile bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
+        evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor.attr._Projectile_attr.firedBy,attackPower:this.getAttackPower()});
+        this.destroy();
+        }
+
+      }
+    }
+  },
+  getAttackPower: function () {
+    return this.attr._Projectile_attr.attackPower;
   }
 };
