@@ -1,3 +1,10 @@
+if (!String.prototype.startsWith) { // nabbed from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+  String.prototype.startsWith = function(searchString, position) {
+    position = position || 0;
+    return this.indexOf(searchString, position) === position;
+   };
+ }
+
 Game.util = {
 
   randomString: function (len) {
@@ -36,5 +43,9 @@ Game.util = {
       }
     }
     return adjPos;
-  }
+  },
+
+  getDisplayDim: function (display) {
+   return {w:display._options.width, h:display._options.height};
+ },
 };
