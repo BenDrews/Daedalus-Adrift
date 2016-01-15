@@ -2,6 +2,8 @@ Game.DATASTORE.ENTITY = {};
 
 Game.Entity = function(template) {
     template = template || {};
+    // console.log("creating entity using template");
+    // console.dir(template);
     Game.Symbol.call(this, template);
     if (! ('attr' in this)) { this.attr = {}; }
     this.attr._name = template.name || '';
@@ -10,7 +12,7 @@ Game.Entity = function(template) {
     this.attr._generator_template_key = template.generator_template_key || '';
     this.attr._mapId = null;
 
-    this.attr._id = template.presetId || Game.util.randomString(32);
+    this.attr._id = template.presetId || Game.util.uniqueId();
     Game.DATASTORE.ENTITY[this.attr._id] = this;
 
     // mixin sutff
@@ -21,12 +23,16 @@ Game.Entity = function(template) {
       this._mixins.push(Game.EntityMixin[this._mixinNames[i]]);
     }
     this._mixinTracker = {};
-
-    for (i = 0; i < this._mixins.length; i++) {
-      var mixin = this._mixins[i];
+    // console.dir(template);
+    // console.dir(template.mixins);
+    // console.dir(this._mixins);
+    for (var mi = 0; mi < this._mixins.length; mi++) {
+      var mixin = this._mixins[mi];
+      // console.dir(mixin);
       this._mixinTracker[mixin.META.mixinName] = true;
       this._mixinTracker[mixin.META.mixinGroup] = true;
-      for (var mixinProp in mixinProp != 'META' && mixin) {
+      for (var mixinProp in mixin) {
+        // console.log("checking mixin prop "+mixinProp);
         if (mixinProp != 'META' && mixin.hasOwnProperty(mixinProp)) {
           this[mixinProp] = mixin[mixinProp];
         }
@@ -36,7 +42,7 @@ Game.Entity = function(template) {
         for (var mixinStateProp in mixin.META.stateModel) {
           if (mixin.META.stateModel.hasOwnProperty(mixinStateProp)) {
             if (typeof mixin.META.stateModel[mixinStateProp] == 'object') {
-              this.attr[mixin.META.stateNamespace][mixinStateProp] = JSON.parse(JSON.stringify(mixin.META.stateModel[mixinStateProp])); //Don't include functions, just properties
+              this.attr[mixin.META.stateNamespace][mixinStateProp] = JSON.parse(JSON.stringify(mixin.META.stateModel[mixinStateProp]));
             } else {
               this.attr[mixin.META.stateNamespace][mixinStateProp] = mixin.META.stateModel[mixinStateProp];
             }
@@ -58,6 +64,24 @@ Game.Entity.prototype.hasMixin = function(checkThis) {
     }
 };
 
+Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
+  for (var i = 0; i < this._mixins.length; i++) {
+    var mixin = this._mixins[i];
+    if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
+      mixin.META.listeners[evtLabel].call(this,evtData);
+    }
+  }
+};
+
+Game.Entity.prototype.destroy = function() {
+    //remove from map
+    this.getMap().extractEntity(this);
+    //remove from datastore
+    Game.DATASTORE.ENTITY[this.getId()] = undefined;
+    // remove from Scheduler
+    Game.Scheduler.remove(this);
+};
+
 Game.Entity.prototype.getId = function() {
     return this.attr._id;
 };
@@ -65,9 +89,11 @@ Game.Entity.prototype.getId = function() {
 Game.Entity.prototype.getMap = function() {
     return Game.DATASTORE.MAP[this.attr._mapId];
 };
-
 Game.Entity.prototype.setMap = function(map) {
     this.attr._mapId = map.getId();
+};
+Game.Entity.prototype.getMapId = function() {
+    return this.attr._mapId;
 };
 
 Game.Entity.prototype.getName = function() {
@@ -85,7 +111,7 @@ Game.Entity.prototype.setPos = function(x_or_xy,y) {
     this.attr._y = y;
   }
 };
-Game.Entity.prototype.getPos = function() {
+Game.Entity.prototype.getPos = function () {
   return {x:this.attr._x,y:this.attr._y};
 };
 Game.Entity.prototype.getX = function() {
@@ -107,23 +133,4 @@ Game.Entity.prototype.toJSON = function () {
 };
 Game.Entity.prototype.fromJSON = function (json) {
   Game.UIMode.gamePersistence.BASE_fromJSON.call(this,json);
-};
-
-Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
-  for (var i = 0; i < this._mixins.length; i++) {
-    var mixin = this._mixins[i];
-    if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
-      mixin.META.listeners[evtLabel].call(this,evtData);
-    }
-  }
-};
-
-Game.Entity.prototype.destroy = function() {
-    //remove from map
-    this.getMap().extractEntity(this);
-    if(this.hasOwnProperty('pauseAction')) {
-      this.pauseAction();
-    }
-    //remove from datastore
-    delete Game.DATASTORE.ENTITY[this.getId()];
 };

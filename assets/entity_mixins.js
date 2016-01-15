@@ -319,6 +319,19 @@ Game.EntityMixin.WanderActor = {
     curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act();}, 250);
     // console.log("end wander acting");
   },
+  act2: function () {
+    // console.log("begin wander acting");
+    // console.log('wander for '+this.getName());
+    var moveDeltas = this.getMoveDeltas();
+    if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
+      this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
+    }
+    this.setCurrentActionDuration(this.getBaseActionDuration()+Game.util.randomInt(-10,10));
+    this.raiseEntityEvent('actionDone');
+    var curObj = this;
+    curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act2();}, 550);
+    // console.log("end wander acting");
+  },
   pauseAction: function() {
     var curObj = this;
     if (curObj.attr._WanderActor_attr.timeout){
@@ -334,8 +347,8 @@ Game.EntityMixin.ShooterActor = {
     mixinGroup: 'Actor',
     stateNamespace: '_ShooterActor_attr',
     stateModel:  {
-      baseActionDuration: 1000,
-      currentActionDuration: 1000,
+      baseActionDuration: 1500,
+      currentActionDuration: 1500,
       timeout: null,
       integer: 0
     },
@@ -366,7 +379,7 @@ Game.EntityMixin.ShooterActor = {
     if (this.attr._ShooterActor_attr.integer >= 50) {
       var projectile = Game.EntityGenerator.create('projectile');
       Game.UIMode.gamePlay.getMap().addEntity(projectile, this.getPos());
-      projectile.act();
+      projectile.act2();
       projectile.attr._Projectile_attr.firedBy = this;
       console.log(projectile);
       this.attr._ShooterActor_attr.integer = 0;
@@ -379,7 +392,7 @@ Game.EntityMixin.ShooterActor = {
     this.setCurrentActionDuration(this.getBaseActionDuration());
     this.raiseEntityEvent('actionDone');
     var curObj = this;
-    curObj.attr._ShooterActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
+    curObj.attr._ShooterActor_attr.timeout = setTimeout(function() {curObj.act();}, 150);
   },
 
   pauseAction: function() {
@@ -403,7 +416,7 @@ Game.EntityMixin.MeleeAttacker = {
     },
     listeners: {
       'bumpEntity': function(evtData) {
-        console.log('MeleeAttacker bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
+        console.log('MeleeAttacker bumpEntity' + evtData.actor.attr._name + " potatoes" + evtData.recipient.attr._name);
         evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor,attackPower:this.getAttackPower()});
       }
     }
@@ -429,7 +442,7 @@ Game.EntityMixin.Projectile = {
     listeners: {
       'bumpEntity': function(evtData) {
         if (this.attr._Projectile_attr.firedBy!== evtData.recipient) {
-        console.log('Projectile bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
+        console.log('Projectile bumpEntity' + evtData.actor.attr._name + "lava " + evtData.recipient.attr._name);
         evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor.attr._Projectile_attr.firedBy,attackPower:this.getAttackPower()});
         this.destroy();
         }
@@ -439,5 +452,96 @@ Game.EntityMixin.Projectile = {
   },
   getAttackPower: function () {
     return this.attr._Projectile_attr.attackPower;
+  }
+};
+
+Game.EntityMixin.Sight = {
+  META: {
+    mixinName: 'Sight',
+    mixinGroup: 'Sense',
+    stateNamespace: '_Sight_attr',
+    stateModel:  {
+      sightRadius: 13
+    },
+    init: function (template) {
+      this.attr._Sight_attr.sightRadius = template.sightRadius || 13;
+    }
+  },
+  getSightRadius: function () {
+    return this.attr._Sight_attr.sightRadius;
+  },
+  setSightRadius: function (n) {
+    this.attr._Sight_attr.sightRadius = n;
+  },
+
+  canSeeEntity: function(entity) {
+      // If not on the same map or on different maps, then exit early
+      if (!entity || this.getMapId() !== entity.getMapId()) {
+          return false;
+      }
+      return this.canSeeCoord(entity.getX(),entity.getY());
+  },
+  canSeeCoord: function(x_or_pos,y) {
+    var otherX = x_or_pos,otherY=y;
+    if (typeof x_or_pos == 'object') {
+      otherX = x_or_pos.x;
+      otherY = x_or_pos.y;
+    }
+
+    // If we're not within the sight radius, then we won't be in a real field of view either.
+    if (Math.max(Math.abs(otherX - this.getX()),Math.abs(otherY - this.getY())) > this.attr._Sight_attr.sightRadius) {
+      return false;
+    }
+
+    var inFov = this.getVisibleCells();
+    return inFov[otherX+','+otherY] || false;
+  },
+  getVisibleCells: function() {
+      var visibleCells = {'byDistance':{}};
+      for (var i=0;i<=this.getSightRadius();i++) {
+          visibleCells.byDistance[i] = {};
+      }
+      this.getMap().getFov().compute(
+          this.getX(), this.getY(),
+          this.getSightRadius(),
+          function(x, y, radius, visibility) {
+              visibleCells[x+','+y] = true;
+              visibleCells.byDistance[radius][x+','+y] = true;
+          }
+      );
+      return visibleCells;
+  },
+  canSeeCoord_delta: function(dx,dy) {
+      return this.canSeeCoord(this.getX()+dx,this.getY()+dy);
+  }
+};
+
+
+Game.EntityMixin.MapMemory = {
+  META: {
+    mixinName: 'MapMemory',
+    mixinGroup: 'MapMemory',
+    stateNamespace: '_MapMemory_attr',
+    stateModel:  {
+      mapsHash: {}
+    },
+    init: function (template) {
+      this.attr._MapMemory_attr.mapsHash = template.mapsHash || {};
+    }
+  },
+  rememberCoords: function (coordSet,mapId) {
+    var mapKey=mapId || this.getMapId();
+    if (! this.attr._MapMemory_attr.mapsHash[mapKey]) {
+      this.attr._MapMemory_attr.mapsHash[mapKey] = {};
+    }
+    for (var coord in coordSet) {
+      if (coordSet.hasOwnProperty(coord) && (coord != 'byDistance')) {
+        this.attr._MapMemory_attr.mapsHash[mapKey][coord] = true;
+      }
+    }
+  },
+  getRememberedCoordsForMap: function (mapId) {
+    var mapKey=mapId || this.getMapId();
+    return this.attr._MapMemory_attr.mapsHash[mapKey] || {};
   }
 };

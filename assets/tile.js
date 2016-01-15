@@ -4,7 +4,10 @@ Game.Tile = function (properties) {
   if (! ('attr' in this)) { this.attr = {}; }
   this.attr._name = properties.name || 'unknown';
   this.attr._walkable = properties.walkable||false;
-  this.attr._opaque = properties.opaque||false;
+  this.attr._diggable = properties.diggable||false;
+  this.attr._transparent = properties.transparent || false;
+  this.attr._opaque = (properties.opaque !== undefined) ? properties.opaque : (! this.attr._transparent);
+  this.attr._transparent = ! this.attr._opaque;
 };
 Game.Tile.extend(Game.Symbol);
 
@@ -27,19 +30,23 @@ Game.Tile.prototype.isWalkable = function () {
 Game.Tile.prototype.isOpaque = function () {
   return this.attr._opaque;
 };
+
+Game.Tile.prototype.isTransparent = function () {
+  return this.attr._transparent;
+};
 //-----------------------------------------------------------------------------
 
 
 Game.Tile.nullTile = new Game.Tile({name: 'nullTile'});
 Game.Tile.bgTiles = [new Game.Tile({name: 'bg1Tile', chr: '1'}),
-  new Game.Tile({name: 'bg2Tile', chr: '2'}),
-  new Game.Tile({name: 'bg3Tile', chr: '3'}),
-  new Game.Tile({name: 'bg4Tile', chr: '4'}),
-  new Game.Tile({name: 'bg5Tile', chr: '5'}),
-  new Game.Tile({name: 'bg6Tile', chr: '6'})];
+  new Game.Tile({name: 'bg2Tile', chr: '2',transparent: true}),
+  new Game.Tile({name: 'bg3Tile', chr: '3',transparent: true}),
+  new Game.Tile({name: 'bg4Tile', chr: '4',transparent: true}),
+  new Game.Tile({name: 'bg5Tile', chr: '5',transparent: true}),
+  new Game.Tile({name: 'bg6Tile', chr: '6',transparent: true})];
 
 Game.Tile.floorTile = new Game.Tile({name: 'floor', chr: 'a', walkable: true});
-Game.Tile.blackFloorTile = new Game.Tile({name: 'blackFloor', chr: 'b', walkable: true});
+Game.Tile.blackFloorTile = new Game.Tile({name: 'blackFloor', chr: 'b', walkable: true, transparent: true});
 Game.Tile.blueFloorTile = new Game.Tile({name: 'blueFloor', chr: 'c', walkable: true});
 Game.Tile.greenFloorTile = new Game.Tile({name: 'greenFloor', chr: 'd', walkable: true});
 Game.Tile.wallTile = new Game.Tile({name:'wall', chr:'#', opaque: true});

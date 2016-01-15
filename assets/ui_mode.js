@@ -131,7 +131,12 @@ Game.UIMode.gamePlay = {
     display.clear();
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
     var bg = Game.UIMode.DEFAULT_COLOR_BG;
-    this.getMap().renderOn(display, this.attr._cameraX, this.attr._cameraY);
+    var seenCells = this.getAvatar().getVisibleCells();
+    this.getMap().renderOn(display,this.attr._cameraX,this.attr._cameraY,{
+      visibleCells:seenCells,
+      maskedCells:this.getAvatar().getRememberedCoordsForMap()
+      });
+    this.getAvatar().rememberCoords(seenCells);
   },
   renderOnAvatar: function(display) {
     var fg = Game.UIMode.DEFAULT_COLOR_FG;
@@ -167,13 +172,13 @@ Game.UIMode.gamePlay = {
   this.setAvatar(Game.EntityGenerator.create('avatar'));
   this.setEnemy(Game.EntityGenerator.create('enemy'));
 
-  this.getMap().addEntity(this.getAvatar(), this.getMap().getRandomWalkableLocation());
-  this.getMap().addEntity(this.getEnemy(), this.getMap().getRandomWalkableLocation());
+  this.getMap().addEntity(this.getAvatar(), this.getMap().getRandomWalkablePosition());
+  this.getMap().addEntity(this.getEnemy(), this.getMap().getRandomWalkablePosition());
   this.setCameraToAvatar();
 
   // TODO: delete dev code
   for(var ecount = 0; ecount < 80; ecount++) {
-    this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkableLocation());
+    this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
 
   }
 
@@ -194,6 +199,8 @@ fromJSON: function (json) {
 Game.UIMode.gameLose = {
   enter: function () {
     console.log("Game.UIMode.gameLose enter");
+    Game.renderDisplayAvatar();
+    Game.renderDisplayMain();
   },
   exit: function () {
     console.log("Game.UIMode.gameLose exit");
@@ -213,6 +220,8 @@ Game.UIMode.gameLose = {
 Game.UIMode.gameWin = {
   enter: function () {
     console.log("Game.UIMode.gameWin enter");
+    Game.renderDisplayAvatar();
+    Game.renderDisplayMain();
   },
   exit: function () {
     console.log("Game.UIMode.gameWin exit");

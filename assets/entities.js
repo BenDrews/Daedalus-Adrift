@@ -5,7 +5,7 @@ Game.EntityGenerator.learn({
   chr:'@',
   fg:'#dda',
   maxHp: 10,
-  mixins: ["PlayerActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "PlayerMessager"]
+  mixins: ["PlayerActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "PlayerMessager", "Sight", "MapMemory"]
 });
 
 Game.EntityGenerator.learn({
