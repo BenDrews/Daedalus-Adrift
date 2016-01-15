@@ -39,7 +39,9 @@ Game.UIMode.gamePlay = {
   actLoop: function() {
     for (var entID in Game.DATASTORE.ENTITY) {
       var entity = Game.DATASTORE.ENTITY[entID];
-      if (entity.hasOwnProperty('act')) {
+      console.log("Trying to start actions of entity: " + entity.getName());
+      if (entity._actions.length > 0) {
+        console.log("Starting the actions of entity: " + entity.getName());
         entity.act();
       }
     }
@@ -47,7 +49,7 @@ Game.UIMode.gamePlay = {
   destroyActLoop: function() {
     for (var entID in Game.DATASTORE.ENTITY) {
       var entity = Game.DATASTORE.ENTITY[entID];
-      if (entity.hasOwnProperty('pauseAction')) {
+      if (entity._actions.length > 0) {
         console.log(entity);
         entity.pauseAction();
       }

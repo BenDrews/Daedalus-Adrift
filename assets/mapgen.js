@@ -8,15 +8,14 @@ Game.mapgen = {
     _startY: 6
   },
   getMapDim: function() {
-    return [this.attr._mapWidth,this.attr._mapHeight];
+    return {x:this.attr._mapWidth,y:this.attr._mapHeight};
   },
   getRoomDim: function() {
-    return [this.attr._roomWidth, this.attr._roomHeight];
+    return {x:this.attr._roomWidth, y:this.attr._roomHeight};
   },
   generate: function() {
     var roomsGenerated = 1;
     var roomGrid = Game.util.init2DArray(this.attr._mapWidth, this.attr._mapHeight, null);
-    //TODO: Replace 50 with a variable
     var tilesGrid = Game.util.init2DArray(this.attr._roomWidth * this.attr._mapWidth + 50, this.attr._roomHeight * this.attr._mapHeight + 50, Game.Tile.nullTile);
     var roomStack = [];
     var coorStack = [];

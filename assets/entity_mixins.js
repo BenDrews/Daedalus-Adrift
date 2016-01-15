@@ -36,6 +36,37 @@ Game.EntityMixin.PlayerActor = {
       direction: 0,
       canMove: true
     },
+    priority: 1,
+    act: function () {
+      curEntity = Game.EntityMixin.PlayerActor;
+      if(curEntity.attr._PlayerActor_attr.canMove && curEntity.hasMixin('Walker')) {
+          var dx = 0;
+          var dy = 0;
+          if(curEntity.attr._PlayerActor_attr.direction & 1) {
+            dy--;
+          }
+          if(curEntity.attr._PlayerActor_attr.direction & 2) {
+            dx++;
+          }
+          if(curEntity.attr._PlayerActor_attr.direction & 4) {
+            dy++;
+          }
+          if(curEntity.attr._PlayerActor_attr.direction & 8) {
+            dx--;
+          }
+          if(dx !== 0 || dy !== 0) {
+            Game.UIMode.gamePlay.moveAvatar(dx,dy);
+            curEntity.setMovable(false);
+            if(Math.abs(dx) + Math.abs(dy) == 2) {
+              setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
+            } else {
+              setTimeout(function () {curEntity.setMovable(true);},75);
+            }
+          }
+      }
+      curEntity.raiseEntityEvent('actionDone');
+      curEntity.attr.timeout = setTimeout(function() {curEntity.act();}, 50);
+    },
     init: function (template) {
   //    Game.Scheduler.add(this,true,1);
     },
@@ -76,43 +107,7 @@ Game.EntityMixin.PlayerActor = {
   unsetDirection: function (dir) {
     this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction & (~dir);
   },
-  act: function () {
-    curEntity = this;
-    if(this.attr._PlayerActor_attr.canMove && this.hasMixin('WalkerCorporeal')) {
-        var dx = 0;
-        var dy = 0;
-        if(this.attr._PlayerActor_attr.direction & 1) {
-          dy--;
-        }
-        if(this.attr._PlayerActor_attr.direction & 2) {
-          dx++;
-        }
-        if(this.attr._PlayerActor_attr.direction & 4) {
-          dy++;
-        }
-        if(this.attr._PlayerActor_attr.direction & 8) {
-          dx--;
-        }
-        if(dx !== 0 || dy !== 0) {
-          Game.UIMode.gamePlay.moveAvatar(dx,dy);
-          this.setMovable(false);
-          if(Math.abs(dx) + Math.abs(dy) == 2) {
-            setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
-          } else {
-            setTimeout(function () {curEntity.setMovable(true);},75);
-          }
-        }
-    }
-    this.raiseEntityEvent('actionDone');
-    this.attr._PlayerActor_attr.timeout = setTimeout(function() {curEntity.act();}, 50);
-  },
 
-  pauseAction: function() {
-    var curObj = this;
-    if (curObj.attr._PlayerActor_attr.timeout){
-      clearTimeout(curObj.attr._PlayerActor_attr.timeout);
-    }
-  }
 };
 
 Game.EntityMixin.WalkerCorporeal = {
@@ -256,6 +251,17 @@ Game.EntityMixin.WanderActor = {
       currentActionDuration: 1000,
       timeout: null
     },
+    priority: 1,
+    act: function () {
+      var moveDeltas = this.getMoveDeltas();
+      if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
+        this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
+      }
+      this.setCurrentActionDuration(this.getBaseActionDuration());
+      this.raiseEntityEvent('actionDone');
+      var curObj = this;
+      curObj.attr.timeout = setTimeout(function() {curObj.act();}, 50);
+    },
     init: function (template) {
 //      Game.Scheduler.add(this,true, 2);
     }
@@ -274,16 +280,6 @@ Game.EntityMixin.WanderActor = {
   },
   getMoveDeltas: function () {
     return Game.util.positionsAdjacentTo({x:0,y:0}).random();
-  },
-  act: function () {
-    var moveDeltas = this.getMoveDeltas();
-    if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
-      this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
-    }
-    this.setCurrentActionDuration(this.getBaseActionDuration());
-    this.raiseEntityEvent('actionDone');
-    var curObj = this;
-    curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
   },
 
   pauseAction: function() {
