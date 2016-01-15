@@ -39,9 +39,7 @@ Game.UIMode.gamePlay = {
   actLoop: function() {
     for (var entID in Game.DATASTORE.ENTITY) {
       var entity = Game.DATASTORE.ENTITY[entID];
-      console.log("Trying to start actions of entity: " + entity.getName());
       if (entity._actions.length > 0) {
-        console.log("Starting the actions of entity: " + entity.getName());
         entity.act();
       }
     }

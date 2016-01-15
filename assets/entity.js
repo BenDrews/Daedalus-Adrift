@@ -49,17 +49,17 @@ Game.Entity = function(template) {
         mixin.META.init.call(this,template);
       }
       if (mixin.META.hasOwnProperty('act')) {
-        var priority = mixin.META.priority || 1;
-        for(var j = 0; j < this._actions.length; j++) {
-          if(priority > this._actions.priority) {
-            break;
+        this._actions.push({action:mixin.META.act, priority:mixin.META.priority});
+        this._actions.sort(function (a,b) {
+          if(a.priority > b.priority) {
+            return 1;
+          } else if (a.priority < b.priority) {
+            return -1;
+          } else {
+            return 0;
           }
-        }
-        for(var k = this._actions.length; k > j; k--) {
-            this._actions[k] = this._actions[k-1];
-          }
-          this._actions[j] = {action:mixin.META.act, priority:priority};
-        }
+        });
+      }
     }
 
     for(i = 0; i < this._actions.length; i++) {
@@ -120,7 +120,6 @@ Game.Entity.prototype.getY   = function() {
 };
 
 Game.Entity.prototype.act = function() {
-  console.log("Entity: "+ this.getName() + " is acting");
   for(var i = 0; i < this._actions.length; i++) {
     this._actions[i].call(this);
   }
@@ -128,7 +127,7 @@ Game.Entity.prototype.act = function() {
 
 Game.Entity.prototype.pauseAction = function() {
     var curObj = this;
-    if (this.attr.hasOwnProperty('this.attr.timeout') && this.attr._timeout){
+    if (this.attr.hasOwnProperty('_timeout') && this.attr._timeout){
       clearTimeout(curObj.attr._timeout);
     }
 };
@@ -153,7 +152,7 @@ Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
 Game.Entity.prototype.destroy = function() {
     //remove from map
     this.getMap().extractEntity(this);
-    if(this.hasOwnProperty('pauseAction')) {
+    if(this.hasOwnProperty('_actions')) {
       this.pauseAction();
     }
     //remove from datastore
