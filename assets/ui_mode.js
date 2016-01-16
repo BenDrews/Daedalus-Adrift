@@ -158,9 +158,9 @@ Game.UIMode.gamePlay = {
   this.setCamera(this.attr._cameraX + dx,this.attr._cameraY + dy);
   },
   setCamera: function (sx,sy) {
-    //TODO: Swap 13 with an attribute
-    this.attr._cameraX = Math.max(0,sx - (sx % 13)) + 7;
-    this.attr._cameraY = Math.max(0,sy - (sy % 13)) + 7;
+    //TODO: Swap 13 with an attribute, and 7, and 1.
+    this.attr._cameraX = Math.max(0,sx - ((sx + 1) % 13)) + 7;
+    this.attr._cameraY = Math.max(0,sy - ((sy + 1) % 13)) + 7;
   },
   setCameraToAvatar: function () {
     this.setCamera(this.getAvatar().getX(),this.getAvatar().getY());
