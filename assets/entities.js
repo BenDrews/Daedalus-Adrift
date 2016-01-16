@@ -20,5 +20,12 @@ Game.EntityGenerator.learn({
   chr:'q',
   fg:'#dda',
   maxHp: 1,
-  mixins: ["WanderActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker"]
+  mixins: ["WanderActor", "ShooterActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker"]
+});
+
+Game.EntityGenerator.learn({
+  name: 'projectile',
+  chr:' ',
+  fg: '#dda',
+  mixins: ["Bullet", "WalkerCorporeal"]
 });

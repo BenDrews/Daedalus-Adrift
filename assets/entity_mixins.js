@@ -36,6 +36,37 @@ Game.EntityMixin.PlayerActor = {
       direction: 0,
       canMove: true
     },
+    priority: 1,
+    act: function () {
+      curEntity = this;
+      if(curEntity.attr._PlayerActor_attr.canMove && curEntity.hasMixin('Walker')) {
+          var dx = 0;
+          var dy = 0;
+          if(curEntity.attr._PlayerActor_attr.direction & 1) {
+            dy--;
+          }
+          if(curEntity.attr._PlayerActor_attr.direction & 2) {
+            dx++;
+          }
+          if(curEntity.attr._PlayerActor_attr.direction & 4) {
+            dy++;
+          }
+          if(curEntity.attr._PlayerActor_attr.direction & 8) {
+            dx--;
+          }
+          if(dx !== 0 || dy !== 0) {
+            Game.UIMode.gamePlay.moveAvatar(dx,dy);
+            curEntity.setMovable(false);
+            if(Math.abs(dx) + Math.abs(dy) == 2) {
+              setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
+            } else {
+              setTimeout(function () {curEntity.setMovable(true);},75);
+            }
+          }
+      }
+      curEntity.raiseEntityEvent('actionDone');
+      curEntity.attr._timeout = setTimeout(function() {curEntity.act();}, 50);
+    },
     init: function (template) {
   //    Game.Scheduler.add(this,true,1);
     },
@@ -45,7 +76,7 @@ Game.EntityMixin.PlayerActor = {
         this.setCurrentActionDuration(this.getBaseActionDuration());
       },
       'killed': function(evtData) {
-        Game.switchUIMode(Game.UIMode.gameLose);
+        Game.switchUIMode('gameLose');
       }
     }
   },
@@ -76,43 +107,7 @@ Game.EntityMixin.PlayerActor = {
   unsetDirection: function (dir) {
     this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction & (~dir);
   },
-  act: function () {
-    curEntity = this;
-    if(this.attr._PlayerActor_attr.canMove && this.hasMixin('WalkerCorporeal')) {
-        var dx = 0;
-        var dy = 0;
-        if(this.attr._PlayerActor_attr.direction & 1) {
-          dy--;
-        }
-        if(this.attr._PlayerActor_attr.direction & 2) {
-          dx++;
-        }
-        if(this.attr._PlayerActor_attr.direction & 4) {
-          dy++;
-        }
-        if(this.attr._PlayerActor_attr.direction & 8) {
-          dx--;
-        }
-        if(dx !== 0 || dy !== 0) {
-          Game.UIMode.gamePlay.moveAvatar(dx,dy);
-          this.setMovable(false);
-          if(Math.abs(dx) + Math.abs(dy) == 2) {
-            setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
-          } else {
-            setTimeout(function () {curEntity.setMovable(true);},75);
-          }
-        }
-    }
-    this.raiseEntityEvent('actionDone');
-    this.attr._PlayerActor_attr.timeout = setTimeout(function() {curEntity.act();}, 50);
-  },
 
-  pauseAction: function() {
-    var curObj = this;
-    if (curObj.attr._PlayerActor_attr.timeout){
-      clearTimeout(curObj.attr._PlayerActor_attr.timeout);
-    }
-  }
 };
 
 Game.EntityMixin.WalkerCorporeal = {
@@ -125,7 +120,6 @@ Game.EntityMixin.WalkerCorporeal = {
     var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight());
     var targetEnt = map.getEntity(targetX, targetY);
     if (targetEnt && targetEnt != this) {
-      console.dir([this, map.getEntity(targetX, targetY)]);
       this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
       return false;
     }
@@ -254,11 +248,34 @@ Game.EntityMixin.WanderActor = {
     stateModel:  {
       baseActionDuration: 1000,
       currentActionDuration: 1000,
-      timeout: null
+      timeout: null,
+      canMove: true
+    },
+    priority: 1,
+    act: function () {
+      var moveDeltas = this.getMoveDeltas();
+      var curObj = this;
+      if (this.hasMixin('Walker') && this.canMove()) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
+        console.log('Try walking');
+        if(this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y)) {
+          console.log('Moving');
+          this.setMovable(false);
+          setTimeout(function() {curObj.setMovable(true);}, 150);
+        }
+      }
+      this.setCurrentActionDuration(this.getBaseActionDuration());
+      this.raiseEntityEvent('actionDone');
+      clearTimeout(curObj.attr._timeout);
+      curObj.attr._timeout = setTimeout(function() {curObj.act();}, 75);
     },
     init: function (template) {
-//      Game.Scheduler.add(this,true, 2);
     }
+  },
+  canMove: function () {
+    return this.attr._WanderActor_attr.canMove;
+  },
+  setMovable: function (canMove) {
+    this.attr._WanderActor_attr.canMove = canMove;
   },
   getBaseActionDuration: function () {
     return this.attr._WanderActor_attr.baseActionDuration;
@@ -274,23 +291,6 @@ Game.EntityMixin.WanderActor = {
   },
   getMoveDeltas: function () {
     return Game.util.positionsAdjacentTo({x:0,y:0}).random();
-  },
-  act: function () {
-    var moveDeltas = this.getMoveDeltas();
-    if (this.hasMixin('Walker')) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
-      this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y);
-    }
-    this.setCurrentActionDuration(this.getBaseActionDuration());
-    this.raiseEntityEvent('actionDone');
-    var curObj = this;
-    curObj.attr._WanderActor_attr.timeout = setTimeout(function() {curObj.act();}, 50);
-  },
-
-  pauseAction: function() {
-    var curObj = this;
-    if (curObj.attr._WanderActor_attr.timeout){
-      clearTimeout(curObj.attr._WanderActor_attr.timeout);
-    }
   }
 };
 
@@ -314,5 +314,103 @@ Game.EntityMixin.MeleeAttacker = {
   },
   getAttackPower: function () {
     return this.attr._MeleeAttacker_attr.attackPower;
+  }
+};
+
+Game.EntityMixin.ShooterActor = {
+  META: {
+    mixinName: 'ShooterActor',
+    mixinGroup: 'Actor',
+    stateNamespace: '_ShooterActor_attr',
+    stateModel:  {
+      baseActionDuration: 1000,
+      currentActionDuration: 1000,
+      timeout: null,
+      integer: 0,
+      canAttack: true
+    },
+    act: function () {
+      var curObj = this;
+      if (this.canAttack()) {
+        var projectile = Game.EntityGenerator.create('projectile');
+        projectile.setDirection(this.getProjectileDeltas());
+        Game.UIMode.gamePlay.getMap().addEntity(projectile, this.getPos());
+        projectile.attr._Bullet_attr.firedBy = this;
+        projectile.act();
+        this.setAttack(false);
+        setTimeout(function() {curObj.setAttack(true);}, 1000);
+      }
+
+      this.raiseEntityEvent('actionDone');
+
+      clearTimeout(curObj.attr._timeout);
+      curObj.attr._timeout = setTimeout(function() {curObj.act();}, 50);
+    }
+  },
+  canAttack: function () {
+    return this.attr._ShooterActor_attr.canAttack;
+  },
+  setAttack: function (canAttack) {
+    this.attr._ShooterActor_attr.canAttack = canAttack;
+  },
+  getProjectileDeltas: function () {
+    return Game.util.positionsAdjacentTo({x:0,y:0}).random();
+  },
+};
+
+Game.EntityMixin.Bullet = {
+  META: {
+    mixinName: 'Bullet',
+    mixinGroup: 'Projectile',
+    stateNamespace: '_Bullet_attr',
+    stateModel:  {
+      attackPower: 1,
+      firedBy: null,
+      direction: null,
+      speed: 100
+    },
+    init: function (template) {
+      this.attr._Bullet_attr.attackPower = template.attackPower || 1;
+      this.attr._Bullet_attr.direction = template.direction || {x:1, y:0};
+      this.attr._Bullet_attr.speed = template.speed || 100;
+      if(Math.abs(this.getDirection().x) + Math.abs(this.getDirection().y) === 2) {
+        this.attr._Bullet_attr.speed *= Math.sqrt(2);
+      }
+    },
+    listeners: {
+      'bumpEntity': function(evtData) {
+        if (this.attr._Bullet_attr.firedBy!== evtData.recipient) {
+        console.log('Projectile bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
+        evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor.attr._Bullet_attr.firedBy,attackPower:this.getAttackPower()});
+        this.destroy();
+        }
+      }
+    },
+    priority: 1,
+    act: function () {
+      if(this.hasMixin('Walker')) {
+        if(!this.tryWalk(Game.UIMode.gamePlay.getMap(), this.getDirection().x, this.getDirection().y)) {
+          this.destroy();
+        } else {
+          var curObj = this;
+          this.attr._timeout = setTimeout(function () {curObj.act();}, this.getSpeed());
+        }
+      }
+    }
+  },
+  getDirection: function() {
+    return this.attr._Bullet_attr.direction;
+  },
+  setDirection: function(direction) {
+    this.attr._Bullet_attr.direction = direction;
+  },
+  getSpeed: function() {
+    return this.attr._Bullet_attr.speed;
+  },
+  setSpeed: function (speed) {
+    this.attr._Bullet_attr.speed = speed;
+  },
+  getAttackPower: function () {
+    return this.attr._Bullet_attr.attackPower;
   }
 };
