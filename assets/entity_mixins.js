@@ -129,7 +129,7 @@ Game.EntityMixin.WalkerCorporeal = {
       var myMap = this.getMap();
       if (myMap){
         if ((dx !== 0) || (dy !== 0)) {
-          this.raiseEntityEvent('movedUnit');
+          this.raiseEntityEvent('movedUnit',{direction: Game.util.posToDir(dx,dy)});
           myMap.updateEntityLocation(this);
         }
       }
@@ -256,9 +256,7 @@ Game.EntityMixin.WanderActor = {
       var moveDeltas = this.getMoveDeltas();
       var curObj = this;
       if (this.hasMixin('Walker') && this.canMove()) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
-        console.log('Try walking');
         if(this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y)) {
-          console.log('Moving');
           this.setMovable(false);
           setTimeout(function() {curObj.setMovable(true);}, 150);
         }
@@ -412,5 +410,106 @@ Game.EntityMixin.Bullet = {
   },
   getAttackPower: function () {
     return this.attr._Bullet_attr.attackPower;
+  }
+};
+
+Game.EntityMixin.NarrowSight = {
+  META: {
+    mixinName: 'NarrowSight',
+    mixinGroup: 'Sense',
+    stateNamespace: '_NarrowSight_attr',
+    stateModel: {
+      sightRadius: 10,
+      facing: 0
+    },
+    init: function (template) {
+      this.attr._NarrowSight_attr.sightRadius = template.sightRadius || 10;
+    },
+    listeners: {
+      'movedUnit': function(evtData) {
+        this.setFacing(evtData.direction);
+      }
+    }
+  },
+  getSightRadius: function () {
+    return this.attr._NarrowSight_attr.sightRadius;
+  },
+  setSightRadius: function (n) {
+    this.attr._NarrowSight_attr.sightRadius = n;
+  },
+  canSeeEntity: function(entity) {
+      // If not on the same map or on different maps, then exit early
+      if (!entity || this.getMapId() !== entity.getMapId()) {
+          return false;
+      }
+      return this.canSeeCoord(entity.getX(),entity.getY());
+  },
+  canSeeCoord: function(x_or_pos,y) {
+    var otherX = x_or_pos,otherY=y;
+    if (typeof x_or_pos == 'object') {
+      otherX = x_or_pos.x;
+      otherY = x_or_pos.y;
+    }
+
+    // If we're not within the sight radius, then we won't be in a real field of view either.
+    if (Math.max(Math.abs(otherX - this.getX()),Math.abs(otherY - this.getY())) > this.attr._NarrowSight_attr.sightRadius) {
+      return false;
+    }
+
+    var inFov = this.getVisibleCells();
+    return inFov[otherX+','+otherY] || false;
+  },
+  getVisibleCells: function() {
+      var visibleCells = {'byDistance':{}};
+      for (var i=0;i<=this.getSightRadius();i++) {
+          visibleCells.byDistance[i] = {};
+      }
+      this.getMap().getFov().compute90(
+          this.getX(), this.getY(),
+          this.getSightRadius(), this.getFacing(),
+          function(x, y, radius, visibility) {
+              visibleCells[x+','+y] = true;
+              visibleCells.byDistance[radius][x+','+y] = true;
+          }
+      );
+      return visibleCells;
+  },
+  canSeeCoord_delta: function(dx,dy) {
+      return this.canSeeCoord(this.getX()+dx,this.getY()+dy);
+  },
+  getFacing: function () {
+    return this.attr._NarrowSight_attr.facing;
+  },
+  setFacing: function (dir) {
+    this.attr._NarrowSight_attr.facing = dir;
+  }
+};
+
+Game.EntityMixin.MapMemory = {
+  META: {
+    mixinName: 'MapMemory',
+    mixinGroup: 'MapMemory',
+    stateNamespace: '_MapMemory_attr',
+    stateModel:  {
+      mapsHash: {}
+    },
+    init: function (template) {
+      this.attr._MapMemory_attr.mapsHash = template.mapsHash || {};
+    }
+  },
+  rememberCoords: function (coordSet,mapId) {
+    var mapKey=mapId || this.getMap().getId();
+    if (! this.attr._MapMemory_attr.mapsHash[mapKey]) {
+      this.attr._MapMemory_attr.mapsHash[mapKey] = {};
+    }
+    for (var coord in coordSet) {
+      if (coordSet.hasOwnProperty(coord) && (coord != 'byDistance')) {
+        this.attr._MapMemory_attr.mapsHash[mapKey][coord] = true;
+      }
+    }
+  },
+  getRememberedCoordsForMap: function (mapId) {
+    var mapKey=mapId || this.getMap().getId();
+    return this.attr._MapMemory_attr.mapsHash[mapKey] || {};
   }
 };

@@ -156,8 +156,6 @@ getCurUIMode: function () {
     this.renderAll();
 },
   eventHandler: function(eventType, evt) {
-    console.log(eventType);
-    console.dir(evt);
     if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('handleInput')) {
       this.getCurUIMode().handleInput(eventType, evt);
     }
