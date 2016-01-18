@@ -14,21 +14,21 @@ Game.util = {
       useX = x_or_pos.x;
       useY = x_or_pos.y;
     }
-    if(useX == 0 && useY == -1) {
+    if(useX === 0 && useY === -1) {
       return 0;
-    } else if(useX == 1 && useY == -1) {
+    } else if(useX === 1 && useY === -1) {
       return 1;
-    } else if(useX == 1 && useY == 0) {
+    } else if(useX === 1 && useY === 0) {
       return 2;
-    } else if(useX == 1 && useY == 1) {
+    } else if(useX === 1 && useY === 1) {
       return 3;
-    } else if(useX == 0 && useY == 1) {
+    } else if(useX === 0 && useY === 1) {
       return 4;
-    } else if(useX == -1 && useY == 1) {
+    } else if(useX === -1 && useY === 1) {
       return 5;
-    } else if(useX == -1 && useY == 0) {
+    } else if(useX === -1 && useY === 0) {
       return 6;
-    } else if(useX == -1 && useY == -1) {
+    } else if(useX === -1 && useY === -1) {
       return 7;
     } else {
       return null;
