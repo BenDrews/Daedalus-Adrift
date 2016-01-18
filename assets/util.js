@@ -2,8 +2,8 @@ if (!String.prototype.startsWith) { // nabbed from https://developer.mozilla.org
   String.prototype.startsWith = function(searchString, position) {
     position = position || 0;
     return this.indexOf(searchString, position) === position;
-   };
- }
+  };
+}
 
 Game.util = {
 
@@ -39,9 +39,14 @@ Game.util = {
     var charSource = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
     var res='';
     for (var i=0; i<len; i++) {
-        res += charSource.random();
+      res += charSource.random();
     }
     return res;
+  },
+
+  uniqueId: function() {
+    Game.util.ID_SEQUENCE++;
+    return Date.now()+'-'+Game.util.ID_SEQUENCE+'-'+Game.util.randomString(24);
   },
 
   init2DArray: function (x,y,initVal) {
@@ -74,6 +79,54 @@ Game.util = {
   },
 
   getDisplayDim: function (display) {
-   return {w:display._options.width, h:display._options.height};
- },
+    return {w:display._options.width, h:display._options.height};
+  },
+
+  cdebug: function (a) {
+    if (typeof a == 'object') {
+      console.dir(JSON.parse(JSON.stringify(a)));
+    } else {
+      console.log(a);
+    }
+  },
+
+  objectArrayToIdArray: function (ar) {
+    return ar.map(function (elt) {
+      return elt.getId();
+    });
+  },
+
+  compactBooleanArray_or: function (ar) {
+    if (! ar) { return false; }
+    var ret = false;
+    for (var i = 0; i < ar.length; i++) {
+      ret = ret || ar[i];
+    }
+    return ret;
+  },
+  compactBooleanArray_and: function (ar) {
+    if (! ar) { return false; }
+    var ret = true;
+    for (var i = 0; i < ar.length; i++) {
+      ret = ret && ar[i];
+    }
+    return ret;
+  },
+
+  compactNumberArray_add: function (ar) {
+    if (! ar) { return 0; }
+    var ret = 0;
+    for (var i = 0; i < ar.length; i++) {
+      ret += ar[i];
+    }
+    return ret;
+  },
+  compactNumberArray_mult: function (ar) {
+    if (! ar) { return 1; }
+    var ret = 1;
+    for (var i = 0; i < ar.length; i++) {
+      ret *= ar[i];
+    }
+    return ret;
+  }
 };

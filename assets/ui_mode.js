@@ -86,6 +86,7 @@ Game.UIMode.gamePlay = {
     return Game.DATASTORE.ENTITY[this.attr._avatarId];
   },
   setAvatar: function (a) {
+    console.log(a);
     this.attr._avatarId = a.getId();
   },
   getEnemy: function () {
@@ -174,13 +175,18 @@ Game.UIMode.gamePlay = {
   this.setAvatar(Game.EntityGenerator.create('avatar'));
   this.setEnemy(Game.EntityGenerator.create('enemy'));
 
-  this.getMap().addEntity(this.getAvatar(), this.getMap().getRandomWalkableLocation());
-  this.getMap().addEntity(this.getEnemy(), this.getMap().getRandomWalkableLocation());
+  this.getMap().addEntity(this.getAvatar(), this.getMap().getRandomWalkablePosition());
+  this.getMap().addEntity(this.getEnemy(), this.getMap().getRandomWalkablePosition());
   this.setCameraToAvatar();
 
   // TODO: delete dev code
+  itemPos = this.getMap().getRandomWalkablePosition();
+  this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
+  // end dev code
+  ///////////////////////
+  var test = Game.ItemGenerator.create('rock');
   for(var ecount = 0; ecount < 80; ecount++) {
-    this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkableLocation());
+    this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
   }
 },
 
@@ -293,7 +299,7 @@ Game.UIMode.gamePersistence = {
         var state_data = JSON.parse(json_state_data);
         console.log('state data: ');
         console.dir(state_data);
-
+        this._resetGameDataStructures()
         console.log(Game.UIMode.gamePersistence.RANDOM_SEED_KEY);
         // game level stuff
         Game.setRandomSeed(state_data[Game.UIMode.gamePersistence.RANDOM_SEED_KEY]);
@@ -320,6 +326,15 @@ Game.UIMode.gamePersistence = {
           }
         }
 
+        for (var itemId in state_data.ITEM) {
+          if (state_data.ITEM.hasOwnProperty(itemId)) {
+            var itemAttr = JSON.parse(state_data.ITEM[itemId]);
+            var newI = Game.ItemGenerator.create(itemAttr._generator_template_key,itemAttr._id);
+            Game.DATASTORE.ITEM[itemId] = newI;
+            Game.DATASTORE.ITEM[itemId].fromJSON(state_data.ITEM[itemId]);
+          }
+        }
+
         // game play et al
         Game.UIMode.gamePlay.attr = state_data.GAME_PLAY;
         Game.Message.attr = state_data.MESSAGES;
@@ -331,10 +346,18 @@ Game.UIMode.gamePersistence = {
 
   newGame: function () {
   //  Game.initializeTimingEngine();
+    this._resetGameDataStructures();
     console.log("newGame");
     Game.setRandomSeed(5 + Math.floor(Game.TRANSIENT_RNG.getUniform()*100000));
     Game.UIMode.gamePlay.setupNewGame();
     Game.switchUIMode('gamePlay');
+  },
+
+  _resetGameDataStructures: function() {
+    Game.DATASTORE = {};
+    Game.DATASTORE.MAP = {};
+    Game.DATASTORE.ENTITY = {};
+    Game.DATASTORE.ITEM = {};
   },
 
   localStorageAvailable: function () { // NOTE: see https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API

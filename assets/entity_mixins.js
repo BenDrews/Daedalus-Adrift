@@ -64,7 +64,7 @@ Game.EntityMixin.PlayerActor = {
             }
           }
       }
-      curEntity.raiseEntityEvent('actionDone');
+      curEntity.raiseSymbolActiveEvent('actionDone');
       curEntity.attr._timeout = setTimeout(function() {curEntity.act();}, 50);
     },
     init: function (template) {
@@ -120,7 +120,7 @@ Game.EntityMixin.WalkerCorporeal = {
     var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight());
     var targetEnt = map.getEntity(targetX, targetY);
     if (targetEnt && targetEnt != this) {
-      this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
+      this.raiseSymbolActiveEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
       return false;
     }
     var targetTile = map.getTile(targetX,targetY);
@@ -129,13 +129,13 @@ Game.EntityMixin.WalkerCorporeal = {
       var myMap = this.getMap();
       if (myMap){
         if ((dx !== 0) || (dy !== 0)) {
-          this.raiseEntityEvent('movedUnit',{direction: Game.util.posToDir(dx,dy)});
+          this.raiseSymbolActiveEvent('movedUnit',{direction: Game.util.posToDir(dx,dy)});
           myMap.updateEntityLocation(this);
         }
       }
       return true;
     }
-    this.raiseEntityEvent('walkForbidden',{target:targetTile});
+    this.raiseSymbolActiveEvent('walkForbidden',{target:targetTile});
     return false;
   }
 };
@@ -207,11 +207,11 @@ Game.EntityMixin.HitPoints = {
         console.log('HitPoints attacked');
 
         this.takeHits(evtData.attackPower);
-        this.raiseEntityEvent('damagedBy',{damager:evtData.attacker,damageAmount:evtData.attackPower});
-        evtData.attacker.raiseEntityEvent('dealtDamage',{damagee:this,damageAmount:evtData.attackPower});
+        this.raiseSymbolActiveEvent('damagedBy',{damager:evtData.attacker,damageAmount:evtData.attackPower});
+        evtData.attacker.raiseSymbolActiveEvent('dealtDamage',{damagee:this,damageAmount:evtData.attackPower});
         if (this.getCurHp() <= 0) {
-          this.raiseEntityEvent('killed',{entKilled: this, killedBy: evtData.attacker});
-          evtData.attacker.raiseEntityEvent('madeKill',{entKilled: this, killedBy: evtData.attacker});
+          this.raiseSymbolActiveEvent('killed',{entKilled: this, killedBy: evtData.attacker});
+          evtData.attacker.raiseSymbolActiveEvent('madeKill',{entKilled: this, killedBy: evtData.attacker});
         }
       },
       'killed': function(evtData) {
@@ -262,7 +262,7 @@ Game.EntityMixin.WanderActor = {
         }
       }
       this.setCurrentActionDuration(this.getBaseActionDuration());
-      this.raiseEntityEvent('actionDone');
+      this.raiseSymbolActiveEvent('actionDone');
       clearTimeout(curObj.attr._timeout);
       curObj.attr._timeout = setTimeout(function() {curObj.act();}, 75);
     },
@@ -306,7 +306,7 @@ Game.EntityMixin.MeleeAttacker = {
     listeners: {
       'bumpEntity': function(evtData) {
         console.log('MeleeAttacker bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
-        evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor,attackPower:this.getAttackPower()});
+        evtData.recipient.raiseSymbolActiveEvent('attacked',{attacker:evtData.actor,attackPower:this.getAttackPower()});
       }
     }
   },
@@ -339,7 +339,7 @@ Game.EntityMixin.ShooterActor = {
         setTimeout(function() {curObj.setAttack(true);}, 1000);
       }
 
-      this.raiseEntityEvent('actionDone');
+      this.raiseSymbolActiveEvent('actionDone');
 
       clearTimeout(curObj.attr._timeout);
       curObj.attr._timeout = setTimeout(function() {curObj.act();}, 50);
@@ -379,7 +379,7 @@ Game.EntityMixin.Bullet = {
       'bumpEntity': function(evtData) {
         if (this.attr._Bullet_attr.firedBy!== evtData.recipient) {
         console.log('Projectile bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
-        evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor.attr._Bullet_attr.firedBy,attackPower:this.getAttackPower()});
+        evtData.recipient.raiseSymbolActiveEvent('attacked',{attacker:evtData.actor.attr._Bullet_attr.firedBy,attackPower:this.getAttackPower()});
         this.destroy();
         }
       }
