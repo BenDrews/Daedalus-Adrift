@@ -9,6 +9,7 @@ Game.EntityGenerator.learn({
 
 Game.EntityGenerator.learn({
   name: 'slime',
+  extChar: ['7','8','9','0'],
   chr: '%',
   maxHp:1,
   mixins: ["HitPoints", "WalkerSegmented", "WanderActor","Chronicle"]
@@ -16,13 +17,13 @@ Game.EntityGenerator.learn({
 
 Game.EntityGenerator.learn({
   name: 'enemy',
-  chr:'q',
+  chr:'!',
   maxHp: 1,
   mixins: ["WanderActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "ShooterActor"]
 });
 
 Game.EntityGenerator.learn({
   name: 'projectile',
-  chr:'1',
+  chr:'*',
   mixins: [ "WalkerCorporeal", "Bullet"]
 });

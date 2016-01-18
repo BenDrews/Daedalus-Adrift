@@ -173,8 +173,8 @@ Game.EntityMixin.WalkerSegmented = {
     stateNamespace: '_WalkerSegmented_attr',
     stateModel: {
       tailSegment: null,
-      extChar: ['3','4','5','6'],
-      baseChar: 'b',
+      extChar: ['7','8','9','0'],
+      baseChar: '%',
       extended: false
     },
     init: function(template) {
