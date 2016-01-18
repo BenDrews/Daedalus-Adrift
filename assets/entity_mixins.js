@@ -146,6 +146,99 @@ Game.EntityMixin.WalkerCorporeal = {
       }
 };
 
+Game.EntityMixin.TailSegment = {
+  META: {
+    mixinName: 'TailSegment',
+    mixinGroup: 'Child',
+    stateNamespace: '_TailSegment_attr',
+    stateModel: {
+      headSegment: null
+    },
+    init: function(template) {
+      this.attr._TailSegment_attr.headSegment = template.headSegment;
+    }
+  },
+  raiseEntityEvent: function(evtLabel, evtData) {
+    this.attr._TailSegment_attr.headSegment.raiseEntityEvent.call(this, evtLabel, evtData);
+  },
+  getHeadSegment: function() {
+    return this.attr._TailSegment_attr.headSegment;
+  }
+};
+
+Game.EntityMixin.WalkerSegmented = {
+  META: {
+    mixinName: 'WalkerSegmented',
+    mixinGroup: 'Walker',
+    stateNamespace: '_WalkerSegmented_attr',
+    stateModel: {
+      tailSegment: null,
+      extChar: ['3','4','5','6'],
+      baseChar: 'b',
+      extended: false
+    },
+    init: function(template) {
+      this.attr._WalkerSegmented_attr.headChar = template.extChar || ['a','b','c','d'];
+      this.attr._WalkerSegmented_attr.baseChar = template.chr;
+      this.attr._WalkerSegmented_attr.tailSegment = new Game.Entity({name:this.getName() + ' Tail Segment', chr:this.attr._WalkerSegmented_attr.extChar[0], headSegment:this, mixins:['TailSegment']});
+    },
+    listeners: {
+      'adjacentMove': function(evtData) {
+        if(!this.isExtended()) {
+            var map = this.getMap();
+            var dx=evtData.dx,dy=evtData.dy;
+            var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
+            var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
+            if (map.getEntity(targetX,targetY)) { // can't walk into spaces occupied by other entities
+              this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
+              // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
+              return {madeAdjacentMove:false};
+            }
+            var targetTile = map.getTile(targetX,targetY);
+            if (targetTile.isWalkable()) {
+              this.setPos(targetX,targetY);
+              var myMap = this.getMap();
+              if (myMap) {
+                myMap.updateEntityLocation(this);
+              }
+              this.extend({x:dx,y:dy});
+              this.raiseEntityEvent('movedUnit',{direction:Game.util.posToDir(dx,dy)});
+              return {madeAdjacentMove:true};
+            } else {
+              this.raiseEntityEvent('walkForbidden',{target:targetTile});
+            }
+            return {madeAdjacentMove:false};
+          }
+          else {
+            this.contract();
+            return {madeAdjacentMove:true};
+          }
+        }
+      }
+    },
+    getTailSegment: function() {
+      return this.attr._WalkerSegmented_attr.tailSegment;
+    },
+    setTailSegment: function(seg) {
+      this.attr._WalkerSegmented_attr.tailSegment = seg;
+    },
+    isExtended: function() {
+      return this.attr._WalkerSegmented_attr.extended;
+    },
+    extend: function(pos) {
+      var dir = Game.util.posToDir(pos);
+      this.attr._WalkerSegmented_attr.extended = true;
+      this.setChar(this.attr._WalkerSegmented_attr.extChar[dir/2]);
+      this.getTailSegment().setChar(this.attr._WalkerSegmented_attr.extChar[((dir/2) + 2) % 4]);
+      this.getMap().addEntity(this.getTailSegment(),{x:this.getX() - pos.x, y:this.getY() - pos.y});
+    },
+    contract: function() {
+      this.getMap().extractEntity(this.getTailSegment());
+      this.attr._WalkerSegmented_attr.extended = false;
+      this.setChar(this.attr._WalkerSegmented_attr.baseChar);
+    }
+};
+
 Game.EntityMixin.Chronicle = {
   META: {
     mixinName: 'Chronicle',
@@ -294,7 +387,7 @@ Game.EntityMixin.WanderActor = {
     this.attr._WanderActor_attr.currentActionDuration = n;
   },
   getMoveDeltas: function () {
-    return Game.util.positionsAdjacentTo({x:0,y:0}).random();
+    return Game.util.positionsOrthogonalTo({x:0,y:0}).random();
   }
 };
 

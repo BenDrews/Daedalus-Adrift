@@ -67,6 +67,11 @@ Game.util = {
     return offset+min;
   },
 
+  positionsOrthogonalTo: function (pos) {
+    var orthPos = [];
+    return [{x:pos.x, y:pos.y - 1}, {x:pos.x + 1, y:pos.y}, {x:pos.x, y:pos.y + 1}, {x:pos.x - 1, y:pos.y}];
+  },
+
   positionsAdjacentTo: function (pos) {
     var adjPos = [];
     for (var dx = -1; dx <= 1; dx++) {

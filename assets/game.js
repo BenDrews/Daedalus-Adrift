@@ -156,7 +156,10 @@ getCurUIMode: function () {
     }
     this._uiModeNameStack.shift();
     this.renderAll();
-},
+  },
+  getAvatar: function () {
+    return Game.UIMode.gamePlay.getAvatar();
+  },
   eventHandler: function(eventType, evt) {
     if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('handleInput')) {
       this.getCurUIMode().handleInput(eventType, evt);

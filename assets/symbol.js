@@ -6,6 +6,10 @@ Game.Symbol = function (properties) {
   this.attr._bg = properties.bg || Game.UIMode.DEFAULT_COLOR_BG;
 };
 
+Game.Symbol.prototype.setChar = function(chr) {
+  this.attr._char = chr;
+};
+
 Game.Symbol.prototype.getChar = function () {
   return this.attr._char;
 };
