@@ -16,6 +16,8 @@ window.onload = function() {
         Game.Message.send("Welcome to WSRL");
         Game.switchUIMode('gameStart');
         Game.renderMain();
+
+        Game.KeyBinding.setKeyBinding();
     }
 };
 

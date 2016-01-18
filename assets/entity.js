@@ -11,7 +11,7 @@ Game.Entity = function(template) {
     this.attr._mapId = null;
     this.attr._timeout = null;
 
-    this.attr._id = template.presetId || Game.util.randomString(32);
+    this.attr._id = template.presetId || Game.util.uniqueId();
     Game.DATASTORE.ENTITY[this.attr._id] = this;
 
     // mixin sutff

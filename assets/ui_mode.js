@@ -94,45 +94,32 @@ Game.UIMode.gamePlay = {
   setEnemy:function (e) {
     this.attr._enemyId = e.getId();
   },
-  handleInput: function (eventType, evt) {
-    var pressedKey = String.fromCharCode(evt.charCode);
-    if(eventType == 'keypress'){
-      if (evt.keyCode == 13) {
-        Game.switchUIMode('gameWin');
-        return;
-      }
-  }
-    if(eventType == 'keydown') {
-      if (evt.keyCode == 27) {
-        Game.switchUIMode('gameLose');
-      } else if (evt.keyCode == 187) { // '='
-        Game.switchUIMode('gamePersistence');
-      } else if (evt.keyCode == 72) { // 'H'
-        //Game.UIMode.LAYER_textReading.setText(Game.KeyBinding.getBindingHelpText());
-        Game.pushUIMode('LAYER_textReading');
-      }
-       else if (evt.keyCode == 38) {
-        this.getAvatar().setDirection(1);
-      } else if (evt.keyCode == 39) {
-        this.getAvatar().setDirection(2);
-      } else if (evt.keyCode == 40) {
-        this.getAvatar().setDirection(4);
-      } else if (evt.keyCode == 37) {
-        this.getAvatar().setDirection(8);
-      }
+  handleInput: function (inputType,inputData) {
+    var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
+    if(!actionBinding) {
+      return false;
+    }
+    if (actionBinding.actionKey == 'SET_MOVE_U') {
+      this.getAvatar().setDirection(1);
+    } else if (actionBinding.actionKey == 'SET_MOVE_R') {
+      this.getAvatar().setDirection(2);
+    } else if (actionBinding.actionKey == 'SET_MOVE_D') {
+      this.getAvatar().setDirection(4);
+    } else if (actionBinding.actionKey == 'SET_MOVE_L') {
+      this.getAvatar().setDirection(8);
+    } else if (actionBinding.actionKey == 'PERSISTENCE') {
+      Game.switchUIMode('gamePersistence');
     }
 
-    if(eventType == 'keyup') {
-      if (evt.keyCode == 38) {
-        this.getAvatar().unsetDirection(1);
-      } else if (evt.keyCode == 39) {
-        this.getAvatar().unsetDirection(2);
-      } else if (evt.keyCode == 40) {
-        this.getAvatar().unsetDirection(4);
-      } else if (evt.keyCode == 37) {
-        this.getAvatar().unsetDirection(8);
+    if (actionBinding.actionKey == 'UNSET_MOVE_U') {
+      this.getAvatar().unsetDirection(1);
+    } else if (actionBinding.actionKey == 'UNSET_MOVE_R') {
+      this.getAvatar().unsetDirection(2);
+    } else if (actionBinding.actionKey == 'UNSET_MOVE_D') {
+      this.getAvatar().unsetDirection(4);
+    } else if (actionBinding.actionKey == 'UNSET_MOVE_L') {
+      this.getAvatar().unsetDirection(8);
     }
-  }
   },
   renderOnMain: function (display) {
     var seenCells = this.getAvatar().getVisibleCells();
@@ -240,10 +227,14 @@ Game.UIMode.gameWin = {
 
 Game.UIMode.gamePersistence = {
   RANDOM_SEED_KEY: 'gameRandomSeed',
+  _storedKeyBinding: '',
    enter: function () {
      console.log('game persistence');
+     this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
+     Game.KeyBinding.setKeyBinding('persist');
    },
    exit: function () {
+     Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
    },
    renderOnMain: function (display) {
      display.clear();
@@ -252,29 +243,31 @@ Game.UIMode.gamePersistence = {
   //   console.log('TODO: check whether a game is in progress before offering restore');
    },
    handleInput: function (inputType,inputData) {
-  if (inputType == 'keypress') {
-     var inputChar = String.fromCharCode(inputData.charCode);
-     if (inputChar == 'S'|| inputChar == 's') { // ignore the various modding keys - control, shift, etc.
-       this.saveGame();
-     } else if (inputChar == 'L'|| inputChar == 'l') {
-       this.restoreGame();
-     } else if (inputChar == 'N'|| inputChar == 'n') {
-       this.newGame();
+     var actionBinding = Game.KeyBinding.getInputBinding(inputType, inputData);
+     console.log("input in persist");
+     console.dir(actionBinding);
+     if(!actionBinding) {
+       return false;
      }
-   } else if (inputType == 'keydown') {
-     if (inputData.keyCode == 27) { // 'Escape'
+     if(actionBinding.actionKey == 'PERSISTENCE_SAVE') {
+       this.saveGame();
+     } else if(actionBinding.actionKey == 'PERSISTENCE_LOAD') {
+       this.restoreGame();
+     } else if(actionBinding.actionKey == 'PERSISTENCE_NEW') {
+       this.newGame();
        Game.switchUIMode('gamePlay');
      }
-   }
+     return false;
  },
 
   saveGame: function () {
-    console.log("save");
     if (Game.UIMode.gamePlay.getMap() !== null) {
       if (this.localStorageAvailable()) {
         Game.DATASTORE.GAME_PLAY = Game.UIMode.gamePlay.attr;
         Game.DATASTORE.MESSAGES = Game.Message.attr;
+        Game.DATASTORE.KEY_BINDING = this._storedKeyBinding;
         window.localStorage.setItem(Game._PERSISTENCE_NAMESPACE, JSON.stringify(Game.DATASTORE));
+        Game.Message.send('Game saved.');
         Game.switchUIMode('gamePlay');
       }
     }
@@ -286,7 +279,7 @@ Game.UIMode.gamePersistence = {
     //  Game.initializeTimingEngine();
       var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
       if(json_state_data === null) {
-        Game.Message.send("No saved game");
+        Game.Message.send("No saved game.");
         return false;
       }
       setTimeout(function(){
@@ -307,6 +300,7 @@ Game.UIMode.gamePersistence = {
             Game.DATASTORE.MAP[mapId] = new Game.Map(mapAttr._mapTileSetName);
             //Game.DATASTORE.MAP[mapId].attr = mapAttr;
             Game.DATASTORE.MAP[mapId].fromJSON(state_data.MAP[mapId]);
+            Game.Message.send('Map loaded.');
           }
         }
 
@@ -317,12 +311,14 @@ Game.UIMode.gamePersistence = {
             var newE = Game.EntityGenerator.create(entAttr._generator_template_key,entAttr._id);
             Game.DATASTORE.ENTITY[entityId] = newE;
             Game.DATASTORE.ENTITY[entityId].fromJSON(state_data.ENTITY[entityId]);
+            Game.Message.send('Entities loaded.');
           }
         }
 
         // game play et al
         Game.UIMode.gamePlay.attr = state_data.GAME_PLAY;
         Game.Message.attr = state_data.MESSAGES;
+        this._storedKeyBinding = state_data.KEY_BINDING;
 
         Game.switchUIMode('gamePlay');
       },1);
@@ -378,8 +374,8 @@ Game.UIMode.LAYER_textReading = {
     _renderScrollLimit: 0,
     enter: function() {
       this._renderY = 0;
-      //this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
-      //Game.KeyBinding.setKeyBinding('LAYER_textReading');
+      this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
+      Game.KeyBinding.setKeyBinding('LAYER_textReading');
       var display = Game.DISPLAYS.main.o;
       var options = display.getOptions();
       this._storedDisplayOptions = {};
@@ -391,7 +387,7 @@ Game.UIMode.LAYER_textReading = {
       Game.refresh();
     },
     exit: function() {
-      //Game.setKeyBinding(this._storedKeyBinding);
+      Game.setKeyBinding(this._storedKeyBinding);
       Game.DISPLAYS.main.o.setOptions(this._storedDisplayOptions);
       Game.refresh();
     },
@@ -403,30 +399,23 @@ Game.UIMode.LAYER_textReading = {
     },
     handleInput: function(inputType, inputData) {
       Game.Message.clear();
-      //var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
-    // console.log('action binding is');
-    // console.dir(actionBinding);
-    // console.log('----------');
-    if (inputType === 'keydown' && inputData.keyCode === 72) {
-      Game.popUIMode();
-    }
-    /*
-    else if (actionBinding.actionKey == 'CANCEL') {
-      Game.switchUiMode(Game.UIMode.gamePlay);
-    }
-    */
-    if (inputType === 'keydown' && inputData.keyCode === 219) {
-      this._renderY++;
-      if (this._renderY > 0) { this._renderY = 0; }
-      Game.renderMain();
-      return true;
-    } else if (inputType === 'keydown' && inputData.keyCode === 221) {
-        this._renderY--;
-        if (this._renderY < this._renderScrollLimit) { this._renderY = this._renderScrollLimit; }
+      var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
+      if (actionBinding.actionKey == 'CANCEL') {
+        Game.popUIMode();
+      }
+
+      if (inputType === 'keydown' && inputData.keyCode === 219) {
+        this._renderY++;
+        if (this._renderY > 0) { this._renderY = 0; }
         Game.renderMain();
         return true;
-      }
-    return false;
+      } else if (inputType === 'keydown' && inputData.keyCode === 221) {
+          this._renderY--;
+          if (this._renderY < this._renderScrollLimit) { this._renderY = this._renderScrollLimit; }
+          Game.renderMain();
+          return true;
+        }
+      return false;
     },
     getText: function() {
       return this._text;
