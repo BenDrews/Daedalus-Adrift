@@ -104,6 +104,7 @@ Game.util = {
     }
     return ret;
   },
+
   compactBooleanArray_and: function (ar) {
     if (! ar) { return false; }
     var ret = true;

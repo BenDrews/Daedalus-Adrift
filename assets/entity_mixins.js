@@ -19,8 +19,137 @@ Game.EntityMixin.PlayerMessager = {
       },
       'killed': function(evtData) {
         Game.Message.send('you were killed by the '+evtData.killedBy.getName());
+      },
+
+       'noItemsToPickup': function(evtData) {
+         Game.Message.send('there is nothing to pickup');
+         Game.renderDisplayMessage();
+       },
+       'inventoryFull': function(evtData) {
+         Game.Message.send('your inventory is full');
+         Game.renderDisplayMessage();
+       },
+       'noItemsPickedUp': function(evtData) {
+         Game.Message.send('you could not pick up any items');
+         Game.renderDisplayMessage();
+       },
+       'someItemsPickedUp': function(evtData) {
+         Game.Message.send('you picked up '+evtData.numItemsPickedUp+' of the items, leaving '+evtData.numItemsNotPickedUp+' of them');
+         Game.renderDisplayMessage();
+       },
+       'allItemsPickedUp': function(evtData) {
+        if (evtData.numItemsPickedUp > 1) {
+           Game.Message.send('you picked up all '+evtData.numItemsPickedUp+' items');
+         } else {
+           Game.Message.send('you picked up the item');
+         }
+         Game.renderDisplayMessage();
+       },
+       'itemsDropped': function(evtData) {
+         Game.Message.send('you dropped '+evtData.numItemsDropped+' items');
+         Game.renderDisplayMessage;
+       }
+    }
+  }
+};
+
+Game.EntityMixin.InventoryHolder = {
+  META: {
+    mixinName: 'InventoryHolder',
+    mixinGroup: 'InventoryHolder',
+    stateNamespace: '_InventoryHolder_attr',
+    stateModel:  {
+      itemId: ''
+    },
+    init: function (template) {
+      this.attr._InventoryHolder_attr.itemId = '';
+    },
+    listeners: {
+      'pickupItems': function(evtData) {
+        return {addedAnyItems: this.pickupItems(evtData.itemSet)};
+      },
+      'dropItems': function(evtData) {
+        return {droppedItems: this.dropItems(evtData.itemSet)};
       }
     }
+  },
+  hasSpace: function () {
+    // NOTE: early dev stuff here! simple placeholder functionality....
+    return this.attr._InventoryHolder_attr.itemId === '';
+  },
+  addItems: function (items_or_ids) {
+    var addItemStatus = {
+      numItemsPickedUp:0,
+      numItemsNotPickedUp:items_or_ids.length
+    };
+    if (items_or_ids.length < 1) {
+      this.raiseSymbolActiveEvent('noItemsToPickup');
+      return addItemStatus;
+    }
+
+    for (var i = 0; i < items_or_ids.length; i++) {
+      if (! this.hasSpace()) {
+        this.raiseSymbolActiveEvent('inventoryFull');
+        if (i === 0) {
+          this.raiseSymbolActiveEvent('noItemsPickedUp');
+          return addItemStatus;
+        } else {
+          this.raiseSymbolActiveEvent('someItemsPickedUp',addItemStatus);
+          return addItemStatus;
+        }
+      }
+      var itemId = items_or_ids[i];
+      if (typeof itemId !== 'string') {
+        itemId = itemId.getId();
+      }
+      this._forceAddItemId(itemId);
+      addItemStatus.numItemsPickedUp++;
+      addItemStatus.numItemsNotPickedUp--;
+    }
+
+    this.raiseSymbolActiveEvent('allItemsPickedUp',addItemStatus);
+    return addItemStatus;
+  },
+  _forceAddItemId: function (itemId) {
+    // NOTE: early dev stuff here! simple placeholder functionality....
+    this.attr._InventoryHolder_attr.itemId = itemId;
+  },
+  getItemIds: function () {
+    if (this.attr._InventoryHolder_attr.itemId) {
+      return [this.attr._InventoryHolder_attr.itemId];
+    }
+    return [];
+  },
+  extractItems: function (ids_or_idxs) {
+    // NOTE: early dev stuff here! simple placeholder functionality....
+    var ret = [this.attr._InventoryHolder_attr.itemId];
+    this.attr._InventoryHolder_attr.itemId = '';
+    return ret;
+  },
+  pickupItems: function (ids_or_idxs) {
+    var itemsToAdd = [];
+    var fromPile = this.getMap().getItems(this.getPos());
+    for (var i = 0; i < fromPile.length; i++) {
+      if ((ids_or_idxs.indexOf(i) > -1) || (ids_or_idxs.indexOf(fromPile[i].getId()) > -1)) {
+        itemsToAdd.push(fromPile[i]);
+      }
+    }
+    var addResult = this.addItems(itemsToAdd);
+    for (var j = 0; j < addResult.numItemsPickedUp; j++) {
+      this.getMap().extractItemAt(itemsToAdd[j],this.getPos());
+    }
+    return addResult;
+  },
+  dropItems: function (ids_or_idxs) {
+    var itemIdsToDrop = this.extractItems(ids_or_idxs);
+    var numDropped = 0;
+    for (var i = 0; i < itemIdsToDrop.length; i++) {
+      if (itemIdsToDrop[i]) {
+        this.getMap().addItem(Game.DATASTORE.ITEM[itemIdsToDrop[i]],this.getPos());
+        numDropped++;
+      }
+    }
+    this.raiseSymbolActiveEvent('itemsDropped', {numItemsDropped:numDropped});
   }
 };
 // Mixins have a META property is is info about/for the mixin itself and then all other properties. The META property is NOT copied into objects for which this mixin is used - all other properies ARE copied in.
