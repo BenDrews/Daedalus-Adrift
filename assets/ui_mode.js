@@ -135,8 +135,12 @@ Game.UIMode.gamePlay = {
   }
   },
   renderOnMain: function (display) {
-    display.clear();
-    this.getMap().renderOn(display, this.attr._cameraX, this.attr._cameraY);
+    var seenCells = this.getAvatar().getVisibleCells();
+    this.getMap().renderOn(display,this.attr._cameraX,this.attr._cameraY,{
+      visibleCells:seenCells,
+      maskedCells:this.getAvatar().getRememberedCoordsForMap()
+    });
+    this.getAvatar().rememberCoords(seenCells);
   },
   renderOnAvatar: function(display) {
     if(this.getAvatar()) {
