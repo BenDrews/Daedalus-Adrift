@@ -162,7 +162,7 @@ Game.UIMode.gamePlay = {
   this.setCameraToAvatar();
 
   // TODO: delete dev code
-  for(var ecount = 0; ecount < 80; ecount++) {
+  for(var ecount = 0; ecount < 30; ecount++) {
     this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkableLocation());
   }
 },

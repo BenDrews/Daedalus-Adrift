@@ -159,7 +159,7 @@ Game.EntityMixin.TailSegment = {
     }
   },
   raiseEntityEvent: function(evtLabel, evtData) {
-    this.attr._TailSegment_attr.headSegment.raiseEntityEvent.call(this, evtLabel, evtData);
+    this.attr._TailSegment_attr.headSegment.raiseEntityEvent.call(this.getHeadSegment(), evtLabel, evtData);
   },
   getHeadSegment: function() {
     return this.attr._TailSegment_attr.headSegment;
@@ -213,6 +213,9 @@ Game.EntityMixin.WalkerSegmented = {
             this.contract();
             return {madeAdjacentMove:true};
           }
+        },
+        'killed': function(evtData) {
+          this.getTailSegment().destroy();
         }
       }
     },
