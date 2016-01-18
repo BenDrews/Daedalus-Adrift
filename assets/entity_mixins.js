@@ -39,7 +39,7 @@ Game.EntityMixin.PlayerActor = {
     priority: 1,
     act: function () {
       curEntity = this;
-      if(curEntity.attr._PlayerActor_attr.canMove && curEntity.hasMixin('Walker')) {
+      if(this.canMove()) {
           var dx = 0;
           var dy = 0;
           if(curEntity.attr._PlayerActor_attr.direction & 1) {
@@ -55,7 +55,7 @@ Game.EntityMixin.PlayerActor = {
             dx--;
           }
           if(dx !== 0 || dy !== 0) {
-            Game.UIMode.gamePlay.moveAvatar(dx,dy);
+            this.raiseEntityEvent('adjacentMove', {dx:dx, dy:dy});
             curEntity.setMovable(false);
             if(Math.abs(dx) + Math.abs(dy) == 2) {
               setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
@@ -98,6 +98,9 @@ Game.EntityMixin.PlayerActor = {
     }
     return this.attr._PlayerActor_attr.actingState;
   },
+  canMove: function () {
+    return this.attr._PlayerActor_attr.canMove;
+  },
   setMovable: function (canMove) {
     this.attr._PlayerActor_attr.canMove = canMove;
   },
@@ -113,31 +116,34 @@ Game.EntityMixin.PlayerActor = {
 Game.EntityMixin.WalkerCorporeal = {
   META: {
     mixinName: 'WalkerCorporeal',
-    mixinGroup: 'Walker'
-  },
-  tryWalk: function (map,dx,dy) {
-    var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth());
-    var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight());
-    var targetEnt = map.getEntity(targetX, targetY);
-    if (targetEnt && targetEnt != this) {
-      this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
-      return false;
-    }
-    var targetTile = map.getTile(targetX,targetY);
-    if (targetTile.isWalkable()) {
-      this.setPos(targetX,targetY);
-      var myMap = this.getMap();
-      if (myMap){
-        if ((dx !== 0) || (dy !== 0)) {
-          this.raiseEntityEvent('movedUnit',{direction: Game.util.posToDir(dx,dy)});
-          myMap.updateEntityLocation(this);
+    mixinGroup: 'Walker',
+    listeners: {
+      'adjacentMove': function(evtData) {
+          var map = this.getMap();
+          var dx=evtData.dx,dy=evtData.dy;
+          var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
+          var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
+          if (map.getEntity(targetX,targetY)) { // can't walk into spaces occupied by other entities
+            this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
+            // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
+            return {madeAdjacentMove:false};
+          }
+          var targetTile = map.getTile(targetX,targetY);
+          if (targetTile.isWalkable()) {
+            this.setPos(targetX,targetY);
+            var myMap = this.getMap();
+            if (myMap) {
+              myMap.updateEntityLocation(this);
+            }
+            this.raiseEntityEvent('movedUnit',{direction:Game.util.posToDir(dx,dy)});
+            return {madeAdjacentMove:true};
+          } else {
+            this.raiseEntityEvent('walkForbidden',{target:targetTile});
+          }
+          return {madeAdjacentMove:false};
+          }
         }
       }
-      return true;
-    }
-    this.raiseEntityEvent('walkForbidden',{target:targetTile});
-    return false;
-  }
 };
 
 Game.EntityMixin.Chronicle = {
@@ -255,10 +261,10 @@ Game.EntityMixin.WanderActor = {
     act: function () {
       var moveDeltas = this.getMoveDeltas();
       var curObj = this;
-      if (this.hasMixin('Walker') && this.canMove()) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
-        if(this.tryWalk(Game.UIMode.gamePlay.getMap(), moveDeltas.x, moveDeltas.y)) {
+      if (this.canMove()) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
+        if(this.raiseEntityEvent('adjacentMove', {dx:moveDeltas.x, dy:moveDeltas.y}).madeAdjacentMove[0]) {
           this.setMovable(false);
-          setTimeout(function() {curObj.setMovable(true);}, 150);
+          setTimeout(function() {curObj.setMovable(true);}, 750);
         }
       }
       this.setCurrentActionDuration(this.getBaseActionDuration());
@@ -332,9 +338,9 @@ Game.EntityMixin.ShooterActor = {
       if (this.canAttack()) {
         var projectile = Game.EntityGenerator.create('projectile');
         projectile.setDirection(this.getProjectileDeltas());
-        Game.UIMode.gamePlay.getMap().addEntity(projectile, this.getPos());
+        this.getMap().addEntity(projectile, {x:this.getX() + projectile.getDirection().x, y:this.getY() + projectile.getDirection().y});
         projectile.attr._Bullet_attr.firedBy = this;
-        projectile.act();
+        setTimeout(function() {projectile.act();}, projectile.getSpeed());
         this.setAttack(false);
         setTimeout(function() {curObj.setAttack(true);}, 1000);
       }
@@ -386,14 +392,12 @@ Game.EntityMixin.Bullet = {
     },
     priority: 1,
     act: function () {
-      if(this.hasMixin('Walker')) {
-        if(!this.tryWalk(Game.UIMode.gamePlay.getMap(), this.getDirection().x, this.getDirection().y)) {
+        if(!this.raiseEntityEvent('adjacentMove', {dx:this.getDirection().x, dy:this.getDirection().y}).madeAdjacentMove[0]) {
           this.destroy();
         } else {
           var curObj = this;
           this.attr._timeout = setTimeout(function () {curObj.act();}, this.getSpeed());
         }
-      }
     }
   },
   getDirection: function() {

@@ -122,6 +122,7 @@ Game.UIMode.gamePlay = {
     }
   },
   renderOnMain: function (display) {
+    this.setCameraToAvatar();
     var seenCells = this.getAvatar().getVisibleCells();
     this.getMap().renderOn(display,this.attr._cameraX,this.attr._cameraY,{
       visibleCells:seenCells,
@@ -138,11 +139,6 @@ Game.UIMode.gamePlay = {
     if(this.getEnemy()) {
       display.drawText(1,5,Game.UIMode.DEFAULT_COLOR_STR+"Enemy X: "+this.getEnemy().getX());
       display.drawText(1,6,Game.UIMode.DEFAULT_COLOR_STR+"Enemy Y: "+this.getEnemy().getY());
-    }
-  },
-  moveAvatar: function (dx, dy) {
-    if (this.getAvatar().tryWalk(this.getMap(),dx,dy)) {
-      this.setCameraToAvatar();
     }
   },
   moveCamera: function (dx,dy) {

@@ -28,7 +28,7 @@ Game.Entity = function(template) {
       var mixin = this._mixins[i];
       this._mixinTracker[mixin.META.mixinName] = true;
       this._mixinTracker[mixin.META.mixinGroup] = true;
-      for (var mixinProp in mixinProp != 'META' && mixin) {
+      for (var mixinProp in mixin) {
         if (mixinProp != 'META' && mixin.hasOwnProperty(mixinProp)) {
           this[mixinProp] = mixin[mixinProp];
         }
@@ -141,12 +141,20 @@ Game.Entity.prototype.fromJSON = function (json) {
 };
 
 Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
+  var response = {};
   for (var i = 0; i < this._mixins.length; i++) {
     var mixin = this._mixins[i];
     if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
-      mixin.META.listeners[evtLabel].call(this,evtData);
+      var resp = mixin.META.listeners[evtLabel].call(this,evtData);
+      for (var respKey in resp) {
+        if (resp.hasOwnProperty(respKey)) {
+          if (! response[respKey]) { response[respKey] = []; }
+          response[respKey].push(resp[respKey]);
+        }
+      }
     }
   }
+  return response;
 };
 
 Game.Entity.prototype.destroy = function() {
