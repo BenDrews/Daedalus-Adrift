@@ -13,6 +13,7 @@ Game.Entity = function(template) {
     this.attr._timeout = null;
 
     //this.attr._id = template.presetId || Game.util.randomString(32);
+
     Game.DATASTORE.ENTITY[this.attr._id] = this;
 };
 Game.Entity.extend(Game.SymbolActive);
