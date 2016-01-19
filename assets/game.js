@@ -92,13 +92,13 @@ var Game = {
   },
   renderAvatar: function() {
     this.DISPLAYS.avatar.o.clear();
-    if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('renderOnAvatar')) {
+    if ('renderAvatarInfo' in this.getCurUIMode()) {
       this.getCurUIMode().renderOnAvatar(this.DISPLAYS.avatar.o);
     }
   },
   renderMain: function() {
     this.DISPLAYS.main.o.clear();
-    if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('renderOnMain')) {
+    if ('render' in this.getCurUIMode()) {
       this.getCurUIMode().renderOnMain(this.DISPLAYS.main.o);
     } else {
       this.DISPLAYS.main.o.drawText(2, 1, "Main display");
@@ -119,6 +119,12 @@ getCurUIMode: function () {
     if (uiModeName) {
       return Game.UIMode[uiModeName];
       }
+    return null;
+  },
+  getDisplayHeight: function (displayId) {
+    if (this._display.hasOwnProperty(displayId)) {
+      return this._display[displayId].h;
+    }
     return null;
   },
   switchUIMode: function (newUiModeName) {

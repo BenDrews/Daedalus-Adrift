@@ -5,7 +5,13 @@ Game.Symbol = function (template) {
   this.attr._fg = template.fg || "transparent";
   this.attr._bg = template.bg || Game.UIMode.DEFAULT_COLOR_BG;
 };
+Game.Symbol.prototype.getColorDesignator = function(){
+     return '%c{'+this.attr._fg+'}%b{'+this.attr._bg+'}';
+};
 
+Game.Symbol.prototype.getRepresentation = function() {
+  return '%c{' + this.attr._fg + '}%b{' + this.attr._bg + '}' + this.attr._char;
+};
 Game.Symbol.prototype.getChar = function () {
   return this.attr._char;
 };
