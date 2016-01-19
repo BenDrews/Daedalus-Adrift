@@ -34,7 +34,8 @@ Game.EntityMixin.PlayerActor = {
       actingState: false,
       currentActionDuration: 1000,
       direction: 0,
-      canMove: true
+      canMove: true,
+      moveSpeed: 75
     },
     priority: 1,
     act: function () {
@@ -57,18 +58,14 @@ Game.EntityMixin.PlayerActor = {
           if(dx !== 0 || dy !== 0) {
             this.raiseEntityEvent('adjacentMove', {dx:dx, dy:dy});
             curEntity.setMovable(false);
-            if(Math.abs(dx) + Math.abs(dy) == 2) {
-              setTimeout(function () {curEntity.setMovable(true);},75 * Math.sqrt(2));
-            } else {
-              setTimeout(function () {curEntity.setMovable(true);},75);
-            }
+            setTimeout(function() {curEntity.setMovable(true);}, this.getMoveSpeed() * Math.sqrt(Math.abs(dx) + Math.abs(dy)));
           }
       }
       curEntity.raiseEntityEvent('actionDone');
       curEntity.attr._timeout = setTimeout(function() {curEntity.act();}, 50);
     },
     init: function (template) {
-  //    Game.Scheduler.add(this,true,1);
+      this.attr._PlayerActor_attr.moveSpeed = template.moveSpeed || 75;
     },
     listeners: {
       'actionDone': function(evtData) {
@@ -110,7 +107,12 @@ Game.EntityMixin.PlayerActor = {
   unsetDirection: function (dir) {
     this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction & (~dir);
   },
-
+  getMoveSpeed: function () {
+    return this.attr._PlayerActor_attr.moveSpeed;
+  },
+  setMoveSpeed: function (ms) {
+    this.attr._PlayerActor_attr.moveSpeed = ms;
+  }
 };
 
 Game.EntityMixin.WalkerCorporeal = {
@@ -175,16 +177,17 @@ Game.EntityMixin.WalkerSegmented = {
       tailSegment: null,
       extChar: ['7','8','9','0'],
       baseChar: '%',
-      extended: false
+      extended: false,
+      immobilized: false
     },
     init: function(template) {
       this.attr._WalkerSegmented_attr.headChar = template.extChar || ['a','b','c','d'];
       this.attr._WalkerSegmented_attr.baseChar = template.chr;
-      this.attr._WalkerSegmented_attr.tailSegment = new Game.Entity({name:this.getName() + ' Tail Segment', chr:this.attr._WalkerSegmented_attr.extChar[0], headSegment:this, mixins:['TailSegment']});
+      this.attr._WalkerSegmented_attr.tailSegment = new Game.Entity({name:this.getName() + ' Tail Segment', chr:this.attr._WalkerSegmented_attr.extChar[0], headSegment:this, alligence:this.getAlligence(), mixins:['TailSegment']});
     },
     listeners: {
       'adjacentMove': function(evtData) {
-        if(!this.isExtended()) {
+        if(!this.isExtended() && !this.isImmobile()) {
             var map = this.getMap();
             var dx=evtData.dx,dy=evtData.dy;
             var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
@@ -216,8 +219,17 @@ Game.EntityMixin.WalkerSegmented = {
         },
         'killed': function(evtData) {
           this.getTailSegment().destroy();
+        },
+        'immobilized': function(evtData) {
+          this.setImmobile(evtData.immobilized);
         }
       }
+    },
+    setImmobile: function(im) {
+      this.attr._WalkerSegmented_attr.immobilized = im;
+    },
+    isImmobile: function() {
+      return this.attr._WalkerSegmented_attr.immobilized;
     },
     getTailSegment: function() {
       return this.attr._WalkerSegmented_attr.tailSegment;
@@ -360,7 +372,7 @@ Game.EntityMixin.WanderActor = {
       if (this.canMove()) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
         if(this.raiseEntityEvent('adjacentMove', {dx:moveDeltas.x, dy:moveDeltas.y}).madeAdjacentMove[0]) {
           this.setMovable(false);
-          setTimeout(function() {curObj.setMovable(true);}, 750);
+          setTimeout(function() {curObj.setMovable(true);}, 250);
         }
       }
       this.setCurrentActionDuration(this.getBaseActionDuration());
@@ -390,7 +402,7 @@ Game.EntityMixin.WanderActor = {
     this.attr._WanderActor_attr.currentActionDuration = n;
   },
   getMoveDeltas: function () {
-    return Game.util.positionsOrthogonalTo({x:0,y:0}).random();
+    return Game.util.positionsAdjacentTo({x:0,y:0}).random();
   }
 };
 
@@ -400,12 +412,34 @@ Game.EntityMixin.WanderChaserActor = {
     mixinGroup: 'Actor',
     stateNamespace: '_WanderChaserActor_attr',
     stateModel:  {
+      topology: 8,
+      speed: 100,
+      canMove:true
+    },
+    priority: 1,
+    act: function () {
+      var moveDeltas = this.getMoveDeltas();
+      var curObj = this;
+      if (this.canMove()) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
+        if(this.raiseEntityEvent('adjacentMove', {dx:moveDeltas.x, dy:moveDeltas.y}).madeAdjacentMove[0]) {
+          this.setMovable(false);
+          setTimeout(function() {curObj.setMovable(true);}, this.getMoveSpeed()*Math.sqrt(Math.abs(moveDeltas.x) + Math.abs(moveDeltas.y)));
+        }
+      }
+      this.raiseEntityEvent('actionDone');
+      clearTimeout(curObj.attr._timeout);
+      curObj.attr._timeout = setTimeout(function() {curObj.act();}, 75);
     },
     init: function (template) {
-      Game.Scheduler.add(this,true, Game.util.randomInt(2,this.getBaseActionDuration()));
-      this.attr._WanderChaserActor_attr.baseActionDuration = template.wanderChaserActionDuration || 1000;
-      this.attr._WanderChaserActor_attr.currentActionDuration = this.attr._WanderChaserActor_attr.baseActionDuration;
+      this.attr._WanderChaserActor_attr.topology = template.topology || 8;
+      this.attr._WanderChaserActor_attr.speed = template.speed || 100;
     }
+  },
+  getMoveSpeed: function () {
+    return this.attr._WanderChaserActor_attr.speed;
+  },
+  setMoveSpeed: function (speed) {
+    this.attr._WanderChaserActor_attr.speed = speed;
   },
   getMoveDeltas: function () {
     var avatar = Game.getAvatar();
@@ -422,7 +456,7 @@ Game.EntityMixin.WanderChaserActor = {
               return false;
           }
           return map.getTile(x, y).isWalkable();
-      }, {topology: 8});
+      }, {topology: this.attr._WanderChaserActor_attr.topology});
 
       // compute the path from here to there
       var count = 0;
@@ -437,19 +471,108 @@ Game.EntityMixin.WanderChaserActor = {
 
       return moveDeltas;
     }
-    return Game.util.positionsAdjacentTo({x:0,y:0}).random();
+    return Game.util.positionsOrthogonalTo({x:0,y:0}).random();
   },
-  act: function () {
-    Game.TimeEngine.lock();
-    // console.log("begin wander acting");
-    // console.log('wander for '+this.getName());
-    var moveDeltas = this.getMoveDeltas();
-    this.raiseEntityEvent('adjacentMove',{dx:moveDeltas.x,dy:moveDeltas.y});
-    Game.Scheduler.setDuration(this.getCurrentActionDuration());
-    this.setCurrentActionDuration(this.getBaseActionDuration()+Game.util.randomInt(-10,10));
-    this.raiseEntityEvent('actionDone');
-    // console.log("end wander acting");
-    Game.TimeEngine.unlock();
+  canMove: function() {
+    return this.attr._WanderChaserActor_attr.canMove;
+  },
+  setMovable: function (canMove) {
+    this.attr._WanderChaserActor_attr.canMove = canMove;
+  }
+};
+
+Game.EntityMixin.LatchExploder = {
+  META: {
+    mixinName: 'LatchExploder',
+    mixinGroup: 'Attacker',
+    stateNamespace: '_LatchExploder_attr',
+    stateModel: {
+      explosionPower: 10,
+      slow: 50,
+      attached: false,
+      attachedTo: null
+    },
+    init: function (template) {
+      this.attr._LatchExploder_attr.explosionPower = template.explosionPower || 10;
+      this.attr._LatchExploder_attr.slow = template.slow || 50;
+    },
+    listeners: {
+      'attacheeMove': function (evtData) {
+        var targetX = this.getX() + evtData.dx;
+        var targetY = this.getY() + evtData.dy;
+        var map = this.getMap();
+        if(map.getTile(targetX,targetY).isWalkable() && (!map.getEntity(targetX,targetY)) || map.getEntity(targetX,targetY) == this.getAttachedTo()) {
+          if(Game.Entity.prototype.raiseEntityEvent.call(this.getAttachedTo(),'adjacentMove', evtData).madeAdjacentMove[0]) {
+            this.setPos(targetX,targetY);
+            map.updateEntityLocation(this);
+            return {madeAdjacentMove: true};
+          }
+        }
+        return {madeAdjacentMove: false};
+      },
+      'detach': function (evtData) {
+        if(this.isAttached()) {
+          this.detach();
+        }
+      },
+      'killed': function(evtData) {
+        if(this.isAttached()){
+          this.detach();
+        }
+        this.destroy();
+      }
+    },
+    act: function () {
+      if(!this.isAttached()){
+        var map = this.getMap();
+        var ent = null;
+        var adjPos = Game.util.positionsAdjacentTo(this.getPos());
+        for (var i = 0; i < adjPos.length; i++) {
+          ent = map.getEntity(adjPos[i]);
+          if(ent && !this.isAllied(ent)) {
+            this.attachTo(ent);
+          }
+        }
+      }
+    }
+  },
+  isAttached: function () {
+    return this.attr._LatchExploder_attr.attached;
+  },
+  attachTo: function (ent) {
+    this.raiseEntityEvent('immobilized', {immobilized:true});
+    this.attr._LatchExploder_attr.attached = true;
+    this.attr._LatchExploder_attr.attachedTo = ent;
+    if(typeof ent.setMoveSpeed == 'function') {
+      ent.setMoveSpeed(ent.getMoveSpeed() + this.getSlow());
+    }
+    var curEntity = this;
+    ent.raiseEntityEvent = function(evtLabel, evtData) {
+      if (evtLabel == 'adjacentMove') {
+        return curEntity.raiseEntityEvent('attacheeMove', {dx:evtData.dx, dy:evtData.dy});
+      } else {
+        Game.Entity.prototype.raiseEntityEvent.call(ent, evtLabel, evtData);
+      }
+    };
+  },
+  getAttachedTo: function () {
+    return this.attr._LatchExploder_attr.attachedTo;
+  },
+  detach: function () {
+    this.raiseEntityEvent('immobilized', {immobilized:false});
+    ent = this.getAttachedTo();
+    if(typeof ent.setMoveSpeed == 'function') {
+      ent.setMoveSpeed(ent.getMoveSpeed() - 50);
+    }
+    this.getAttachedTo().raiseEntityEvent = Game.Entity.prototype.raiseEntityEvent.call(this.getAttachedTo());
+    this.attr._LatchExploder_attr.attached = false;
+    this.attr._LatchExploder_attr.attachedTo = null;
+  },
+  getSlow: function () {
+    return this.attr._LatchExploder_attr.slow;
+  },
+  setSlow: function (s) {
+    this.attr._LatchExploder_attr.slow = s;
   }
 };
 
@@ -460,16 +583,36 @@ Game.EntityMixin.MeleeAttacker = {
     stateNamespace: '_MeleeAttacker_attr',
     stateModel:  {
       attackPower: 1,
+      canAttack: true,
+      speed: 100
     },
     init: function (template) {
       this.attr._MeleeAttacker_attr.attackPower = template.attackPower || 1;
+      this.attr._MeleeAttacker_attr.speed = template.attackSpeed || 100;
     },
     listeners: {
       'bumpEntity': function(evtData) {
         console.log('MeleeAttacker bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
-        evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor,attackPower:this.getAttackPower()});
+        var curObj = this;
+        if(!this.isAllied(evtData.recipient) && this.canAttack()) {
+          evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor,attackPower:this.getAttackPower()});
+          this.setAttack(false);
+          setTimeout(function() {curObj.setAttack(true);}, this.getAttackSpeed());
+        }
       }
     }
+  },
+  getAttackSpeed: function () {
+    return this.attr._MeleeAttacker_attr.speed;
+  },
+  setAttackSpeed: function (speed) {
+    this.attr._MeleeAttacker_attr.speed = speed;
+  },
+  canAttack: function () {
+    return this.attr._MeleeAttacker_attr.canAttack;
+  },
+  setAttack: function (canAttack) {
+    this.attr._MeleeAttacker_attr.canAttack = canAttack;
   },
   getAttackPower: function () {
     return this.attr._MeleeAttacker_attr.attackPower;
@@ -482,11 +625,12 @@ Game.EntityMixin.ShooterActor = {
     mixinGroup: 'Actor',
     stateNamespace: '_ShooterActor_attr',
     stateModel:  {
-      baseActionDuration: 1000,
-      currentActionDuration: 1000,
       timeout: null,
-      integer: 0,
-      canAttack: true
+      canAttack: true,
+      speed: 500
+    },
+    init: function (template) {
+      this.attr._ShooterActor_attr.speed = template.shootSpeed || 500;
     },
     act: function () {
       var curObj = this;
@@ -497,7 +641,7 @@ Game.EntityMixin.ShooterActor = {
         projectile.attr._Bullet_attr.firedBy = this;
         setTimeout(function() {projectile.act();}, projectile.getSpeed());
         this.setAttack(false);
-        setTimeout(function() {curObj.setAttack(true);}, 1000);
+        setTimeout(function() {curObj.setAttack(true);}, this.getAttackSpeed());
       }
 
       this.raiseEntityEvent('actionDone');
@@ -506,6 +650,12 @@ Game.EntityMixin.ShooterActor = {
       curObj.attr._timeout = setTimeout(function() {curObj.act();}, 50);
     }
   },
+  getAttackSpeed: function () {
+    return this.attr._ShooterActor_attr.speed;
+  },
+  setAttackSpeed: function (speed) {
+    this.attr._ShooterActor_attr.speed = speed;
+  },
   canAttack: function () {
     return this.attr._ShooterActor_attr.canAttack;
   },
@@ -513,7 +663,10 @@ Game.EntityMixin.ShooterActor = {
     this.attr._ShooterActor_attr.canAttack = canAttack;
   },
   getProjectileDeltas: function () {
-    return Game.util.positionsAdjacentTo({x:0,y:0}).random();
+    do{
+      projDeltas = Game.util.positionsAdjacentTo({x:0,y:0}).random();
+    } while(!this.getMap().getTile(this.getX() + projDeltas.x, this.getY() + projDeltas.y).isWalkable());
+    return projDeltas;
   },
 };
 
@@ -572,33 +725,38 @@ Game.EntityMixin.Bullet = {
   }
 };
 
-Game.EntityMixin.NarrowSight = {
+Game.EntityMixin.Sight = {
   META: {
-    mixinName: 'NarrowSight',
+    mixinName: 'Sight',
     mixinGroup: 'Sense',
-    stateNamespace: '_NarrowSight_attr',
+    stateNamespace: '_Sight_attr',
     stateModel: {
       sightRadius: 10,
-      facing: 0
+      facing: 0,
+      sightRange: '360'
     },
     init: function (template) {
-      this.attr._NarrowSight_attr.sightRadius = template.sightRadius || 10;
+      this.attr._Sight_attr.sightRadius = template.sightRadius || 10;
+      this.attr._Sight_attr.sightRange = template.sightRange || '360';
     },
     listeners: {
       'movedUnit': function(evtData) {
         this.setFacing(evtData.direction);
+      },
+      'senseForEntity': function(evtData) {
+        return {entitySensed:this.canSeeEntity(evtData.senseForEntity)};
       }
     }
   },
   getSightRadius: function () {
-    return this.attr._NarrowSight_attr.sightRadius;
+    return this.attr._Sight_attr.sightRadius;
   },
   setSightRadius: function (n) {
-    this.attr._NarrowSight_attr.sightRadius = n;
+    this.attr._Sight_attr.sightRadius = n;
   },
   canSeeEntity: function(entity) {
       // If not on the same map or on different maps, then exit early
-      if (!entity || this.getMapId() !== entity.getMapId()) {
+      if (!entity || this.getMap().getId() !== entity.getMap().getId()) {
           return false;
       }
       return this.canSeeCoord(entity.getX(),entity.getY());
@@ -611,7 +769,7 @@ Game.EntityMixin.NarrowSight = {
     }
 
     // If we're not within the sight radius, then we won't be in a real field of view either.
-    if (Math.max(Math.abs(otherX - this.getX()),Math.abs(otherY - this.getY())) > this.attr._NarrowSight_attr.sightRadius) {
+    if (Math.max(Math.abs(otherX - this.getX()),Math.abs(otherY - this.getY())) > this.attr._Sight_attr.sightRadius) {
       return false;
     }
 
@@ -623,7 +781,7 @@ Game.EntityMixin.NarrowSight = {
       for (var i=0;i<=this.getSightRadius();i++) {
           visibleCells.byDistance[i] = {};
       }
-      this.getMap().getFov().compute90(
+      this.getMap().getFov()['compute'+this.getSightRange()](
           this.getX(), this.getY(),
           this.getSightRadius(), this.getFacing(),
           function(x, y, radius, visibility) {
@@ -637,10 +795,16 @@ Game.EntityMixin.NarrowSight = {
       return this.canSeeCoord(this.getX()+dx,this.getY()+dy);
   },
   getFacing: function () {
-    return this.attr._NarrowSight_attr.facing;
+    return this.attr._Sight_attr.facing;
   },
   setFacing: function (dir) {
-    this.attr._NarrowSight_attr.facing = dir;
+    this.attr._Sight_attr.facing = dir;
+  },
+  getSightRange: function () {
+    return this.attr._Sight_attr.sightRange;
+  },
+  setSightRange: function (sr) {
+    this.attr._Sight_attr.sightRange = sr;
   }
 };
 

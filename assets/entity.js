@@ -10,6 +10,9 @@ Game.Entity = function(template) {
     this.attr._generator_template_key = template.generator_template_key || '';
     this.attr._mapId = null;
     this.attr._timeout = null;
+    this.attr._alligence = template.alligence || 'self';
+    this.attr._allyHash = template.allyHash || {};
+    this.setAlliedWith(this.getAlligence(),true);
 
     this.attr._id = template.presetId || Game.util.uniqueId();
     Game.DATASTORE.ENTITY[this.attr._id] = this;
@@ -165,4 +168,31 @@ Game.Entity.prototype.destroy = function() {
     }
     //remove from datastore
     delete Game.DATASTORE.ENTITY[this.getId()];
+};
+
+Game.Entity.prototype.isAllied = function (ent) {
+  if(this.getAlligence() === 'self' || (typeof ent.getAlligence !== 'function')) return false;
+  else {
+    return this.getAllies()[ent.getAlligence()];
+  }
+};
+
+Game.Entity.prototype.setAlliedWith = function (banner,allied){
+  this.getAllies()[banner] = allied;
+};
+
+Game.Entity.prototype.getAllies = function () {
+  return this.attr._allyHash;
+};
+
+Game.Entity.prototype.setAllies = function (allies) {
+  this.attr._allyHash = allies;
+};
+
+Game.Entity.prototype.getAlligence = function () {
+  return this.attr._alligence;
+};
+
+Game.Entity.prototype.setAlligence = function (a) {
+  this.attr._alligence = a;
 };
