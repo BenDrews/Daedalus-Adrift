@@ -46,7 +46,7 @@ var Game = {
   TRANSIENT_RNG: null,
   _bgMusic: null,
   DATASTORE: {},
-  TimeEngine: null,
+
   init: function () {
     this._game = this;
     this.TRANSIENT_RNG = ROT.RNG.clone();
@@ -92,13 +92,13 @@ var Game = {
   },
   renderAvatar: function() {
     this.DISPLAYS.avatar.o.clear();
-    if ('renderAvatarInfo' in this.getCurUIMode()) {
+    if (this.getCurUIMode() && typeof this.getCurUIMode().renderOnAvatar == "function") {
       this.getCurUIMode().renderOnAvatar(this.DISPLAYS.avatar.o);
     }
   },
   renderMain: function() {
     this.DISPLAYS.main.o.clear();
-    if ('render' in this.getCurUIMode()) {
+    if (this.getCurUIMode() && typeof this.getCurUIMode().renderOnMain == "function") {
       this.getCurUIMode().renderOnMain(this.DISPLAYS.main.o);
     } else {
       this.DISPLAYS.main.o.drawText(2, 1, "Main display");
@@ -114,7 +114,7 @@ var Game = {
     this.DISPLAYS.message.o.clear();
     this.DISPLAYS.message.o.drawText(1,1,'%c{#fff}%b{#000}'+msg,79);
   },
-getCurUIMode: function () {
+  getCurUIMode: function () {
     var uiModeName = this._uiModeNameStack[0];
     if (uiModeName) {
       return Game.UIMode[uiModeName];
@@ -122,8 +122,9 @@ getCurUIMode: function () {
     return null;
   },
   getDisplayHeight: function (displayId) {
-    if (this._display.hasOwnProperty(displayId)) {
-      return this._display[displayId].h;
+    console.log(this.DISPLAYS);
+    if (this.DISPLAYS.hasOwnProperty(displayId)) {
+      return this.DISPLAYS[displayId].h;
     }
     return null;
   },
@@ -153,7 +154,7 @@ getCurUIMode: function () {
     if (newMode) {
       newMode.enter();
       }
-      this.renderAll();
+    //  this.renderAll();
   },
   popUIMode: function () {
     var curMode = this.getCurUIMode();
@@ -164,7 +165,7 @@ getCurUIMode: function () {
     this.renderAll();
 },
   eventHandler: function(eventType, evt) {
-    if (this.getCurUIMode() && this.getCurUIMode().hasOwnProperty('handleInput')) {
+    if (this.getCurUIMode()) {
       this.getCurUIMode().handleInput(eventType, evt);
     }
   }

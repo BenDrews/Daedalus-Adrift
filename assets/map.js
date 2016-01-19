@@ -152,18 +152,21 @@ Game.Map.prototype.extractItemAt = function (itm_or_idx,x_or_pos,y) {
     useY = x_or_pos.y;
   }
   var itemIds = this.attr._itemsByLocation[useX+','+useY];
+          console.log(itemIds);
   if (! itemIds) { return false; }
 
   var item = false, extractedId = '';
   if (Number.isInteger(itm_or_idx)) {
     extractedId = itemIds.splice(itm_or_idx,1);
     item = Game.DATASTORE.ITEM[extractedId];
+            console.log(item);
   } else {
     var idToFind = itm_or_idx.getId();
     for (var i = 0; i < itemIds.length; i++) {
       if (idToFind === itemIds[i]) {
         extractedId = itemIds.splice(i,1);
         item = Game.DATASTORE.ITEM[extractedId];
+        console.log(item);
         break;
       }
     }

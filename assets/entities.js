@@ -4,7 +4,7 @@ Game.EntityGenerator.learn({
   name: 'avatar',
   chr:'@',
   maxHp: 10,
-  inventoryCapacity: 3,
+  inventoryCapacity: 30,
   mixins: ["PlayerActor", "NarrowSight", "MapMemory", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "PlayerMessager", "InventoryHolder"]
 });
 

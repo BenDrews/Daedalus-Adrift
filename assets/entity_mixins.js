@@ -23,23 +23,23 @@ Game.EntityMixin.PlayerMessager = {
 
        'noItemsToPickup': function(evtData) {
          Game.Message.send('there is nothing to pickup');
-         Game.renderDisplayMessage();
+         Game.renderMessage();
        },
        'inventoryFull': function(evtData) {
          Game.Message.send('your inventory is full');
-         Game.renderDisplayMessage();
+         Game.renderMessage();
        },
        'inventoryEmpty': function(evtData) {
          Game.Message.send('you are not carrying anything');
-         Game.renderDisplayMessage();
+         Game.renderMessage();
        },
        'noItemsPickedUp': function(evtData) {
          Game.Message.send('you could not pick up any items');
-         Game.renderDisplayMessage();
+         Game.renderMessage();
        },
        'someItemsPickedUp': function(evtData) {
          Game.Message.send('you picked up '+evtData.numItemsPickedUp+' of the items, leaving '+evtData.numItemsNotPickedUp+' of them');
-         Game.renderDisplayMessage();
+         Game.renderMessage();
        },
        'allItemsPickedUp': function(evtData) {
         if (evtData.numItemsPickedUp > 1) {
@@ -47,11 +47,11 @@ Game.EntityMixin.PlayerMessager = {
          } else {
            Game.Message.send('you picked up the item');
          }
-         Game.renderDisplayMessage();
+         Game.renderMessage();
        },
        'itemsDropped': function(evtData) {
          Game.Message.send('you dropped '+evtData.numItemsDropped+' items');
-         Game.renderDisplayMessage();
+         Game.renderMessage();
        }
     }
   }
@@ -85,7 +85,7 @@ Game.EntityMixin.InventoryHolder = {
       }
     }
   },
-  _getContainer: function() {
+  _getContainer: function () {
     return Game.DATASTORE.ITEM[this.attr._InventoryHolder_attr.containerId];
   },
   hasInventorySpace: function () {
@@ -102,10 +102,10 @@ Game.EntityMixin.InventoryHolder = {
   },
   pickupItems: function (ids_or_idxs) {
     var itemsToAdd = [];
-    var fromPile = this.getMap().getItems(this.getPos());
+    var fromPile = Game.UIMode.gamePlay.getMap().getItems(this.getPos());
     var pickupResult = {
-      numItemsPickedUp: 0,
-      numItemsNotPickedUp: ids_or_idxs.length
+      numItemsPickedUp:0,
+      numItemsNotPickedUp:ids_or_idxs.length
     };
 
     if (fromPile.length < 1) {
@@ -117,39 +117,48 @@ Game.EntityMixin.InventoryHolder = {
       this.raiseSymbolActiveEvent('noItemsPickedUp');
       return pickupResult;
     }
+
+
     for (var i = 0; i < fromPile.length; i++) {
       if ((ids_or_idxs.indexOf(i) > -1) || (ids_or_idxs.indexOf(fromPile[i].getId()) > -1)) {
-        itemsToAdd.push(fromPile[i]);
+          itemsToAdd.push(fromPile[i]);
       }
     }
     var addResult = this._getContainer().addItems(itemsToAdd);
     pickupResult.numItemsPickedUp = addResult.numItemsAdded;
-    pickupResult.numItemsNotPickedUp = add.Result.numItemsNotAdded;
+    pickupResult.numItemsNotPickedUp = addResult.numItemsNotAdded;
+    var lastItemFromMap = '';
     for (var j = 0; j < pickupResult.numItemsPickedUp; j++) {
-      this.getMap().extractItemAt(itemsToAdd[j],this.getPos());
+      lastItemFromMap = this.getMap().extractItemAt(itemsToAdd[j],this.getPos());
     }
+    console.log(lastItemFromMap);
+
+    pickupResult.lastItemPickedUpName = lastItemFromMap.getName();
     if (pickupResult.numItemsNotPickedUp > 0) {
-      this.raiseSymbolActiveEvent('someItemsPickedUp', pickupResult);
+      this.raiseSymbolActiveEvent('someItemsPickedUp',pickupResult);
     } else {
-      this.raiseSymbolActiveEvent('allItemsPickedUp', pickupResult);
+      this.raiseSymbolActiveEvent('allItemsPickedUp',pickupResult);
     }
+
     return pickupResult;
   },
   dropItems: function (ids_or_idxs) {
-    var itemIdsToDrop = this._getContainer().extractItems(ids_or_idxs);
-    var dropResult = {numItemsDropped: 0};
-    if (itemIdsToDrop.length < 1) {
+    var itemsToDrop = this._getContainer().extractItems(ids_or_idxs);
+    var dropResult = {numItemsDropped:0};
+    if (itemsToDrop.length < 1) {
       this.raiseSymbolActiveEvent('inventoryEmpty');
       return dropResult;
     }
-
-    for (var i = 0; i < itemToDrop.length; i++) {
-      if (itemToDrop[i]) {
+    var lastItemDropped = '';
+    for (var i = 0; i < itemsToDrop.length; i++) {
+      if (itemsToDrop[i]) {
+        lastItemDropped = itemsToDrop[i];
         this.getMap().addItem(itemsToDrop[i],this.getPos());
         dropResult.numItemsDropped++;
       }
     }
-    this.raiseSymbolActiveEvent('itemsDropped', dropResult);
+    dropResult.lastItemDroppedName = lastItemDropped.getName();
+    this.raiseSymbolActiveEvent('itemsDropped',dropResult);
     return dropResult;
   }
 };
