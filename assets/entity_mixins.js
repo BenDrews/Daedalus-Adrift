@@ -394,6 +394,65 @@ Game.EntityMixin.WanderActor = {
   }
 };
 
+Game.EntityMixin.WanderChaserActor = {
+  META: {
+    mixinName: 'WanderChaserActor',
+    mixinGroup: 'Actor',
+    stateNamespace: '_WanderChaserActor_attr',
+    stateModel:  {
+    },
+    init: function (template) {
+      Game.Scheduler.add(this,true, Game.util.randomInt(2,this.getBaseActionDuration()));
+      this.attr._WanderChaserActor_attr.baseActionDuration = template.wanderChaserActionDuration || 1000;
+      this.attr._WanderChaserActor_attr.currentActionDuration = this.attr._WanderChaserActor_attr.baseActionDuration;
+    }
+  },
+  getMoveDeltas: function () {
+    var avatar = Game.getAvatar();
+    var senseResp = this.raiseEntityEvent('senseForEntity',{senseForEntity:avatar});
+    if (Game.util.compactBooleanArray_or(senseResp.entitySensed)) {
+
+      // build a path instance for the avatar
+      var source = this;
+      var map = this.getMap();
+      var path = new ROT.Path.AStar(avatar.getX(), avatar.getY(), function(x, y) {
+          // If an entity is present at the tile, can't move there.
+          var entity = map.getEntity(x, y);
+          if (entity && entity !== avatar && entity !== source) {
+              return false;
+          }
+          return map.getTile(x, y).isWalkable();
+      }, {topology: 8});
+
+      // compute the path from here to there
+      var count = 0;
+      var moveDeltas = {x:0,y:0};
+      path.compute(this.getX(), this.getY(), function(x, y) {
+          if (count == 1) {
+              moveDeltas.x = x - source.getX();
+              moveDeltas.y = y - source.getY();
+          }
+          count++;
+      });
+
+      return moveDeltas;
+    }
+    return Game.util.positionsAdjacentTo({x:0,y:0}).random();
+  },
+  act: function () {
+    Game.TimeEngine.lock();
+    // console.log("begin wander acting");
+    // console.log('wander for '+this.getName());
+    var moveDeltas = this.getMoveDeltas();
+    this.raiseEntityEvent('adjacentMove',{dx:moveDeltas.x,dy:moveDeltas.y});
+    Game.Scheduler.setDuration(this.getCurrentActionDuration());
+    this.setCurrentActionDuration(this.getBaseActionDuration()+Game.util.randomInt(-10,10));
+    this.raiseEntityEvent('actionDone');
+    // console.log("end wander acting");
+    Game.TimeEngine.unlock();
+  }
+};
+
 Game.EntityMixin.MeleeAttacker = {
   META: {
     mixinName: 'MeleeAttacker',
