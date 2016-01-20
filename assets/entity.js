@@ -22,6 +22,8 @@ Game.Entity = function(template) {
     this._mixinNames = template.mixins || [];
     this._mixins = [];
     this._actions = [];
+    this._listeners = {};
+    this._listeningTo = [];
     for (var i = 0; i < this._mixinNames.length; i++) {
       this._mixins.push(Game.EntityMixin[this._mixinNames[i]]);
     }
@@ -143,19 +145,55 @@ Game.Entity.prototype.fromJSON = function (json) {
   Game.UIMode.gamePersistence.BASE_fromJSON.call(this,json);
 };
 
-Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
-  var response = {};
-  for (var i = 0; i < this._mixins.length; i++) {
-    var mixin = this._mixins[i];
+Game.Entity.prototype.addListener = function(ent,evtLabel,callLabel) {
+  if(!this._listeners[evtLabel]) {this._listeners[evtLabel] = {};}
+  this._listeners[evtLabel][ent.getId()] = callLabel;
+  ent._listeningTo.push([evtLabel,this.getId()]);
+};
+
+Game.Entity.prototype.removeListener = function(listener) {
+  for(var evtLabel in this._listeners) {
+      if(this._listeners[evtLabel][listener.getId()]){
+        delete this._listeners[evtLabel][listener.getId()];
+      }
+  }
+  if(this._listeners[evtLabel].length < 1) {
+    delete this._listeners[evtLabe];
+  }
+};
+
+Game.Entity.prototype.raiseExternalEntityEvent = function(evtLabel,evtData) {
+  for (var j = 0; j < this._mixins.length; j++) {
+    var mixin = this._mixins[j];
     if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
-      var resp = mixin.META.listeners[evtLabel].call(this,evtData);
-      for (var respKey in resp) {
-        if (resp.hasOwnProperty(respKey)) {
-          if (! response[respKey]) { response[respKey] = []; }
-          response[respKey].push(resp[respKey]);
+      mixin.META.listeners[evtLabel].call(this,evtData);
+    }
+  }
+};
+
+Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
+  if(this._listeners[evtLabel]) {
+    var handled = false;
+    for(var listener in this._listeners[evtLabel]) {
+      Game.DATASTORE.ENTITY[listener].raiseExternalEntityEvent(this._listeners[evtLabel][listener], evtData);
+    }
+  }
+  var response = {};
+  if (!evtData || !evtData.handled) {
+    for (var i = 0; i < this._mixins.length; i++) {
+      var mixin = this._mixins[i];
+      if (mixin.META.listeners && mixin.META.listeners[evtLabel]) {
+        var resp = mixin.META.listeners[evtLabel].call(this,evtData);
+        for (var respKey in resp) {
+          if (resp.hasOwnProperty(respKey)) {
+            if (! response[respKey]) { response[respKey] = []; }
+            response[respKey].push(resp[respKey]);
+          }
         }
       }
     }
+  } else {
+    response = evtData.response;
   }
   return response;
 };
@@ -165,6 +203,11 @@ Game.Entity.prototype.destroy = function() {
     this.getMap().extractEntity(this);
     if(this.hasOwnProperty('_actions')) {
       this.pauseAction();
+    }
+    if(this._listeningTo.length > 0) {
+      for (var listening in this._listeningTo) {
+        delete Game.DATASTORE.ENTITY[listening[1]]._listeners[listening[0]][this.getId()];
+      }
     }
     //remove from datastore
     delete Game.DATASTORE.ENTITY[this.getId()];

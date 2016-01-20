@@ -137,7 +137,7 @@ Game.EntityMixin.WalkerCorporeal = {
             if (myMap) {
               myMap.updateEntityLocation(this);
             }
-            this.raiseEntityEvent('movedUnit',{direction:Game.util.posToDir(dx,dy)});
+            this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
             return {madeAdjacentMove:true};
           } else {
             this.raiseEntityEvent('walkForbidden',{target:targetTile});
@@ -205,7 +205,7 @@ Game.EntityMixin.WalkerSegmented = {
                 myMap.updateEntityLocation(this);
               }
               this.extend({x:dx,y:dy});
-              this.raiseEntityEvent('movedUnit',{direction:Game.util.posToDir(dx,dy)});
+              this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
               return {madeAdjacentMove:true};
             } else {
               this.raiseEntityEvent('walkForbidden',{target:targetTile});
@@ -501,14 +501,29 @@ Game.EntityMixin.LatchExploder = {
         var targetX = this.getX() + evtData.dx;
         var targetY = this.getY() + evtData.dy;
         var map = this.getMap();
-        if(map.getTile(targetX,targetY).isWalkable() && (!map.getEntity(targetX,targetY)) || map.getEntity(targetX,targetY) == this.getAttachedTo()) {
-          if(Game.Entity.prototype.raiseEntityEvent.call(this.getAttachedTo(),'adjacentMove', evtData).madeAdjacentMove[0]) {
-            this.setPos(targetX,targetY);
-            map.updateEntityLocation(this);
-            return {madeAdjacentMove: true};
+        if(!evtData.latchers) {
+          evtData.latchers = {};
+          for(var ltch = 0; ltch < this.getAttachedTo().attr._LatchExploder_attr.latchers.length; ltch++) {
+            evtData.latchers[this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch].getId()] = false;
           }
         }
-        return {madeAdjacentMove: false};
+        if(map.getTile(targetX,targetY).isWalkable()) {
+          evtData.latchers[this.getId()] = true;
+        }
+        var allCanMove = true;
+        for(var latcher in evtData.latchers) {
+          allCanMove = allCanMove && evtData.latchers[latcher];
+        }
+        if(allCanMove) {
+          evtData.handled = false;
+        } else {
+          evtData.handled = true;
+          evtData.response = {madeAdjacentMove:[false]};
+        }
+      },
+      'attacheeMoved': function (evtData) {
+        this.setPos(this.getX() + evtData.dx, this.getY() + evtData.dy);
+        this.getMap().updateEntityLocation(this);
       },
       'detach': function (evtData) {
         if(this.isAttached()) {
@@ -526,7 +541,7 @@ Game.EntityMixin.LatchExploder = {
       if(!this.isAttached()){
         var map = this.getMap();
         var ent = null;
-        var adjPos = Game.util.positionsAdjacentTo(this.getPos());
+        var adjPos = Game.util.positionsOrthogonalTo(this.getPos());
         for (var i = 0; i < adjPos.length; i++) {
           ent = map.getEntity(adjPos[i]);
           if(ent && !this.isAllied(ent)) {
@@ -547,13 +562,11 @@ Game.EntityMixin.LatchExploder = {
       ent.setMoveSpeed(ent.getMoveSpeed() + this.getSlow());
     }
     var curEntity = this;
-    ent.raiseEntityEvent = function(evtLabel, evtData) {
-      if (evtLabel == 'adjacentMove') {
-        return curEntity.raiseEntityEvent('attacheeMove', {dx:evtData.dx, dy:evtData.dy});
-      } else {
-        Game.Entity.prototype.raiseEntityEvent.call(ent, evtLabel, evtData);
-      }
-    };
+    if(!ent.attr._LatchExploder_attr) {ent.attr._LatchExploder_attr = {};}
+    if(!ent.attr._LatchExploder_attr.latchers) {ent.attr._LatchExploder_attr.latchers = [];}
+    ent.attr._LatchExploder_attr.latchers.push(this);
+    ent.addListener(this, 'adjacentMove', 'attacheeMove');
+    ent.addListener(this, 'movedUnit', 'attacheeMoved');
   },
   getAttachedTo: function () {
     return this.attr._LatchExploder_attr.attachedTo;
@@ -564,7 +577,7 @@ Game.EntityMixin.LatchExploder = {
     if(typeof ent.setMoveSpeed == 'function') {
       ent.setMoveSpeed(ent.getMoveSpeed() - 50);
     }
-    this.getAttachedTo().raiseEntityEvent = Game.Entity.prototype.raiseEntityEvent.call(this.getAttachedTo());
+    ent.removeListener(this);
     this.attr._LatchExploder_attr.attached = false;
     this.attr._LatchExploder_attr.attachedTo = null;
   },
