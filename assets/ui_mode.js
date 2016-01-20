@@ -1,4 +1,7 @@
-Game.UIMode = {};
+Game.UIMode = {DEFAULT_COLOR_STR:""};
+
+//##############################################################################
+//##############################################################################
 
 Game.UIMode.gameStart = {
   enter: function () {
@@ -10,17 +13,17 @@ Game.UIMode.gameStart = {
   },
   handleInput: function (eventType, evt) {
     console.log("Game.UIMode.gameStart handleInput");
-    Game.switchUIMode(Game.UIMode.gamePersistence);
+    Game.switchUIMode('gamePersistence');
   },
   renderOnMain: function (display) {
     display.clear();
-    var fg = Game.UIMode.DEFAULT_COLOR_FG;
-    var bg = Game.UIMode.DEFAULT_COLOR_BG;
-    display.drawText(4,4, "Welcome to WSRL", fg, bg);
-    display.drawText(4, 6, "Press any key to continue", fg, bg);
-    console.log("Game.UIMode.gameStart renderOnMain");
+    display.drawText(4,4, Game.UIMode.DEFAULT_COLOR_STR+"Welcome to WSRL");
+    display.drawText(4, 6, Game.UIMode.DEFAULT_COLOR_STR+"Press any key to continue");
   }
 };
+
+//##############################################################################
+//##############################################################################
 
 Game.UIMode.gamePlay = {
   paceMaker: null,
@@ -36,7 +39,7 @@ Game.UIMode.gamePlay = {
   actLoop: function() {
     for (var entID in Game.DATASTORE.ENTITY) {
       var entity = Game.DATASTORE.ENTITY[entID];
-      if (entity.hasOwnProperty('act')) {
+      if (entity._actions.length > 0) {
         entity.act();
       }
     }
@@ -44,7 +47,7 @@ Game.UIMode.gamePlay = {
   destroyActLoop: function() {
     for (var entID in Game.DATASTORE.ENTITY) {
       var entity = Game.DATASTORE.ENTITY[entID];
-      if (entity.hasOwnProperty('pauseAction')) {
+      if (entity._actions.length > 0) {
         console.log(entity);
         entity.pauseAction();
       }
@@ -91,59 +94,50 @@ Game.UIMode.gamePlay = {
   setEnemy:function (e) {
     this.attr._enemyId = e.getId();
   },
-  handleInput: function (eventType, evt) {
-    var pressedKey = String.fromCharCode(evt.charCode);
-    if(eventType == 'keypress'){
-      if (evt.keyCode == 13) {
-        Game.switchUIMode(Game.UIMode.gameWin);
-        return;
-      }
-  }
-    if(eventType == 'keydown') {
-      if (evt.keyCode == 27) {
-        Game.switchUIMode(Game.UIMode.gameLose);
-      } else if (evt.keyCode == 187) { // '='
-        Game.switchUIMode(Game.UIMode.gamePersistence);
-      } else if (evt.keyCode == 38) {
-        this.getAvatar().setDirection(1);
-      } else if (evt.keyCode == 39) {
-        this.getAvatar().setDirection(2);
-      } else if (evt.keyCode == 40) {
-        this.getAvatar().setDirection(4);
-      } else if (evt.keyCode == 37) {
-        this.getAvatar().setDirection(8);
-      }
+  handleInput: function (inputType,inputData) {
+    var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
+    if(!actionBinding) {
+      return false;
+    }
+    if (actionBinding.actionKey == 'SET_MOVE_U') {
+      this.getAvatar().setDirection(1);
+    } else if (actionBinding.actionKey == 'SET_MOVE_R') {
+      this.getAvatar().setDirection(2);
+    } else if (actionBinding.actionKey == 'SET_MOVE_D') {
+      this.getAvatar().setDirection(4);
+    } else if (actionBinding.actionKey == 'SET_MOVE_L') {
+      this.getAvatar().setDirection(8);
+    } else if (actionBinding.actionKey == 'PERSISTENCE') {
+      Game.switchUIMode('gamePersistence');
     }
 
-    if(eventType == 'keyup') {
-      if (evt.keyCode == 38) {
-        this.getAvatar().unsetDirection(1);
-      } else if (evt.keyCode == 39) {
-        this.getAvatar().unsetDirection(2);
-      } else if (evt.keyCode == 40) {
-        this.getAvatar().unsetDirection(4);
-      } else if (evt.keyCode == 37) {
-        this.getAvatar().unsetDirection(8);
+    if (actionBinding.actionKey == 'UNSET_MOVE_U') {
+      this.getAvatar().unsetDirection(1);
+    } else if (actionBinding.actionKey == 'UNSET_MOVE_R') {
+      this.getAvatar().unsetDirection(2);
+    } else if (actionBinding.actionKey == 'UNSET_MOVE_D') {
+      this.getAvatar().unsetDirection(4);
+    } else if (actionBinding.actionKey == 'UNSET_MOVE_L') {
+      this.getAvatar().unsetDirection(8);
     }
-  }
   },
   renderOnMain: function (display) {
-    display.clear();
-    var fg = Game.UIMode.DEFAULT_COLOR_FG;
-    var bg = Game.UIMode.DEFAULT_COLOR_BG;
-    this.getMap().renderOn(display, this.attr._cameraX, this.attr._cameraY);
+    var seenCells = this.getAvatar().getVisibleCells();
+    this.getMap().renderOn(display,this.attr._cameraX,this.attr._cameraY,{
+      visibleCells:seenCells,
+      maskedCells:this.getAvatar().getRememberedCoordsForMap()
+    });
+    this.getAvatar().rememberCoords(seenCells);
   },
   renderOnAvatar: function(display) {
-    var fg = Game.UIMode.DEFAULT_COLOR_FG;
-    var bg = Game.UIMode.DEFAULT_COLOR_BG;
     if(this.getAvatar()) {
-      display.drawText(1,2,"Avatar X: "+this.getAvatar().getX(),fg,bg); // DEV
-      display.drawText(1,3,"Avatar Y: "+this.getAvatar().getY(),fg,bg);
-      display.drawText(1,4,"Units moved: "+this.getAvatar().getMoves(),fg,bg);
+      display.drawText(1,2,Game.UIMode.DEFAULT_COLOR_STR+"Avatar X: "+this.getAvatar().getX()); // DEV
+      display.drawText(1,3,Game.UIMode.DEFAULT_COLOR_STR+"Avatar Y: "+this.getAvatar().getY());
+      display.drawText(1,4,Game.UIMode.DEFAULT_COLOR_STR+"Units moved: "+this.getAvatar().getMoves());
     }
     if(this.getEnemy()) {
-      display.drawText(1,5,"Enemy X: "+this.getEnemy().getX(),fg,bg);
-      display.drawText(1,6,"Enemy Y: "+this.getEnemy().getY(),fg,bg);
+      display.drawText(1,5,Game.UIMode.DEFAULT_COLOR_STR+"Enemy X: "+this.getEnemy().getX());
+      display.drawText(1,6,Game.UIMode.DEFAULT_COLOR_STR+"Enemy Y: "+this.getEnemy().getY());
     }
   },
   moveAvatar: function (dx, dy) {
@@ -155,9 +149,9 @@ Game.UIMode.gamePlay = {
   this.setCamera(this.attr._cameraX + dx,this.attr._cameraY + dy);
   },
   setCamera: function (sx,sy) {
-    //TODO: Swap 13 with an attribute
-    this.attr._cameraX = Math.max(0,sx - (sx % 13)) + 7;
-    this.attr._cameraY = Math.max(0,sy - (sy % 13)) + 7;
+    //TODO: Swap 13 with an attribute, and 7, and 1.
+    this.attr._cameraX = Math.max(0,sx - ((sx + 1) % 13)) + 7;
+    this.attr._cameraY = Math.max(0,sy - ((sy + 1) % 13)) + 7;
   },
   setCameraToAvatar: function () {
     this.setCamera(this.getAvatar().getX(),this.getAvatar().getY());
@@ -175,11 +169,6 @@ Game.UIMode.gamePlay = {
   for(var ecount = 0; ecount < 80; ecount++) {
     this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkableLocation());
   }
-
-//  Game.Scheduler.add(this.getEnemy(),true, 0.1);
-  //Game.Scheduler.add(this.getAvatar(),true,1);
-  //Game.Scheduler._queue._time = 1;
-
 },
 
 toJSON: function() {
@@ -189,6 +178,9 @@ fromJSON: function (json) {
   Game.UIMode.gamePersistence.BASE_fromJSON.call(this,json);
 }
 };
+
+//##############################################################################
+//##############################################################################
 
 Game.UIMode.gameLose = {
   enter: function () {
@@ -202,12 +194,15 @@ Game.UIMode.gameLose = {
   },
   renderOnMain: function (display) {
     display.clear();
-    display.drawText(4,4, "Defeat");
+    display.drawText(4,4, Game.UIMode.DEFAULT_COLOR_STR+"Defeat");
     console.log("Game.UIMode.gamePlay renderOnMain");
 
   },
 
 };
+
+//##############################################################################
+//##############################################################################
 
 Game.UIMode.gameWin = {
   enter: function () {
@@ -221,56 +216,59 @@ Game.UIMode.gameWin = {
   },
   renderOnMain: function (display) {
     display.clear();
-    display.drawText(4,4, "Victory");
+    display.drawText(4,4, Game.UIMode.DEFAULT_COLOR_STR+"Victory");
     console.log("Game.UIMode.gamePlay renderOnMain");
 
   }
 };
 
+//##############################################################################
+//##############################################################################
+
 Game.UIMode.gamePersistence = {
   RANDOM_SEED_KEY: 'gameRandomSeed',
+  _storedKeyBinding: '',
    enter: function () {
      console.log('game persistence');
+     this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
+     Game.KeyBinding.setKeyBinding('persist');
    },
    exit: function () {
+     Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
    },
    renderOnMain: function (display) {
-     var fg = Game.UIMode.DEFAULT_COLOR_FG;
-     var bg = Game.UIMode.DEFAULT_COLOR_BG;
      display.clear();
-     display.drawText(1,3,"press S to save the current game, L to load the saved game, or N start a new one",fg,bg);
+     display.drawText(1,3,Game.UIMode.DEFAULT_COLOR_STR+"Press S to save the current game, L to load the saved game, or N start a new one");
   //   console.log('TODO: check whether local storage has a game before offering restore');
   //   console.log('TODO: check whether a game is in progress before offering restore');
    },
    handleInput: function (inputType,inputData) {
-  //  console.log('gameStart inputType:');
-  //  console.dir(inputType);
-  //  console.log('gameStart inputData:');
-  //  console.dir(inputData);
-  if (inputType == 'keypress') {
-     var inputChar = String.fromCharCode(inputData.charCode);
-     if (inputChar == 'S'|| inputChar == 's') { // ignore the various modding keys - control, shift, etc.
+     var actionBinding = Game.KeyBinding.getInputBinding(inputType, inputData);
+     console.log("input in persist");
+     console.dir(actionBinding);
+     if(!actionBinding) {
+       return false;
+     }
+     if(actionBinding.actionKey == 'PERSISTENCE_SAVE') {
        this.saveGame();
-     } else if (inputChar == 'L'|| inputChar == 'l') {
+     } else if(actionBinding.actionKey == 'PERSISTENCE_LOAD') {
        this.restoreGame();
-     } else if (inputChar == 'N'|| inputChar == 'n') {
+     } else if(actionBinding.actionKey == 'PERSISTENCE_NEW') {
        this.newGame();
+       Game.switchUIMode('gamePlay');
      }
-   } else if (inputType == 'keydown') {
-     if (inputData.keyCode == 27) { // 'Escape'
-       Game.switchUIMode(Game.UIMode.gamePlay);
-     }
-   }
+     return false;
  },
 
   saveGame: function () {
-    console.log("save");
     if (Game.UIMode.gamePlay.getMap() !== null) {
       if (this.localStorageAvailable()) {
         Game.DATASTORE.GAME_PLAY = Game.UIMode.gamePlay.attr;
         Game.DATASTORE.MESSAGES = Game.Message.attr;
+        Game.DATASTORE.KEY_BINDING = this._storedKeyBinding;
         window.localStorage.setItem(Game._PERSISTENCE_NAMESPACE, JSON.stringify(Game.DATASTORE));
-        Game.switchUIMode(Game.UIMode.gamePlay);
+        Game.Message.send('Game saved.');
+        Game.switchUIMode('gamePlay');
       }
     }
   },
@@ -281,7 +279,7 @@ Game.UIMode.gamePersistence = {
     //  Game.initializeTimingEngine();
       var  json_state_data = window.localStorage.getItem(Game._PERSISTENCE_NAMESPACE);
       if(json_state_data === null) {
-        Game.Message.send("No saved game");
+        Game.Message.send("No saved game.");
         return false;
       }
       setTimeout(function(){
@@ -302,6 +300,7 @@ Game.UIMode.gamePersistence = {
             Game.DATASTORE.MAP[mapId] = new Game.Map(mapAttr._mapTileSetName);
             //Game.DATASTORE.MAP[mapId].attr = mapAttr;
             Game.DATASTORE.MAP[mapId].fromJSON(state_data.MAP[mapId]);
+            Game.Message.send('Map loaded.');
           }
         }
 
@@ -312,14 +311,16 @@ Game.UIMode.gamePersistence = {
             var newE = Game.EntityGenerator.create(entAttr._generator_template_key,entAttr._id);
             Game.DATASTORE.ENTITY[entityId] = newE;
             Game.DATASTORE.ENTITY[entityId].fromJSON(state_data.ENTITY[entityId]);
+            Game.Message.send('Entities loaded.');
           }
         }
 
         // game play et al
         Game.UIMode.gamePlay.attr = state_data.GAME_PLAY;
         Game.Message.attr = state_data.MESSAGES;
+        this._storedKeyBinding = state_data.KEY_BINDING;
 
-        Game.switchUIMode(Game.UIMode.gamePlay);
+        Game.switchUIMode('gamePlay');
       },1);
     }
   },
@@ -329,7 +330,7 @@ Game.UIMode.gamePersistence = {
     console.log("newGame");
     Game.setRandomSeed(5 + Math.floor(Game.TRANSIENT_RNG.getUniform()*100000));
     Game.UIMode.gamePlay.setupNewGame();
-    Game.switchUIMode(Game.UIMode.gamePlay);
+    Game.switchUIMode('gamePlay');
   },
 
   localStorageAvailable: function () { // NOTE: see https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
@@ -359,4 +360,67 @@ Game.UIMode.gamePersistence = {
     }
     this[using_state_hash] = JSON.parse(json);
   }
+};
+
+
+//##############################################################################
+//##############################################################################
+
+Game.UIMode.LAYER_textReading = {
+    _storedKeyBinding: '',
+    _storedDisplayOptions: null,
+    _text: 'Default text layer',
+    _renderY: 0,
+    _renderScrollLimit: 0,
+    enter: function() {
+      this._renderY = 0;
+      this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
+      Game.KeyBinding.setKeyBinding('LAYER_textReading');
+      var display = Game.DISPLAYS.main.o;
+      var options = display.getOptions();
+      this._storedDisplayOptions = {};
+      for (var optionKey in options) {
+        this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
+      }
+      display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
+      Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
+      Game.refresh();
+    },
+    exit: function() {
+      Game.setKeyBinding(this._storedKeyBinding);
+      Game.DISPLAYS.main.o.setOptions(this._storedDisplayOptions);
+      Game.refresh();
+    },
+    renderOnMain: function(display) {
+      var dims = Game.util.getDisplayDim(display);
+      var linesTaken = display.drawText(1,this._renderY,Game.UIMode.DEFAULT_COLOR_STR+"text is "+this._text, dims.w-2);
+      this._renderScrollLimit = dims.h - linesTaken;
+      if (this._renderScrollLimit > 0) { this._renderScrolLimit=0;}
+    },
+    handleInput: function(inputType, inputData) {
+      Game.Message.clear();
+      var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
+      if (actionBinding.actionKey == 'CANCEL') {
+        Game.popUIMode();
+      }
+
+      if (inputType === 'keydown' && inputData.keyCode === 219) {
+        this._renderY++;
+        if (this._renderY > 0) { this._renderY = 0; }
+        Game.renderMain();
+        return true;
+      } else if (inputType === 'keydown' && inputData.keyCode === 221) {
+          this._renderY--;
+          if (this._renderY < this._renderScrollLimit) { this._renderY = this._renderScrollLimit; }
+          Game.renderMain();
+          return true;
+        }
+      return false;
+    },
+    getText: function() {
+      return this._text;
+    },
+    setText: function(text){
+      this._text = text;
+    }
 };

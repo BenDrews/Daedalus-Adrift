@@ -1,4 +1,39 @@
+if (!String.prototype.startsWith) { // nabbed from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+  String.prototype.startsWith = function(searchString, position) {
+    position = position || 0;
+    return this.indexOf(searchString, position) === position;
+   };
+ }
+
 Game.util = {
+
+  posToDir: function(x_or_pos,y) {
+    var useX = x_or_pos;
+    var useY = y;
+    if(typeof x_or_pos == 'object') {
+      useX = x_or_pos.x;
+      useY = x_or_pos.y;
+    }
+    if(useX === 0 && useY === -1) {
+      return 0;
+    } else if(useX === 1 && useY === -1) {
+      return 1;
+    } else if(useX === 1 && useY === 0) {
+      return 2;
+    } else if(useX === 1 && useY === 1) {
+      return 3;
+    } else if(useX === 0 && useY === 1) {
+      return 4;
+    } else if(useX === -1 && useY === 1) {
+      return 5;
+    } else if(useX === -1 && useY === 0) {
+      return 6;
+    } else if(useX === -1 && useY === -1) {
+      return 7;
+    } else {
+      return null;
+    }
+  },
 
   randomString: function (len) {
     var charSource = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
@@ -7,6 +42,12 @@ Game.util = {
         res += charSource.random();
     }
     return res;
+  },
+
+  ID_SEQUENCE: 0,
+  uniqueId: function() {
+     Game.util.ID_SEQUENCE++;
+     return Date.now()+'-'+Game.util.ID_SEQUENCE+'-'+Game.util.randomString(24);
   },
 
   init2DArray: function (x,y,initVal) {
@@ -36,5 +77,9 @@ Game.util = {
       }
     }
     return adjPos;
-  }
+  },
+
+  getDisplayDim: function (display) {
+   return {w:display._options.width, h:display._options.height};
+ },
 };

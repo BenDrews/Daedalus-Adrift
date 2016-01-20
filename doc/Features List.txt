@@ -1,0 +1,21 @@
+Eventual Feature List
+Unkillable Enemies
+Enemy Interaction
+Levels
+Bosses
+Items
+Smart Enemy AI
+Room Puzzles
+Preset Rooms
+Soundtrack/Sound effects
+Animated Sprites
+Projectiles
+UI Stack
+Fog of War
+
+Next Milestone(s)
+
+
+Current Work Plan
+Projectiles
+UI Stack

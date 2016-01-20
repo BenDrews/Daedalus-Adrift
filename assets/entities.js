@@ -3,9 +3,8 @@ Game.EntityGenerator = new Game.Generator('entities', Game.Entity);
 Game.EntityGenerator.learn({
   name: 'avatar',
   chr:'@',
-  fg:'#dda',
-  maxHp: 1,
-  mixins: ["PlayerActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "PlayerMessager"]
+  maxHp: 10,
+  mixins: ["PlayerActor", "NarrowSight", "MapMemory", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "PlayerMessager"]
 });
 
 Game.EntityGenerator.learn({
@@ -18,7 +17,12 @@ Game.EntityGenerator.learn({
 Game.EntityGenerator.learn({
   name: 'enemy',
   chr:'q',
-  fg:'#dda',
   maxHp: 1,
-  mixins: ["WanderActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker"]
+  mixins: ["WanderActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "ShooterActor"]
+});
+
+Game.EntityGenerator.learn({
+  name: 'projectile',
+  chr:'1',
+  mixins: [ "WalkerCorporeal", "Bullet"]
 });
