@@ -125,7 +125,7 @@ Game.EntityMixin.WalkerCorporeal = {
           var dx=evtData.dx,dy=evtData.dy;
           var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
           var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
-          if (map.getEntity(targetX,targetY)) { // can't walk into spaces occupied by other entities
+          if (map.getEntity(targetX,targetY) && (!evtData.entIgnore || !evtData.entIgnore[map.getEntity(targetX,targetY).getId()])) { // can't walk into spaces occupied by other entities
             this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
             // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
             return {madeAdjacentMove:false};
@@ -516,6 +516,10 @@ Game.EntityMixin.LatchExploder = {
         }
         if(allCanMove) {
           evtData.handled = false;
+          if(!evtData.entIgnore) {evtData.entIgnore = {}};
+          for(var latcher in evtData.latchers) {
+            evtData.entIgnore[latcher] = true;
+          }
         } else {
           evtData.handled = true;
           evtData.response = {madeAdjacentMove:[false]};
@@ -523,7 +527,11 @@ Game.EntityMixin.LatchExploder = {
       },
       'attacheeMoved': function (evtData) {
         this.setPos(this.getX() + evtData.dx, this.getY() + evtData.dy);
-        this.getMap().updateEntityLocation(this);
+        var map = this.getMap();
+        for (var ltch = 0; ltch < this.getAttachedTo().attr._LatchExploder_attr.latchers.length; ltch++) {
+          map.updateEntityLocation(this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch]);
+        }
+        map.updateEntityLocation(this.getAttachedTo());
       },
       'detach': function (evtData) {
         if(this.isAttached()) {

@@ -206,7 +206,8 @@ Game.Entity.prototype.destroy = function() {
     }
     if(this._listeningTo.length > 0) {
       for (var listening in this._listeningTo) {
-        delete Game.DATASTORE.ENTITY[listening[1]]._listeners[listening[0]][this.getId()];
+        var ent = Game.DATASTORE.ENTITY[this._listeningTo[listening][1]];
+        if(ent) {delete ent._listeners[this._listeningTo[listening][0]][this.getId()];}
       }
     }
     //remove from datastore
