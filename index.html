@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>RogueLike-Games</title>
@@ -32,5 +33,24 @@
     <div id="wsrl-avatar-display" class="wsrl-display"></div>
     <div id="wsrl-main-display" class="wsrl-display"></div>
     <div id="wsrl-message-display" class="wsrl-display"></div>
+
+    <div onmousemove="showCoords(event)" onmouseout="clearCoor()"></div>
+
+    <p>Mouse over the rectangle above to get the horizontal and vertical coordinates of your mouse pointer.</p>
+
+
+    <script>
+    function showCoords(event) {
+        var x = event.clientX;
+        var y = event.clientY;
+        console.log(x);
+        console.log(y);
+        var coor = "X coords: " + x + ", Y coords: " + y;
+        document.getElementById("wsrl-display").innerHTML = coor;
+    }
+
+    function clearCoor() {
+        document.getElementById("wsrl-display").innerHTML = "";
   </body>
+
 </html>

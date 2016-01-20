@@ -47,6 +47,8 @@ var Game = {
   _bgMusic: null,
   DATASTORE: {},
   TimeEngine: null,
+  CurX: 0,
+  CurY: 0,
   init: function () {
     this._game = this;
     this.TRANSIENT_RNG = ROT.RNG.clone();
@@ -69,6 +71,7 @@ var Game = {
     bindEventToScreen('keyup');
     this.switchUIMode('gameStart');
     this.renderAll();
+  
   },
   getRandomSeed: function () {
     return this._randomSeed;

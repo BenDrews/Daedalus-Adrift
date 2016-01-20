@@ -11,14 +11,14 @@ Game.EntityGenerator.learn({
   name: 'slime',
   chr: '%',
   maxHp:1,
-  mixins: ["HitPoints", "Chronicle"]
+  mixins: ["HitPoints", "Chronicle", "RandomActor", "WalkerCorporeal"]
 });
 
 Game.EntityGenerator.learn({
   name: 'enemy',
   chr:'q',
-  maxHp: 1,
-  mixins: ["WanderActor", "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker", "ShooterActor"]
+  maxHp: 10,
+  mixins: [ "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker"]
 });
 
 Game.EntityGenerator.learn({
