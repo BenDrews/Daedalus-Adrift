@@ -4,8 +4,9 @@ Game.EntityGenerator.learn({
   name: 'avatar',
   chr:'@',
   maxHp: 10,
+  inventoryCapacity: 30,
   sightRange:'360',
-  mixins: ["PlayerActor", "Sight", "MapMemory", "WalkerCorporeal", "HitPoints", "Chronicle", "PlayerMessager"]
+  mixins: ["PlayerActor", "Sight", "MapMemory", "WalkerCorporeal", "HitPoints", "Chronicle", "PlayerMessager", "InventoryHolder"]
 });
 
 Game.EntityGenerator.learn({

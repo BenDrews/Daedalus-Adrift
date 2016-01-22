@@ -30,8 +30,147 @@ Game.EntityMixin.PlayerMessager = {
       },
       'killed': function(evtData) {
         Game.Message.send('You were killed by the '+evtData.killedBy.getName() + '.');
+      },
+
+       'noItemsToPickup': function(evtData) {
+         Game.Message.send('there is nothing to pickup');
+         Game.renderMessage();
+       },
+       'inventoryFull': function(evtData) {
+         Game.Message.send('your inventory is full');
+         Game.renderMessage();
+       },
+       'inventoryEmpty': function(evtData) {
+         Game.Message.send('you are not carrying anything');
+         Game.renderMessage();
+       },
+       'noItemsPickedUp': function(evtData) {
+         Game.Message.send('you could not pick up any items');
+         Game.renderMessage();
+       },
+       'someItemsPickedUp': function(evtData) {
+         Game.Message.send('you picked up '+evtData.numItemsPickedUp+' of the items, leaving '+evtData.numItemsNotPickedUp+' of them');
+         Game.renderMessage();
+       },
+       'allItemsPickedUp': function(evtData) {
+        if (evtData.numItemsPickedUp > 1) {
+           Game.Message.send('you picked up all '+evtData.numItemsPickedUp+' items');
+         } else {
+           Game.Message.send('you picked up the item');
+         }
+         Game.renderMessage();
+       },
+       'itemsDropped': function(evtData) {
+         Game.Message.send('you dropped '+evtData.numItemsDropped+' items');
+         Game.renderMessage();
+       }
+    }
+  }
+};
+
+Game.EntityMixin.InventoryHolder = {
+  META: {
+    mixinName: 'InventoryHolder',
+    mixinGroup: 'InventoryHolder',
+    stateNamespace: '_InventoryHolder_attr',
+    stateModel:  {
+      containerId: '',
+      inventoryCapacity: 5
+    },
+    init: function (template) {
+      this.attr._InventoryHolder_attr.inventoryCapacity = template.inventoryCapacity || 5;
+      if (template.containerId) {
+        this.attr._InventoryHolder_attr.containerId = template.containerId;
+      } else {
+        var container = Game.ItemGenerator.create('_inventoryContainer');
+        container.setCapacity(this.attr._InventoryHolder_attr.inventoryCapacity);
+        this.attr._InventoryHolder_attr.containerId = container.getId();
+      }
+    },
+    listeners: {
+      'pickupItems': function(evtData) {
+        return {addedAnyItems: this.pickupItems(evtData.itemSet)};
+      },
+      'dropItems': function(evtData) {
+        return {droppedItems: this.dropItems(evtData.itemSet)};
       }
     }
+  },
+  _getContainer: function () {
+    return Game.DATASTORE.ITEM[this.attr._InventoryHolder_attr.containerId];
+  },
+  hasInventorySpace: function () {
+    return this._getContainer().hasSpace();
+  },
+  addInventoryItems: function (items_or_ids) {
+    return this._getContainer().addItems(items_or_ids);
+  },
+  getInventoryItemIds: function () {
+    return this._getContainer().getItemIds();
+  },
+  extractInventoryItems: function (ids_or_idxs) {
+    return this._getContainer().extractItems(ids_or_idxs);
+  },
+  pickupItems: function (ids_or_idxs) {
+    var itemsToAdd = [];
+    var fromPile = Game.UIMode.gamePlay.getMap().getItems(this.getPos());
+    var pickupResult = {
+      numItemsPickedUp:0,
+      numItemsNotPickedUp:ids_or_idxs.length
+    };
+
+    if (fromPile.length < 1) {
+      this.raiseSymbolActiveEvent('noItemsToPickup');
+      return pickupResult;
+    }
+    if (! this._getContainer().hasSpace()) {
+      this.raiseSymbolActiveEvent('inventoryFull');
+      this.raiseSymbolActiveEvent('noItemsPickedUp');
+      return pickupResult;
+    }
+
+
+    for (var i = 0; i < fromPile.length; i++) {
+      if ((ids_or_idxs.indexOf(i) > -1) || (ids_or_idxs.indexOf(fromPile[i].getId()) > -1)) {
+          itemsToAdd.push(fromPile[i]);
+      }
+    }
+    var addResult = this._getContainer().addItems(itemsToAdd);
+    pickupResult.numItemsPickedUp = addResult.numItemsAdded;
+    pickupResult.numItemsNotPickedUp = addResult.numItemsNotAdded;
+    var lastItemFromMap = '';
+    for (var j = 0; j < pickupResult.numItemsPickedUp; j++) {
+      lastItemFromMap = this.getMap().extractItemAt(itemsToAdd[j],this.getPos());
+    }
+    console.log(lastItemFromMap);
+
+    pickupResult.lastItemPickedUpName = lastItemFromMap.getName();
+    if (pickupResult.numItemsNotPickedUp > 0) {
+      this.raiseSymbolActiveEvent('someItemsPickedUp',pickupResult);
+    } else {
+      this.raiseSymbolActiveEvent('allItemsPickedUp',pickupResult);
+    }
+
+    return pickupResult;
+  },
+  dropItems: function (ids_or_idxs) {
+    var itemsToDrop = this._getContainer().extractItems(ids_or_idxs);
+    var dropResult = {numItemsDropped:0};
+    if (itemsToDrop.length < 1) {
+      this.raiseSymbolActiveEvent('inventoryEmpty');
+      return dropResult;
+    }
+    var lastItemDropped = '';
+    for (var i = 0; i < itemsToDrop.length; i++) {
+      if (itemsToDrop[i]) {
+        lastItemDropped = itemsToDrop[i];
+        this.getMap().addItem(itemsToDrop[i],this.getPos());
+        dropResult.numItemsDropped++;
+      }
+    }
+    dropResult.lastItemDroppedName = lastItemDropped.getName();
+    this.raiseSymbolActiveEvent('itemsDropped',dropResult);
+    return dropResult;
   }
 };
 // Mixins have a META property is is info about/for the mixin itself and then all other properties. The META property is NOT copied into objects for which this mixin is used - all other properies ARE copied in.
@@ -72,7 +211,7 @@ Game.EntityMixin.PlayerActor = {
             setTimeout(function() {curEntity.setMovable(true);}, this.getMoveSpeed() * Math.sqrt(Math.abs(dx) + Math.abs(dy)));
           }
       }
-      curEntity.raiseEntityEvent('actionDone');
+      curEntity.raiseSymbolActiveEvent('actionDone');
       curEntity.attr._timeout = setTimeout(function() {curEntity.act();}, 50);
     },
     init: function (template) {
@@ -345,8 +484,8 @@ Game.EntityMixin.HitPoints = {
         this.raiseEntityEvent('damagedBy',{damager:evtData.attacker,damageAmount:evtData.attackPower,attackMethod:evtData.attackMethod});
         evtData.attacker.raiseEntityEvent('dealtDamage',{damagee:this,damageAmount:evtData.attackPower,attackMethod:evtData.attackMethod});
         if (this.getCurHp() <= 0) {
-          this.raiseEntityEvent('killed',{entKilled: this, killedBy: evtData.attacker});
-          evtData.attacker.raiseEntityEvent('madeKill',{entKilled: this, killedBy: evtData.attacker});
+          this.raiseSymbolActiveEvent('killed',{entKilled: this, killedBy: evtData.attacker});
+          evtData.attacker.raiseSymbolActiveEvent('madeKill',{entKilled: this, killedBy: evtData.attacker});
         }
       },
       'killed': function(evtData) {
@@ -397,7 +536,7 @@ Game.EntityMixin.WanderActor = {
         }
       }
       this.setCurrentActionDuration(this.getBaseActionDuration());
-      this.raiseEntityEvent('actionDone');
+      this.raiseSymbolActiveEvent('actionDone');
       clearTimeout(curObj.attr._timeout);
       curObj.attr._timeout = setTimeout(function() {curObj.act();}, 75);
     },
@@ -757,7 +896,7 @@ Game.EntityMixin.ShooterActor = {
         setTimeout(function() {curObj.setAttack(true);}, this.getAttackSpeed());
       }
 
-      this.raiseEntityEvent('actionDone');
+      this.raiseSymbolActiveEvent('actionDone');
 
       clearTimeout(curObj.attr._timeout);
       curObj.attr._timeout = setTimeout(function() {curObj.act();}, 50);
@@ -806,7 +945,7 @@ Game.EntityMixin.Bullet = {
       'bumpEntity': function(evtData) {
         if (this.attr._Bullet_attr.firedBy!== evtData.recipient) {
         console.log('Projectile bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
-        evtData.recipient.raiseEntityEvent('attacked',{attacker:evtData.actor.attr._Bullet_attr.firedBy,attackPower:this.getAttackPower()});
+        evtData.recipient.raiseSymbolActiveEvent('attacked',{attacker:evtData.actor.attr._Bullet_attr.firedBy,attackPower:this.getAttackPower()});
         this.destroy();
         }
       }

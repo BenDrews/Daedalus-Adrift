@@ -1,13 +1,20 @@
-Game.Symbol = function (properties) {
-  properties = properties || {};
+Game.Symbol = function (template) {
+  template = template || {};
   if (! ('attr' in this)) { this.attr = {}; }
-  this.attr._char = properties.chr || ' ';
-  this.attr._fg = properties.fg || "transparent";
-  this.attr._bg = properties.bg || Game.UIMode.DEFAULT_COLOR_BG;
+  this.attr._char = template.chr || ' ';
+  this.attr._fg = template.fg || "transparent";
+  this.attr._bg = template.bg || Game.UIMode.DEFAULT_COLOR_BG;
+};
+Game.Symbol.prototype.getColorDesignator = function(){
+     return '%c{'+this.attr._fg+'}%b{'+this.attr._bg+'}';
 };
 
 Game.Symbol.prototype.setChar = function(chr) {
   this.attr._char = chr;
+};
+
+Game.Symbol.prototype.getRepresentation = function() {
+  return '%c{' + this.attr._fg + '}%b{' + this.attr._bg + '}' + this.attr._char;
 };
 
 Game.Symbol.prototype.getChar = function () {
@@ -33,3 +40,4 @@ Game.Symbol.prototype.draw = function (display,disp_x,disp_y,masked) {
 Game.Symbol.NULL_SYMBOL = new Game.Symbol();
 Game.Symbol.AVATAR = new Game.Symbol({chr:'@',fg:'#dda'});
 Game.Symbol.ENEMY = new Game.Symbol({chr:'q',fg:'#dda'});
+Game.Symbol.ITEM_PILE = new Game.Symbol({chr: '&', fg: '#dcc'});
