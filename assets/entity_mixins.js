@@ -187,34 +187,41 @@ Game.EntityMixin.WalkerSegmented = {
     },
     listeners: {
       'adjacentMove': function(evtData) {
-        if(!this.isExtended() && !this.isImmobile()) {
-            var map = this.getMap();
-            var dx=evtData.dx,dy=evtData.dy;
-            var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
-            var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
-            if (map.getEntity(targetX,targetY)) { // can't walk into spaces occupied by other entities
-              this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
-              // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
+        if(!this.isImmobile()){
+          if(!this.isExtended()) {
+              var map = this.getMap();
+              var dx=evtData.dx,dy=evtData.dy;
+              var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
+              var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
+              if (map.getEntity(targetX,targetY)) { // can't walk into spaces occupied by other entities
+                this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
+                // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
+                return {madeAdjacentMove:false};
+              }
+              var targetTile = map.getTile(targetX,targetY);
+              if (targetTile.isWalkable()) {
+                this.setPos(targetX,targetY);
+                var myMap = this.getMap();
+                if (myMap) {
+                  myMap.updateEntityLocation(this);
+                }
+                this.extend({x:dx,y:dy});
+                this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
+                return {madeAdjacentMove:true};
+              } else {
+                this.raiseEntityEvent('walkForbidden',{target:targetTile});
+              }
               return {madeAdjacentMove:false};
             }
-            var targetTile = map.getTile(targetX,targetY);
-            if (targetTile.isWalkable()) {
-              this.setPos(targetX,targetY);
-              var myMap = this.getMap();
-              if (myMap) {
-                myMap.updateEntityLocation(this);
-              }
-              this.extend({x:dx,y:dy});
-              this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
+            else {
+              this.contract();
               return {madeAdjacentMove:true};
-            } else {
-              this.raiseEntityEvent('walkForbidden',{target:targetTile});
+            }
+          } else {
+            if(this.isExtended()){
+              this.contract();
             }
             return {madeAdjacentMove:false};
-          }
-          else {
-            this.contract();
-            return {madeAdjacentMove:true};
           }
         },
         'killed': function(evtData) {
@@ -227,6 +234,9 @@ Game.EntityMixin.WalkerSegmented = {
     },
     setImmobile: function(im) {
       this.attr._WalkerSegmented_attr.immobilized = im;
+      if(im) {
+        this.contract();
+      }
     },
     isImmobile: function() {
       return this.attr._WalkerSegmented_attr.immobilized;
@@ -468,8 +478,9 @@ Game.EntityMixin.WanderChaserActor = {
           }
           count++;
       });
-
-      return moveDeltas;
+      if(moveDeltas.x || moveDeltas.y) {
+        return moveDeltas;
+      }
     }
     return Game.util.positionsOrthogonalTo({x:0,y:0}).random();
   },
@@ -490,7 +501,8 @@ Game.EntityMixin.LatchExploder = {
       explosionPower: 10,
       slow: 50,
       attached: false,
-      attachedTo: null
+      attachedTo: null,
+      canAttach: true
     },
     init: function (template) {
       this.attr._LatchExploder_attr.explosionPower = template.explosionPower || 10;
@@ -508,7 +520,10 @@ Game.EntityMixin.LatchExploder = {
           }
         }
         if(map.getTile(targetX,targetY).isWalkable()) {
-          evtData.latchers[this.getId()] = true;
+          var ent = map.getEntity(targetX,targetY);
+          if(!ent || ent == this.getAttachedTo() || (typeof ent.getAttachedTo == 'function' && ent.getAttachedTo() == this.getAttachedTo())) {
+            evtData.latchers[this.getId()] = true;
+          }
         }
         var allCanMove = true;
         for(var latcher in evtData.latchers) {
@@ -516,8 +531,8 @@ Game.EntityMixin.LatchExploder = {
         }
         if(allCanMove) {
           evtData.handled = false;
-          if(!evtData.entIgnore) {evtData.entIgnore = {}};
-          for(var latcher in evtData.latchers) {
+          if(!evtData.entIgnore) {evtData.entIgnore = {};}
+          for(latcher in evtData.latchers) {
             evtData.entIgnore[latcher] = true;
           }
         } else {
@@ -529,9 +544,26 @@ Game.EntityMixin.LatchExploder = {
         this.setPos(this.getX() + evtData.dx, this.getY() + evtData.dy);
         var map = this.getMap();
         for (var ltch = 0; ltch < this.getAttachedTo().attr._LatchExploder_attr.latchers.length; ltch++) {
-          map.updateEntityLocation(this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch]);
+          if(this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch] != this) {
+            map.extractEntity(this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch]);
+          }
+        }
+        this.getMap().updateEntityLocation(this);
+        for (ltch = 0; ltch < this.getAttachedTo().attr._LatchExploder_attr.latchers.length; ltch++) {
+          if(this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch] != this) {
+            map.addEntity(this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch],this.getAttachedTo().attr._LatchExploder_attr.latchers[ltch].getPos());
+          }
         }
         map.updateEntityLocation(this.getAttachedTo());
+      },
+      'explode': function (evtData) {
+        if(this.isAttached()) {
+          this.detach();
+        }
+        for(var pos in Game.util.positionsOrthogonalTo(this.getPos())) {
+
+        }
+        this.destroy();
       },
       'detach': function (evtData) {
         if(this.isAttached()) {
@@ -546,7 +578,7 @@ Game.EntityMixin.LatchExploder = {
       }
     },
     act: function () {
-      if(!this.isAttached()){
+      if(!this.isAttached() && this.getCanAttach()){
         var map = this.getMap();
         var ent = null;
         var adjPos = Game.util.positionsOrthogonalTo(this.getPos());
@@ -558,6 +590,12 @@ Game.EntityMixin.LatchExploder = {
         }
       }
     }
+  },
+  getCanAttach: function() {
+    return this.attr._LatchExploder_attr.canAttach;
+  },
+  setCanAttach: function(ca) {
+    this.attr._LatchExploder_attr.canAttach = ca;
   },
   isAttached: function () {
     return this.attr._LatchExploder_attr.attached;
@@ -573,8 +611,16 @@ Game.EntityMixin.LatchExploder = {
     if(!ent.attr._LatchExploder_attr) {ent.attr._LatchExploder_attr = {};}
     if(!ent.attr._LatchExploder_attr.latchers) {ent.attr._LatchExploder_attr.latchers = [];}
     ent.attr._LatchExploder_attr.latchers.push(this);
+
     ent.addListener(this, 'adjacentMove', 'attacheeMove');
     ent.addListener(this, 'movedUnit', 'attacheeMoved');
+    ent.addListener(this, 'killed', 'detach');
+
+    if(ent.attr._LatchExploder_attr.latchers.length >= 4) {
+      for(var ltch = 0; ltch < 4; ltch++) {
+        ent.attr._LatchExploder_attr.latchers[0].raiseEntityEvent('explode');
+      }
+    }
   },
   getAttachedTo: function () {
     return this.attr._LatchExploder_attr.attachedTo;
@@ -586,8 +632,17 @@ Game.EntityMixin.LatchExploder = {
       ent.setMoveSpeed(ent.getMoveSpeed() - 50);
     }
     ent.removeListener(this);
+    for(var ltch = 0; ltch < ent.attr._LatchExploder_attr.latchers.length; ltch++) {
+        if(ent.attr._LatchExploder_attr.latchers[ltch] == this) {
+          ent.attr._LatchExploder_attr.latchers.splice(ltch,1);
+        }
+    }
     this.attr._LatchExploder_attr.attached = false;
     this.attr._LatchExploder_attr.attachedTo = null;
+
+    this.setCanAttach(false);
+    var curEnt = this;
+    setTimeout(function() {curEnt.setCanAttach(true);}, 2000);
   },
   getSlow: function () {
     return this.attr._LatchExploder_attr.slow;
