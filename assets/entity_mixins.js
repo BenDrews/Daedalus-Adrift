@@ -6,19 +6,30 @@ Game.EntityMixin.PlayerMessager = {
     mixinGroup: 'PlayerMessager',
     listeners: {
       'walkForbidden': function(evtData) {
-        Game.Message.send('you can\'t walk into the '+evtData.target.getName());
+        Game.Message.send('Your path is blocked.');
       },
       'dealtDamage': function(evtData) {
-        Game.Message.send('you hit the '+evtData.damagee.getName()+' for '+evtData.damageAmount);
+        evtData.attackMethod = evtData.attackMethod || 'hit';
+        Game.Message.send('You ' + evtData.attackMethod + ' the '+evtData.damagee.getName()+' dealing '+evtData.damageAmount + ' damage.');
       },
       'madeKill': function(evtData) {
-        Game.Message.send('you killed the '+evtData.entKilled.getName());
+        Game.Message.send('You killed the '+evtData.entKilled.getName() + '.');
       },
       'damagedBy': function(evtData) {
-        Game.Message.send('the '+evtData.damager.getName()+' hit you for '+evtData.damageAmount);
+        evtData.attackMethod = evtData.attackMethod || 'hit';
+        Game.Message.send('The '+evtData.damager.getName()+' ' + evtData.attackMethod + ' you dealing '+evtData.damageAmount + ' damage.');
+      },
+      'afflictedWith': function(evtData){
+        Game.Message.send('The '+evtData.afflicter.getName() + ' has '+evtData.afflictionMessage + ' afflicting you with ' + evtData.affliction +'.');
+      },
+      'afflictionRemoved': function(evtData) {
+        Game.Message.send('You have been ' + evtData.cureMessage + ' curing your ' + evtData.affliction + '.');
+      },
+      'warning': function(evtData) {
+        Game.Message.send(evtData.warning);
       },
       'killed': function(evtData) {
-        Game.Message.send('you were killed by the '+evtData.killedBy.getName());
+        Game.Message.send('You were killed by the '+evtData.killedBy.getName() + '.');
       }
     }
   }
@@ -331,8 +342,8 @@ Game.EntityMixin.HitPoints = {
         console.log('HitPoints attacked');
 
         this.takeHits(evtData.attackPower);
-        this.raiseEntityEvent('damagedBy',{damager:evtData.attacker,damageAmount:evtData.attackPower});
-        evtData.attacker.raiseEntityEvent('dealtDamage',{damagee:this,damageAmount:evtData.attackPower});
+        this.raiseEntityEvent('damagedBy',{damager:evtData.attacker,damageAmount:evtData.attackPower,attackMethod:evtData.attackMethod});
+        evtData.attacker.raiseEntityEvent('dealtDamage',{damagee:this,damageAmount:evtData.attackPower,attackMethod:evtData.attackMethod});
         if (this.getCurHp() <= 0) {
           this.raiseEntityEvent('killed',{entKilled: this, killedBy: evtData.attacker});
           evtData.attacker.raiseEntityEvent('madeKill',{entKilled: this, killedBy: evtData.attacker});
@@ -498,14 +509,14 @@ Game.EntityMixin.LatchExploder = {
     mixinGroup: 'Attacker',
     stateNamespace: '_LatchExploder_attr',
     stateModel: {
-      explosionPower: 10,
+      explosionPower: 1,
       slow: 50,
       attached: false,
       attachedTo: null,
       canAttach: true
     },
     init: function (template) {
-      this.attr._LatchExploder_attr.explosionPower = template.explosionPower || 10;
+      this.attr._LatchExploder_attr.explosionPower = template.explosionPower || 1;
       this.attr._LatchExploder_attr.slow = template.slow || 50;
     },
     listeners: {
@@ -556,12 +567,30 @@ Game.EntityMixin.LatchExploder = {
         }
         map.updateEntityLocation(this.getAttachedTo());
       },
-      'explode': function (evtData) {
+      'primeExplosion': function (evtData) {
+        var positions = Game.util.positionsOrthogonalTo(this.getPos());
+        if(this.getAttachedTo().attr._LatchExploder_attr.latchers[0] == this) {
+          for(var i = 0; i < positions.length; i++) {
+            var ent = this.getMap().getEntity(positions[i]);
+            if(ent == Game.getAvatar()) {
+              ent.raiseEntityEvent('warning', {warning:'The slimes nearby start to contort and pulsate...'});
+            }
+          }
+        }
         if(this.isAttached()) {
           this.detach();
+          this.raiseEntityEvent('immobilized', {immobilized:true});
         }
-        for(var pos in Game.util.positionsOrthogonalTo(this.getPos())) {
-
+        var curEnt = this;
+        setTimeout(function () {curEnt.raiseEntityEvent('explode');}, 1000);
+      },
+      'explode': function (evtData) {
+        var positions = Game.util.positionsOrthogonalTo(this.getPos());
+        for(var i = 0; i < positions.length; i++) {
+          var ent = this.getMap().getEntity(positions[i]);
+          if(ent && !ent.isAllied(this)) {
+            ent.raiseEntityEvent("attacked",{attacker:this,attackPower:this.getExplosionPower(),attackMethod:"violently exploded near"});
+          }
         }
         this.destroy();
       },
@@ -616,9 +645,10 @@ Game.EntityMixin.LatchExploder = {
     ent.addListener(this, 'movedUnit', 'attacheeMoved');
     ent.addListener(this, 'killed', 'detach');
 
+    ent.raiseEntityEvent('afflictedWith',{afflicter:this,affliction:'slow',afflictionMessage:'latched on'});
     if(ent.attr._LatchExploder_attr.latchers.length >= 4) {
       for(var ltch = 0; ltch < 4; ltch++) {
-        ent.attr._LatchExploder_attr.latchers[0].raiseEntityEvent('explode');
+        ent.attr._LatchExploder_attr.latchers[0].raiseEntityEvent('primeExplosion');
       }
     }
   },
@@ -632,6 +662,7 @@ Game.EntityMixin.LatchExploder = {
       ent.setMoveSpeed(ent.getMoveSpeed() - 50);
     }
     ent.removeListener(this);
+    ent.raiseEntityEvent('afflictionRemoved',{affliction:'slow', cureMessage:"released by the slime"});
     for(var ltch = 0; ltch < ent.attr._LatchExploder_attr.latchers.length; ltch++) {
         if(ent.attr._LatchExploder_attr.latchers[ltch] == this) {
           ent.attr._LatchExploder_attr.latchers.splice(ltch,1);
@@ -649,6 +680,12 @@ Game.EntityMixin.LatchExploder = {
   },
   setSlow: function (s) {
     this.attr._LatchExploder_attr.slow = s;
+  },
+  getExplosionPower: function () {
+    return this.attr._LatchExploder_attr.explosionPower;
+  },
+  setExplosionPower: function(ep) {
+    this.attr._LatchExploder_attr.explosionPower = ep;
   }
 };
 
