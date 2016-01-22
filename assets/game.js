@@ -39,6 +39,8 @@ var Game = {
       o: null
     },
   },
+  mouseX: 0,
+  mouseY: 0,
   _PERSISTENCE_NAMESPACE: 'wsrlgame',
   _game: null,
   _uiModeNameStack: [],
@@ -71,7 +73,7 @@ var Game = {
     bindEventToScreen('keyup');
     this.switchUIMode('gameStart');
     this.renderAll();
-  
+
   },
   getRandomSeed: function () {
     return this._randomSeed;

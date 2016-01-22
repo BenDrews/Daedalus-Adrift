@@ -31,26 +31,23 @@
   </head>
   <body>
     <div id="wsrl-avatar-display" class="wsrl-display"></div>
-    <div id="wsrl-main-display" class="wsrl-display"></div>
+
+        <div id="wsrl-main-display" onmousemove="showCoords(event)" class="wsrl-display"></div>
     <div id="wsrl-message-display" class="wsrl-display"></div>
 
-    <div onmousemove="showCoords(event)" onmouseout="clearCoor()"></div>
-
-    <p>Mouse over the rectangle above to get the horizontal and vertical coordinates of your mouse pointer.</p>
+    <!-- <div onmousemove="showCoords(event)" onmouseout="clearCoor()"></div> -->
 
 
     <script>
     function showCoords(event) {
-        var x = event.clientX;
-        var y = event.clientY;
-        console.log(x);
-        console.log(y);
-        var coor = "X coords: " + x + ", Y coords: " + y;
-        document.getElementById("wsrl-display").innerHTML = coor;
-    }
+        Game.mouseX = event.clientX;
+        Game.mouseY = event.clientY;
+        Game.UIMode.gamePlay.getAvatar().setFacing();
 
-    function clearCoor() {
-        document.getElementById("wsrl-display").innerHTML = "";
+    //    var coor = "X coords: " + Game.mouseX + ", Y coords: " + Game.mouseY;
+    //    console.log(coor);
+      }
+        </script>
   </body>
 
 </html>

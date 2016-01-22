@@ -574,7 +574,8 @@ Game.EntityMixin.NarrowSight = {
     },
     listeners: {
       'movedUnit': function(evtData) {
-        this.setFacing(evtData.direction);
+        //this.setFacing(evtData.direction);
+        this.setFacing();
       }
     }
   },
@@ -628,13 +629,20 @@ Game.EntityMixin.NarrowSight = {
   getFacing: function () {
     return this.attr._NarrowSight_attr.facing;
   },
-  setFacing: function (dir) {
-    Game.util.detectCursor();
-    var slope = (Game.curY - this.getY())/(Game.curX - this.getX());
-    var angle = Math.atan2(slope);
-    this.attr._NarrowSight_attr.facing = 0;
-    console.log(Game.curX);
-    console.log(Game.curY);
+  setFacing: function () {
+  //  var slope = Math.round((Game.mouseY - this.getY())/(Game.mouseX - this.getX()));
+    var deltaY = Game.mouseY/2 - 364 / 2 + 80;
+    var deltaX = Game.mouseX/2 - 798 / 2 + 100;
+    var angle = Math.atan2(deltaY, deltaX);
+    console.log( angle, Game.mouseX/2,Game.mouseY/2, 798 /2 - 100, 364 /2 - 80);
+    result = Math.round(Math.abs(((angle + Math.PI/2) / Math.PI)) * 8 - 2);
+    console.log(result);
+    if (result > 7) {
+      result = 0;
+    } else if (result < 0) {
+      result = 7;
+    }
+    this.attr._NarrowSight_attr.facing = result;
   },
 
 };

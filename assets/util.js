@@ -31,32 +31,7 @@ Game.util = {
       return null;
     }
   },
-  getCursorXY: function(e) {
-    Game.CurX = (window.Event) ? e.pageX : event.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
-    Game.CurY = (window.Event) ? e.pageY : event.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
- },
-   detectCursor: function() {
-     if (!String.prototype.startsWith) { // nabbed from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
-       String.prototype.startsWith = function(searchString, position) {
-         position = position || 0;
-         return this.indexOf(searchString, position) === position;
-        };
-      }
-
-      var IE = document.all?true:false;
-      if(IE){
-          Game.CurX = window.event.clientX;
-          Game.CurY = window.event.clientY;
-      }
-      else{
-          if (window.captureEvents) {
-          document.captureEvents(Event.MOUSEMOVE);
-      }
-      document.onmousemove = Game.util.getCursorXY;
-     }
-   },
-
-
+  
   randomString: function (len) {
     var charSource = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
     var res='';
