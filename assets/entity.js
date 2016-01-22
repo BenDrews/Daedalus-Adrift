@@ -3,15 +3,16 @@ Game.DATASTORE.ENTITY = {};
 Game.Entity = function(template) {
     template = template || {};
     this._mixinSet = Game.EntityMixin;
+    this.attr = {};
+    this.attr._alligence = template.alligence || 'self';
+    this.attr._allyHash = template.allyHash || {};
+    this.setAlliedWith(this.getAlligence(),true);
     Game.SymbolActive.call(this, template);
     this.attr._x = template.x || 0;
     this.attr._y = template.y || 0;
     this.attr._generator_template_key = template.generator_template_key || '';
     this.attr._mapId = null;
     this.attr._timeout = null;
-    this.attr._alligence = template.alligence || 'self';
-    this.attr._allyHash = template.allyHash || {};
-    this.setAlliedWith(this.getAlligence(),true);
     this._listeners = {};
     this._listeningTo = [];
 
