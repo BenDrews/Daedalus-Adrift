@@ -1,5 +1,4 @@
 Game.ItemMixin = {};
-
 Game.ItemMixin.Container = {
   META: {
     mixinName: 'Container',

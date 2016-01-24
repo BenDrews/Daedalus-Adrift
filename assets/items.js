@@ -6,3 +6,11 @@ Game.ItemGenerator.learn({
   chr:"&",
   fg:'#aaa'
 });
+
+Game.ItemGenerator.learn({
+  name: 'oil',
+  chr:"*",
+  fg:'#aaa',
+  foodValue: 100,
+  mixins: ['Food']
+});
