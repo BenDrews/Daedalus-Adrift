@@ -17,7 +17,7 @@ window.onload = function() {
         Game.switchUIMode('gameStart');
         Game.renderMain();
 
-        Game.KeyBinding.setKeyBinding();
+      //  Game.KeyBinding.setKeyBinding();
     }
 };
 

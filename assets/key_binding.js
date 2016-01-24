@@ -2,7 +2,7 @@ Game.KeyBinding = {
   _availableBindings: ['numpad','wasd'],
   _curBindingKey: '',
   _currentBindingLookup: {},
-
+   _bindingHelpText: "Instructions: \n \n Movement = UP, DOWN, LEFT, RIGHT Keys \n Inventory = I \n Pickup Item = G \nDrop Item = D \n Pause Menu = Esc \n \nWhile in Pause Menu: \n \nSave Game = S \nLoad Game = L \nNew Game = N \n \nObjectives: Do not let the slimes get you. Slimes will latch onto you once they come near you. If four slimes latch on to you, they will explode, hurting you.\n",
   setKeyBinding:function (bindingSetKey) {
     this._curBindingKey = bindingSetKey || 'numpad';
     this.calcBindingLookups();
@@ -105,6 +105,9 @@ Game.KeyBinding = {
     }
     var bindingInfo = this.Action[actionLookupKey][this._curBindingKey] || this.Action[actionLookupKey].all;
   },
+  getBindingHelpText: function () {
+  return this._bindingHelpText;
+},
   Action: {
     PERSISTENCE      : {action_group:'meta'    ,guid:Game.util.uniqueId() ,ordering:2 ,short:'games'    ,long :'save or load or restart',
     numpad: {label:'='     ,inputMatch:'='      ,inputType:'keypress' ,inputMetaShift:false ,inputMetaCtrl:false},      waxd: {label:'='     ,inputMatch:'='      ,inputType:'keypress' ,inputMetaShift:false ,inputMetaCtrl:false}
@@ -170,6 +173,9 @@ UNSET_MOVE_L    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:
 numpad: {label:'4' ,inputMatch:ROT.VK_LEFT ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'a' ,inputMatch:ROT.VK_A       ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
+HELP            : {action_group:'meta' ,guid :Game.util.uniqueId() ,ordering:1 ,short:'help'     ,long:'show which keys do which commands'      ,
+      all: {label:'?'     ,inputMatch:'?'      ,inputType:'keypress' ,inputMetaShift:true ,inputMetaCtrl:false}
+    },
 UNSET_MOVE_R    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight right',
 numpad: {label:'6' ,inputMatch:ROT.VK_RIGHT ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'d' ,inputMatch:ROT.VK_D       ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false}

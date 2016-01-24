@@ -124,6 +124,10 @@ Game.UIMode.gamePlay = {
       Game.pushUIMode('LAYER_inventoryDrop');
       //var dropRes = this.getAvatar().dropItems(this.getAvatar().getItemIds());
       //tookTurn = dropRes.numItemsDropped > 0;
+    } else if (actionBinding.actionKey == 'HELP') {
+      // console.log('TODO: set up help stuff for gamepersistence');
+      Game.UIMode.LAYER_textReading.setText(Game.KeyBinding.getBindingHelpText());
+      Game.pushUIMode('LAYER_textReading');
     }
 
 
@@ -425,13 +429,13 @@ Game.UIMode.LAYER_textReading = {
     Game.refresh();
   },
   exit: function() {
-    Game.setKeyBinding(this._storedKeyBinding);
+    Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
     Game.DISPLAYS.main.o.setOptions(this._storedDisplayOptions);
     Game.refresh();
   },
   renderOnMain: function(display) {
     var dims = Game.util.getDisplayDim(display);
-    var linesTaken = display.drawText(1,this._renderY,Game.UIMode.DEFAULT_COLOR_STR+"text is "+this._text, dims.w-2);
+    var linesTaken = display.drawText(1,this._renderY,Game.UIMode.DEFAULT_COLOR_STR+""+this._text, dims.w-2);
     this._renderScrollLimit = dims.h - linesTaken;
     if (this._renderScrollLimit > 0) { this._renderScrolLimit=0;}
   },
