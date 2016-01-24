@@ -17,7 +17,7 @@ Game.EntityGenerator.learn({
   maxHp:1,
   topology:4,
   alligence:'slime',
-  mixins: ["HitPoints", "WalkerSegmented", "Sight", "WanderChaserActor","Chronicle","LatchExploder"]
+  mixins: ["HitPoints", "WalkerSegmented", "Sight", "WanderChaserActor","Chronicle"]
 });
 
 Game.EntityGenerator.learn({

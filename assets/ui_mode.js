@@ -130,7 +130,9 @@ Game.UIMode.gamePlay = {
       Game.pushUIMode('LAYER_textReading');
     } else if (actionBinding.actionKey == 'EXAMINE') {
        Game.pushUIMode('LAYER_inventoryExamine');
-      }
+    } else if (actionBinding.actionKey == 'EAT') {
+      Game.pushUIMode('LAYER_inventoryEat');
+    }
 
 
 
@@ -158,10 +160,14 @@ Game.UIMode.gamePlay = {
       display.drawText(1,2,Game.UIMode.DEFAULT_COLOR_STR+"Avatar X: "+this.getAvatar().getX()); // DEV
       display.drawText(1,3,Game.UIMode.DEFAULT_COLOR_STR+"Avatar Y: "+this.getAvatar().getY());
       display.drawText(1,4,Game.UIMode.DEFAULT_COLOR_STR+"Units moved: "+this.getAvatar().getMoves());
+      display.drawText(1,8,Game.UIMode.DEFAULT_COLOR_STR+this.getAvatar().getHungerStateDescr());
+      display.drawText(1,7,Game.UIMode.DEFAULT_COLOR_STR+"Hit Points: "+this.getAvatar().getCurHp());
+
     }
     if(this.getEnemy()) {
       display.drawText(1,5,Game.UIMode.DEFAULT_COLOR_STR+"Enemy X: "+this.getEnemy().getX());
       display.drawText(1,6,Game.UIMode.DEFAULT_COLOR_STR+"Enemy Y: "+this.getEnemy().getY());
+
     }
   },
   moveCamera: function (dx,dy) {
@@ -188,10 +194,12 @@ Game.UIMode.gamePlay = {
     var itemPos = this.getMap().getRandomWalkablePosition();
     this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
     this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
+    this.getMap().addItem(Game.ItemGenerator.create('apple'), itemPos);
+
     // end dev code
     ///////////////////////
     for(var ecount = 0; ecount < 30; ecount++) {
-      this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
+//      this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
     }
      for (var ti=0; ti<3;ti++) {
        Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('rock')]);
@@ -283,6 +291,10 @@ Game.UIMode.gamePersistence = {
     } else if(actionBinding.actionKey == 'PERSISTENCE_NEW') {
       this.newGame();
       Game.switchUIMode('gamePlay');
+    } else if (actionBinding.actionKey == 'HELP') {
+      // console.log('TODO: set up help stuff for gamepersistence');
+      Game.UIMode.LAYER_textReading.setText(Game.KeyBinding.getBindingHelpText());
+      Game.addUiMode('LAYER_textReading');
     }
     return false;
   },
@@ -420,19 +432,19 @@ Game.UIMode.LAYER_textReading = {
     this._renderY = 0;
     this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
     Game.KeyBinding.setKeyBinding('LAYER_textReading');
-    var display = Game.DISPLAYS.main.o;
+    var display = Game.DISPLAYS.avatar.o;
     var options = display.getOptions();
     this._storedDisplayOptions = {};
     for (var optionKey in options) {
       this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
     }
-    display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
+//    display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
     Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
     Game.refresh();
   },
   exit: function() {
     Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
-    Game.DISPLAYS.main.o.setOptions(this._storedDisplayOptions);
+//    Game.DISPLAYS.avatar.o.setOptions(this._storedDisplayOptions);
     Game.refresh();
   },
   renderOnMain: function(display) {
@@ -491,7 +503,7 @@ Game.UIMode.LAYER_itemListing = function(template) {
   this._selectedItemIdxs= [];
   this._displayItemsStartIndex = 0;
   this._displayItems = [];
-  this._displayMaxNum = Game.getDisplayHeight('main') - 3;
+  this._displayMaxNum = Game.getDisplayHeight('avatar') - 3;
   this._numItemsShown = 0;
   this._storedKeyBinding = '';
   this._storedDisplayOptions = {};
@@ -510,13 +522,13 @@ Game.UIMode.LAYER_itemListing.prototype._runFilterOnItemIdList = function () {
 };
 
 Game.UIMode.LAYER_itemListing.prototype.enter = function () {
-  var display = Game.DISPLAYS.main.o;
+  var display = Game.DISPLAYS.avatar.o;
   var options = display.getOptions();
   this._storedDisplayOptions = {};
   for (var optionKey in options) {
     this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
   }
-  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
+//  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
 
 
   this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
@@ -528,7 +540,7 @@ Game.UIMode.LAYER_itemListing.prototype.enter = function () {
    Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
 };
 Game.UIMode.LAYER_itemListing.prototype.exit = function () {
-  Game.DISPLAYS.main.o.setOptions(this._storedDisplayOptions);
+//  Game.DISPLAYS.avatar.o.setOptions(this._storedDisplayOptions);
 
   Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
   setTimeout(function(){
@@ -618,9 +630,12 @@ Game.UIMode.LAYER_itemListing.prototype.getCaptionText = function () {
   }
   return captionText;
 };
-Game.UIMode.LAYER_itemListing.prototype.renderOnMain = function (display) {
-  var selectionLetters = 'abcdefghijklmnopqrstuvwxyz';
 
+Game.UIMode.LAYER_itemListing.prototype.renderOnMain = function (display) {
+  Game.UIMode.gamePlay.renderOnMain(display);
+};
+Game.UIMode.LAYER_itemListing.prototype.renderOnAvatar = function (display) {
+  var selectionLetters = 'abcdefghijklmnopqrstuvwxyz';
   // Render the caption in the top row
   display.drawText(0, 0, Game.UIMode.DEFAULT_COLOR_STR + this.getCaptionText());
   var row = 0;
@@ -736,7 +751,15 @@ Game.UIMode.LAYER_inventoryListing.handleInput = function (inputType,inputData) 
 
    if (actionBinding) {
      if (actionBinding.actionKey == 'EXAMINE') {
-       Game.addUiMode('LAYER_inventoryExamine');
+       Game.pushUIMode('LAYER_inventoryExamine');
+       return false;
+     }
+     if (actionBinding.actionKey == 'DROP') {
+       Game.pushUIMode('LAYER_inventoryDrop');
+       return false;
+     }
+     if (actionBinding.actionKey == 'EAT') {
+       Game.pushUIMode('LAYER_inventoryEat');
        return false;
      }
    }
@@ -777,6 +800,7 @@ Game.UIMode.LAYER_inventoryPickup = new Game.UIMode.LAYER_itemListing({
 Game.UIMode.LAYER_inventoryPickup.doSetup = function () {
   this.setup({itemIdList: Game.util.objectArrayToIdArray(Game.UIMode.gamePlay.getAvatar().getMap().getItems(Game.UIMode.gamePlay.getAvatar().getPos()))});
 };
+
 Game.UIMode.LAYER_inventoryExamine = new Game.UIMode.LAYER_itemListing({
      caption: 'Examine',
     canSelect: true,
@@ -788,11 +812,34 @@ Game.UIMode.LAYER_inventoryExamine = new Game.UIMode.LAYER_itemListing({
          console.log('sending special message of '+d);
          setTimeout(function() {
             Game.specialMessage(d);
-         }, 2);
+                        Game.specialMessage(d);
+                                  Game.specialMessage(d);
+         }, 0.5);
        }
        return false;
      }
  });
  Game.UIMode.LAYER_inventoryExamine.doSetup = function () {
-   this.setup({itemIdList: Game.getAvatar().getInventoryItemIds()});
+   this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
+ };
+
+ Game.UIMode.LAYER_inventoryEat = new Game.UIMode.LAYER_itemListing({
+     caption: 'Eat',
+     canSelect: true,
+     keyBindingName: 'LAYER_inventoryEat',
+     filterListedItemsOn: function(itemId) {
+       return  Game.DATASTORE.ITEM[itemId].hasMixin('Food');
+     },
+     processingFunction: function (selectedItemIds) {
+       if (selectedItemIds[0]) {
+         var foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([selectedItemIds[0]])[0];
+ //        Game.util.cdebug(foodItem);
+         Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+         return true;
+       }
+       return false;
+     }
+ });
+ Game.UIMode.LAYER_inventoryEat.doSetup = function () {
+   this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
  };

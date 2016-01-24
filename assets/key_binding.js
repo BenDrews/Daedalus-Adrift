@@ -2,7 +2,7 @@ Game.KeyBinding = {
   _availableBindings: ['numpad','wasd'],
   _curBindingKey: '',
   _currentBindingLookup: {},
-   _bindingHelpText: "Instructions: \n \n Movement = UP, DOWN, LEFT, RIGHT Keys \n Inventory = I \n Pickup Item = G \nDrop Item = D \n Pause Menu = Esc \n \nWhile in Pause Menu: \n \nSave Game = S \nLoad Game = L \nNew Game = N \n \nObjectives: Do not let the slimes get you. Slimes will latch onto you once they come near you. If four slimes latch on to you, they will explode, hurting you.\n",
+   _bindingHelpText: '',
   setKeyBinding:function (bindingSetKey) {
     this._curBindingKey = bindingSetKey || 'numpad';
     this.calcBindingLookups();
@@ -145,9 +145,9 @@ INVENTORY : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.0 ,
   wasd  : {label:'i' ,inputMatch:ROT.VK_I ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 EAT   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.3 ,short:'eat' ,long :'consume food to reduce hunger'         ,
- numpad: {label:'E' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false} ,
+ numpad: {label:'e' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
  wasd  : {label:'E' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false},
- LAYER_inventoryListing: {label:'E' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
+ LAYER_inventoryListing: {label:'e' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
 },
 EXAMINE : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.9 ,short:'examine' ,long :'get details about a carried item',
  numpad: {label:'x' ,inputMatch:ROT.VK_X ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false},
