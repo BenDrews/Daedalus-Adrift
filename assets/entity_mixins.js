@@ -631,16 +631,14 @@ Game.EntityMixin.NarrowSight = {
   },
   setFacing: function () {
   //  var slope = Math.round((Game.mouseY - this.getY())/(Game.mouseX - this.getX()));
-    var deltaY = Game.mouseY/2 - 364 / 2 + 80;
-    var deltaX = Game.mouseX/2 - 798 / 2 + 100;
+    var deltaY = Game.mouseY/2 - 364 / 2 + 70;
+    var deltaX = Game.mouseX/2 - 798 / 2 + 90;
     var angle = Math.atan2(deltaY, deltaX);
-    console.log( angle, Game.mouseX/2,Game.mouseY/2, 798 /2 - 100, 364 /2 - 80);
-    result = Math.round(Math.abs(((angle + Math.PI/2) / Math.PI)) * 8 - 2);
+    console.log( angle, Game.mouseX/2,Game.mouseY/2, 798 /2 - 90, 364 /2 - 70);
+    result = Math.round((((angle + Math.PI) / Math.PI)) * 4) + 6;
     console.log(result);
     if (result > 7) {
-      result = 0;
-    } else if (result < 0) {
-      result = 7;
+      result = result - 8;
     }
     this.attr._NarrowSight_attr.facing = result;
   },
