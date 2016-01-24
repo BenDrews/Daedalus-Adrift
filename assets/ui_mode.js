@@ -128,7 +128,9 @@ Game.UIMode.gamePlay = {
       // console.log('TODO: set up help stuff for gamepersistence');
       Game.UIMode.LAYER_textReading.setText(Game.KeyBinding.getBindingHelpText());
       Game.pushUIMode('LAYER_textReading');
-    }
+    } else if (actionBinding.actionKey == 'EXAMINE') {
+       Game.pushUIMode('LAYER_inventoryExamine');
+      }
 
 
 
@@ -729,6 +731,17 @@ Game.UIMode.LAYER_inventoryListing = new Game.UIMode.LAYER_itemListing({
 Game.UIMode.LAYER_inventoryListing.doSetup = function () {
   this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
 };
+Game.UIMode.LAYER_inventoryListing.handleInput = function (inputType,inputData) {
+   var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
+
+   if (actionBinding) {
+     if (actionBinding.actionKey == 'EXAMINE') {
+       Game.addUiMode('LAYER_inventoryExamine');
+       return false;
+     }
+   }
+   return Game.UIMode.LAYER_itemListing.prototype.handleInput.call(this,inputType,inputData);
+ };
 
 //-------------------
 
@@ -764,3 +777,22 @@ Game.UIMode.LAYER_inventoryPickup = new Game.UIMode.LAYER_itemListing({
 Game.UIMode.LAYER_inventoryPickup.doSetup = function () {
   this.setup({itemIdList: Game.util.objectArrayToIdArray(Game.UIMode.gamePlay.getAvatar().getMap().getItems(Game.UIMode.gamePlay.getAvatar().getPos()))});
 };
+Game.UIMode.LAYER_inventoryExamine = new Game.UIMode.LAYER_itemListing({
+     caption: 'Examine',
+    canSelect: true,
+     keyBindingName: 'LAYER_inventoryExamine',
+     processingFunction: function (selectedItemIds) {
+       console.log('LAYER_inventoryExamine processing on '+selectedItemIds[0]);
+       if (selectedItemIds[0]) {
+         var d = Game.DATASTORE.ITEM[selectedItemIds[0]].getDetailedDescription();
+         console.log('sending special message of '+d);
+         setTimeout(function() {
+            Game.specialMessage(d);
+         }, 2);
+       }
+       return false;
+     }
+ });
+ Game.UIMode.LAYER_inventoryExamine.doSetup = function () {
+   this.setup({itemIdList: Game.getAvatar().getInventoryItemIds()});
+ };
