@@ -60,6 +60,7 @@ Game.Map.prototype.addEntity = function (ent,pos) {
   this.attr._locationsByEntity[ent.getId()] = pos.x+","+pos.y;
   ent.setMap(this);
   ent.setPos(pos);
+  ent.raiseEntityEvent('addedToMap');
 };
 
 Game.Map.prototype.addItem = function (itm, pos) {

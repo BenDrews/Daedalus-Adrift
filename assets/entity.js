@@ -7,16 +7,17 @@ Game.Entity = function(template) {
     this.attr._alligence = template.alligence || 'self';
     this.attr._allyHash = template.allyHash || {};
     this.setAlliedWith(this.getAlligence(),true);
-    Game.SymbolActive.call(this, template);
     this.attr._x = template.x || 0;
     this.attr._y = template.y || 0;
+    this.attr._mapId = template.mapId || null;
+    Game.SymbolActive.call(this, template);
     this.attr._generator_template_key = template.generator_template_key || '';
-    this.attr._mapId = null;
     this.attr._timeout = null;
     this._listeners = {};
     this._listeningTo = [];
 
     Game.DATASTORE.ENTITY[this.attr._id] = this;
+    this.raiseEntityEvent('initialized');
 };
 Game.Entity.extend(Game.SymbolActive);
 

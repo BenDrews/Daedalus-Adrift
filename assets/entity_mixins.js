@@ -180,9 +180,6 @@ Game.EntityMixin.PlayerActor = {
     mixinGroup: 'Actor',
     stateNamespace: '_PlayerActor_attr',
     stateModel:  {
-      baseActionDuration: 1000,
-      actingState: false,
-      currentActionDuration: 1000,
       direction: 0,
       canMove: true,
       moveSpeed: 75
@@ -219,25 +216,11 @@ Game.EntityMixin.PlayerActor = {
     },
     listeners: {
       'actionDone': function(evtData) {
-  //      Game.Scheduler.setDuration(this.getCurrentActionDuration());
-        this.setCurrentActionDuration(this.getBaseActionDuration());
       },
       'killed': function(evtData) {
         Game.switchUIMode('gameLose');
       }
     }
-  },
-  getBaseActionDuration: function () {
-    return this.attr._PlayerActor_attr.baseActionDuration;
-  },
-  setBaseActionDuration: function (n) {
-    this.attr._PlayerActor_attr.baseActionDuration = n;
-  },
-  getCurrentActionDuration: function () {
-    return this.attr._PlayerActor_attr.currentActionDuration;
-  },
-  setCurrentActionDuration: function (n) {
-    this.attr._PlayerActor_attr.currentActionDuration = n;
   },
   isActing: function (state) {
     if (state !== undefined) {
@@ -414,6 +397,111 @@ Game.EntityMixin.WalkerSegmented = {
     }
 };
 
+Game.EntityMixin.GiantFlank = {
+  META: {
+    mixinName: 'GiantFlank',
+    mixinGroup: 'Child',
+    stateNamespace: '_GiantFlank_attr',
+    stateModel: {
+      headEnt: null
+    },
+    init: function(template) {
+      this.attr._GiantFlank_attr.headEnt = template.headEnt;
+    }
+  },
+  raiseEntityEvent: function(evtLabel, evtData) {
+    this.getHeadEnt.raiseEntityEvent.call(this.getHeadEnt(), evtLabel, evtData);
+  },
+  getHeadSegment: function() {
+    return this.attr._GiantFlank_attr.headEnt;
+  }
+};
+
+Game.EntityMixin.WalkerGiant = {
+  META: {
+    mixinName: 'WalkerGiant',
+    mixinGroup: 'Walker',
+    stateNamespace: '_WalkerGiant_attr',
+    stateModel: {
+      flanks: {},
+      flankChars: {},
+      immobilized: false
+    },
+    init: function (template) {
+      this.attr._WalkerGiant_attr.flankChars = template.flankChars || {'-1,-1':'a','-1,0':'b','-1,1':'c','0,-1':'d','0,1':'e','1,-1':'f','1,0':'g','1,1':'h'};
+      var positions = Game.util.positionsAdjacentTo(0,0);
+      for(var i = 0; i < positions.length; i++) {
+        flankChars['' + positions[i].x + ',' + positions[i].y] = new Game.Entity({name:this.getName() + ' Giant Flank', chr:this.attr._WalkerGiant_attr.flankChars['' + positions[i].x + ',' + positions[i].y], headEnt:this, flankPos: positions[i], alligence:this.getAlligence(), mixins:['HeadFlank']});
+      }
+    },
+    listeners: {
+      'addedToMap': function (evtData) {
+        var map = this.getMap();
+        var positions = Game.util.positionsAdjacentTo(this.getPos());
+        for(var i = 0; i < positions.length; i++) {
+          if(map.getTile(positions[i]).isWalkable() || map.getEntity(positions[i])) {
+            this.destroy();
+            return false;
+          }
+        }
+        var flanks = this.getFlanks();
+        var pos;
+        for(var flank in flanks) {
+          pos = {x:this.getX() + flank.getFlankPos().x, y:this.getY() + flank.getFlankPos().y};
+          map.addEntity(flank,pos);
+        }
+      },
+      'adjacentMove': function (evtData) {
+        var map = this.getMap();
+        var dx=evtData.dx,dy=evtData.dy;
+        var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
+        var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
+        if (map.getEntity(targetX,targetY) && (!evtData.entIgnore || !evtData.entIgnore[map.getEntity(targetX,targetY).getId()])) { // can't walk into spaces occupied by other entities
+          this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
+          return {madeAdjacentMove:false};
+        }
+        var targetTile = map.getTile(targetX,targetY);
+        if (targetTile.isWalkable()) {
+          this.setPos(targetX,targetY);
+          var myMap = this.getMap();
+          if (myMap) {
+            myMap.updateEntityLocation(this);
+          }
+          this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
+          return {madeAdjacentMove:true};
+        } else {
+          this.raiseEntityEvent('walkForbidden',{target:targetTile});
+        }
+        return {madeAdjacentMove:false};
+      },
+      'killed': function(evtData) {
+        this.getTailSegment().destroy();
+      },
+      'immobilized': function(evtData) {
+        this.setImmobile(evtData.immobilized);
+      }
+    }
+  },
+  setFlank: function(dx_dpos, dy) {
+
+  },
+  getFlank: function(dx_dpos, dy) {
+
+  },
+  getFlanks: function() {
+    return this.attr._WalkerGiant_attr.flanks;
+  },
+  setImmobile: function(im) {
+    this.attr._WalkerSegmented_attr.immobilized = im;
+    if(im) {
+      this.contract();
+    }
+  },
+  isImmobile: function() {
+    return this.attr._WalkerSegmented_attr.immobilized;
+  }
+};
+
 Game.EntityMixin.Chronicle = {
   META: {
     mixinName: 'Chronicle',
@@ -520,22 +608,18 @@ Game.EntityMixin.WanderActor = {
     mixinGroup: 'Actor',
     stateNamespace: '_WanderActor_attr',
     stateModel:  {
-      baseActionDuration: 1000,
-      currentActionDuration: 1000,
-      timeout: null,
       canMove: true
     },
     priority: 1,
     act: function () {
       var moveDeltas = this.getMoveDeltas();
       var curObj = this;
-      if (this.canMove()) { // NOTE: this pattern suggests that maybe tryWalk shoudl be converted to an event
+      if (this.canMove()) {
         if(this.raiseEntityEvent('adjacentMove', {dx:moveDeltas.x, dy:moveDeltas.y}).madeAdjacentMove[0]) {
           this.setMovable(false);
           setTimeout(function() {curObj.setMovable(true);}, 250);
         }
       }
-      this.setCurrentActionDuration(this.getBaseActionDuration());
       this.raiseSymbolActiveEvent('actionDone');
       clearTimeout(curObj.attr._timeout);
       curObj.attr._timeout = setTimeout(function() {curObj.act();}, 75);
@@ -548,18 +632,6 @@ Game.EntityMixin.WanderActor = {
   },
   setMovable: function (canMove) {
     this.attr._WanderActor_attr.canMove = canMove;
-  },
-  getBaseActionDuration: function () {
-    return this.attr._WanderActor_attr.baseActionDuration;
-  },
-  setBaseActionDuration: function (n) {
-    this.attr._WanderActor_attr.baseActionDuration = n;
-  },
-  getCurrentActionDuration: function () {
-    return this.attr._WanderActor_attr.currentActionDuration;
-  },
-  setCurrentActionDuration: function (n) {
-    this.attr._WanderActor_attr.currentActionDuration = n;
   },
   getMoveDeltas: function () {
     return Game.util.positionsAdjacentTo({x:0,y:0}).random();
