@@ -10,7 +10,8 @@ Game.Map = function (mapTileSetName){
     _width: this._tiles.length,
     _height: this._tiles[0].length,
     _entitiesByLocation: {},
-    _locationsByEntity: {}
+    _locationsByEntity: {},
+    _itemsByLocation: {},
   };
 
   this._fov = null;
@@ -61,6 +62,14 @@ Game.Map.prototype.addEntity = function (ent,pos) {
   ent.setPos(pos);
 };
 
+Game.Map.prototype.addItem = function (itm, pos) {
+  var loc = pos.x + "," + pos.y;
+  if (! this.attr._itemsByLocation[loc]) {
+    this.attr._itemsByLocation[loc] = [];
+  }
+  this.attr._itemsByLocation[loc].push(itm.getId());
+};
+
 Game.Map.prototype.updateEntityLocation = function (ent) {
   var origLoc = this.attr._locationsByEntity[ent.getId()];
   if (origLoc) {
@@ -69,6 +78,17 @@ Game.Map.prototype.updateEntityLocation = function (ent) {
   var pos = ent.getPos();
   this.attr._entitiesByLocation[pos.x+","+pos.y] = ent.getId();
   this.attr._locationsByEntity[ent.getId()] = pos.x+","+pos.y;
+};
+
+Game.Map.prototype.getItems = function (x_or_pos, y) {
+  var useX = x_or_pos, useY = y;
+  if (typeof x_or_pos == 'object') {
+    useX = x_or_pos.x;
+    useY = x_or_pos.y;
+  }
+  var itemIds = this.attr._itemsByLocation[useX + ',' + useY];
+  if (itemIds) { return itemIds.map(function(iid) {return Game.DATASTORE.ITEM[iid];});}
+  return [];
 };
 
 Game.Map.prototype.getEntity = function (x_or_pos,y) {
@@ -125,17 +145,48 @@ Game.Map.prototype.getEntitiesNearby = function (radius,x_or_pos,y) {
   return foundEnts;
 };
 
+Game.Map.prototype.extractItemAt = function (itm_or_idx,x_or_pos,y) {
+  var useX = x_or_pos,useY=y;
+  if (typeof x_or_pos == 'object') {
+    useX = x_or_pos.x;
+    useY = x_or_pos.y;
+  }
+  var itemIds = this.attr._itemsByLocation[useX+','+useY];
+          console.log(itemIds);
+  if (! itemIds) { return false; }
+
+  var item = false, extractedId = '';
+  if (Number.isInteger(itm_or_idx)) {
+    extractedId = itemIds.splice(itm_or_idx,1);
+    item = Game.DATASTORE.ITEM[extractedId];
+            console.log(item);
+  } else {
+    var idToFind = itm_or_idx.getId();
+    for (var i = 0; i < itemIds.length; i++) {
+      if (idToFind === itemIds[i]) {
+        extractedId = itemIds.splice(i,1);
+        item = Game.DATASTORE.ITEM[extractedId];
+        console.log(item);
+        break;
+      }
+    }
+  }
+  return item;
+};
+
 Game.Map.prototype.renderOn = function (display,camX,camY,renderOptions) {
   var opt = renderOptions || {};
 
  var checkCellsVisible = opt.visibleCells !== undefined;
  var visibleCells = opt.visibleCells || {};
  var showVisibleEntities = (opt.showVisibleEntities !== undefined) ? opt.showVisibleEntities : true;
+ var showVisibleItems = (opt.showVisibleItems !== undefined) ? opt.showVisibleItems: true;
  var showVisibleTiles = (opt.showVisibleTiles !== undefined) ? opt.showVisibleTiles : true;
 
  var checkCellsMasked = opt.maskedCells !== undefined;
  var maskedCells = opt.maskedCells || {};
  var showMaskedEntities = (opt.showMaskedEntities !== undefined) ? opt.showMaskedEntities : false;
+ var showMaskedItems = (opt.showMaskedItems !== undefined) ? opt.showMaskedItems : false;
  var showMaskedTiles = (opt.showMaskedTiles !== undefined) ? opt.showMaskedTiles : true;
 
 
@@ -175,6 +226,20 @@ Game.Map.prototype.renderOn = function (display,camX,camY,renderOptions) {
      } else if (showMaskedTiles && maskedCells[mapCoord]) {
        tile.draw(display,x,y,true);
      }
+      var items = this.getItems(mapPos);
+      if (items.length == 1) {
+        if (showVisibleItems && visibleCells[mapCoord]) {
+          items[0].draw(display,x,y);
+        } else if (showMaskedItems && maskedCells[mapCoord]) {
+          items[0].draw(display,x,y,true);
+        }
+      } else if (items.length > 1) {
+        if (showVisibleItems && visibleCells[mapCoord]) {
+          Game.Symbol.ITEM_PILE.draw(display,x,y);
+        } else if (showMaskedItems && maskedCells[mapCoord]) {
+          Game.Symbol.ITEM_PILE.draw(display,x,y,true);
+        }
+      }
 
      var ent = this.getEntity(mapPos);
      if (ent) {
@@ -188,7 +253,7 @@ Game.Map.prototype.renderOn = function (display,camX,camY,renderOptions) {
  }
 };
 
-Game.Map.prototype.getRandomLocation = function(filter_func) {
+Game.Map.prototype.getRandomPosition = function(filter_func) {
   if (filter_func === undefined) {
     filter_func = function(tile) { return true; };
   }
@@ -201,8 +266,8 @@ Game.Map.prototype.getRandomLocation = function(filter_func) {
   return {x:tX,y:tY};
 };
 
-Game.Map.prototype.getRandomWalkableLocation = function() {
-  return this.getRandomLocation(function(t){ return t.isWalkable(); });
+Game.Map.prototype.getRandomWalkablePosition = function() {
+  return this.getRandomPosition(function(t){ return t.isWalkable(); });
 };
 
 Game.Map.prototype.toJSON = function () {
