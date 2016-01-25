@@ -403,9 +403,11 @@ Game.EntityMixin.GiantFlank = {
     mixinGroup: 'Child',
     stateNamespace: '_GiantFlank_attr',
     stateModel: {
+      flankPos: {x:1,y:1},
       headEnt: null
     },
     init: function(template) {
+      this.attr._GiantFlank_attr.flankPos = template.flankPos;
       this.attr._GiantFlank_attr.headEnt = template.headEnt;
     }
   },

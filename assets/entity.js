@@ -17,7 +17,6 @@ Game.Entity = function(template) {
     this._listeningTo = [];
 
     Game.DATASTORE.ENTITY[this.attr._id] = this;
-    this.raiseEntityEvent('initialized');
 };
 Game.Entity.extend(Game.SymbolActive);
 
