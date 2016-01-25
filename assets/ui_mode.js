@@ -294,7 +294,7 @@ Game.UIMode.gamePersistence = {
     } else if (actionBinding.actionKey == 'HELP') {
       // console.log('TODO: set up help stuff for gamepersistence');
       Game.UIMode.LAYER_textReading.setText(Game.KeyBinding.getBindingHelpText());
-      Game.addUiMode('LAYER_textReading');
+      Game.pushUIMode('LAYER_textReading');
     }
     return false;
   },
@@ -433,14 +433,17 @@ Game.UIMode.LAYER_textReading = {
     this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
     Game.KeyBinding.setKeyBinding('LAYER_textReading');
     var display = Game.DISPLAYS.avatar.o;
-    var options = display.getOptions();
-    this._storedDisplayOptions = {};
-    for (var optionKey in options) {
-      this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
-    }
-//    display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
-    Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
+//    var options = display.getOptions();
+    console.log(display.getOptions());
+//    this._storedDisplayOptions = {};
+    // for (var optionKey in options) {
+    //   this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
+    // }
+//        display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
     Game.refresh();
+
+    Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
+
   },
   exit: function() {
     Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
@@ -457,8 +460,10 @@ Game.UIMode.LAYER_textReading = {
 
   },
   handleInput: function(inputType, inputData) {
-    Game.Message.clear();
     var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
+    if (! actionBinding) {
+  return false;
+}
     if (actionBinding.actionKey == 'CANCEL') {
       Game.popUIMode();
     }
@@ -466,12 +471,12 @@ Game.UIMode.LAYER_textReading = {
     if (inputType === 'keydown' && inputData.keyCode === 219) {
       this._renderY++;
       if (this._renderY > 0) { this._renderY = 0; }
-      Game.renderMain();
+      Game.renderOnAvatar();
       return true;
     } else if (inputType === 'keydown' && inputData.keyCode === 221) {
       this._renderY--;
       if (this._renderY < this._renderScrollLimit) { this._renderY = this._renderScrollLimit; }
-      Game.renderMain();
+      Game.renderOnAvatar();
       return true;
     }
     return false;
@@ -508,11 +513,8 @@ Game.UIMode.LAYER_itemListing = function(template) {
   this._displayItems = [];
   this._displayMaxNum = Game.getDisplayHeight('avatar') - 3;
   this._numItemsShown = 0;
-  this._storedKeyBinding = '';
-  this._storedDisplayOptions = {};
-  this._tex = 'Default text layer';
-  this._renderY = 0;
-  this._renderScrollLimit = 0;
+//  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
+
 };
 
 Game.UIMode.LAYER_itemListing.prototype._runFilterOnItemIdList = function () {
@@ -525,14 +527,14 @@ Game.UIMode.LAYER_itemListing.prototype._runFilterOnItemIdList = function () {
 };
 
 Game.UIMode.LAYER_itemListing.prototype.enter = function () {
-  var display = Game.DISPLAYS.avatar.o;
-  var options = display.getOptions();
-  this._storedDisplayOptions = {};
-  for (var optionKey in options) {
-    this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
-  }
-//  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
-
+   var display = Game.DISPLAYS.avatar.o;
+   var options = display.getOptions();
+  // this._storedDisplayOptions = {};
+  // for (var optionKey in options) {
+  //   this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
+  // }
+//  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
+//  console.log(display.getOptions());
 
   this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
   Game.KeyBinding.setKeyBinding(this._keyBindingName);
@@ -741,6 +743,7 @@ Game.UIMode.LAYER_itemListing.prototype.handleInput = function (inputType,inputD
       helpText += "a-" + lastSelectionLetter + "  select the indicated item\n";
     }
     helpText += Game.KeyBinding.getBindingHelpText();
+    console.log(helpText);
     Game.UIMode.LAYER_textReading.setText(helpText);
     Game.pushUIMode('LAYER_textReading');
   }
