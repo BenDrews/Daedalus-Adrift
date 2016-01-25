@@ -453,6 +453,9 @@ Game.UIMode.LAYER_textReading = {
     this._renderScrollLimit = dims.h - linesTaken;
     if (this._renderScrollLimit > 0) { this._renderScrolLimit=0;}
   },
+  renderOnMessage: function(display) {
+
+  },
   handleInput: function(inputType, inputData) {
     Game.Message.clear();
     var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
@@ -489,8 +492,8 @@ Game.UIMode.LAYER_itemListing = function(template) {
 
   this._caption = template.caption || 'Items';
   this._processingFunction = template.processingFunction;
-  this._filterListedItemsOnFunction = template.filterListedItemsOn || function(x) {
-    return x;
+  this._filterListedItemsOnFunction = template.filterListedItemsOn || function(itemId) {
+    return itemId;
   };
   this._canSelectItem = template.canSelect || false;
   this._canSelectMultipleItems = template.canSelectMultipleItems || false;
@@ -634,10 +637,16 @@ Game.UIMode.LAYER_itemListing.prototype.getCaptionText = function () {
 Game.UIMode.LAYER_itemListing.prototype.renderOnMain = function (display) {
   Game.UIMode.gamePlay.renderOnMain(display);
 };
+Game.UIMode.LAYER_itemListing.prototype.renderOnMessage = function (display) {
+};
 Game.UIMode.LAYER_itemListing.prototype.renderOnAvatar = function (display) {
   var selectionLetters = 'abcdefghijklmnopqrstuvwxyz';
   // Render the caption in the top row
   display.drawText(0, 0, Game.UIMode.DEFAULT_COLOR_STR + this.getCaptionText());
+  if (this._displayItems.length < 1) {
+       display.drawText(0, 2, Game.UIMode.DEFAULT_COLOR_STR + 'nothing for '+ this.getCaptionText().toLowerCase());
+       return;
+     }
   var row = 0;
   if (this._hasNoItemOption) {
     display.drawText(0, 1, Game.UIMode.DEFAULT_COLOR_STR + '0 - no item');
@@ -675,7 +684,7 @@ Game.UIMode.LAYER_itemListing.prototype.executeProcessingFunction = function() {
       selectedItemIds.push(this._itemIdList[selectionIndex]);
     }
   }
-  Game.popUIMode();
+  Game.removeUiModeAllLayers();
   // Call the processing function and end the player's turn if it returns true.
   if (this._processingFunction(selectedItemIds)) {
     Game.UIMode.gamePlay.getAvatar().raiseSymbolActiveEvent('actionDone');
@@ -743,9 +752,11 @@ Game.UIMode.LAYER_inventoryListing = new Game.UIMode.LAYER_itemListing({
   canSelect: false,
   keyBindingName: 'LAYER_inventoryListing'
 });
+
 Game.UIMode.LAYER_inventoryListing.doSetup = function () {
   this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
 };
+
 Game.UIMode.LAYER_inventoryListing.handleInput = function (inputType,inputData) {
    var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
 
@@ -811,14 +822,13 @@ Game.UIMode.LAYER_inventoryExamine = new Game.UIMode.LAYER_itemListing({
          var d = Game.DATASTORE.ITEM[selectedItemIds[0]].getDetailedDescription();
          console.log('sending special message of '+d);
          setTimeout(function() {
-            Game.specialMessage(d);
-                        Game.specialMessage(d);
-                                  Game.specialMessage(d);
-         }, 0.5);
+            Game.Message.send(d);
+         }, 2);
        }
        return false;
      }
  });
+
  Game.UIMode.LAYER_inventoryExamine.doSetup = function () {
    this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
  };

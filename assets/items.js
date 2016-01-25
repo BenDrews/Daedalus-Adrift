@@ -5,7 +5,8 @@ Game.ItemGenerator.learn({
   name: 'rock',
   description: 'a generic lump of hard mineral',
   chr:String.fromCharCode(174),
-  fg:'#bbc'
+  fg:'#bbc',
+  bg: '#000'
 });
 
 Game.ItemGenerator.learn({
@@ -13,6 +14,7 @@ Game.ItemGenerator.learn({
   description: 'a nice juicy apple - yum!',
   chr:String.fromCharCode(174),
   fg:'#f32',
+  bg: '#000',
   foodValue: 100,
   mixins: ['Food']
 });

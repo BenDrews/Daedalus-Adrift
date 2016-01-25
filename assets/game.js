@@ -105,7 +105,11 @@ var Game = {
     }
   },
   renderMessage: function() {
-  Game.Message.renderOn(this.DISPLAYS.message.o);
+    if (this.getCurUIMode() && typeof this.getCurUIMode().renderOnMessage == "function") {
+      this.getCurUIMode().renderOnMessage(this.DISPLAYS.message.o);
+    } else {
+      this.Message.renderOn(this.DISPLAYS.message.o);
+    }
 },
   hideDisplayMessage: function() {
     this.DISPLAYS.message.o.clear();
@@ -121,6 +125,13 @@ var Game = {
       }
     return null;
   },
+   getCurUiModeName: function () {
+     var uiModeName = this._uiModeNameStack[0];
+     if (uiModeName) {
+       return uiModeName;
+     }
+     return null;
+  },
   getDisplayHeight: function (displayId) {
     console.log(this.DISPLAYS);
     if (this.DISPLAYS.hasOwnProperty(displayId)) {
@@ -128,6 +139,20 @@ var Game = {
     }
     return null;
   },
+  removeUiModeAllLayers: function () {
+       var curModeName = this.getCurUiModeName();
+        while ((curModeName !== null) && curModeName.startsWith('LAYER_')) {
+         var curMode = this.getCurUIMode();
+         curMode.exit();
+         this._uiModeNameStack.shift();
+         curModeName = this.getCurUiModeName();
+      }
+       // curMode = this.getCurUiMode();
+       // if (curMode !== null) {
+       //   curMode.enter();
+       // }
+       // this.renderDisplayAll();
+ },
   switchUIMode: function (newUiModeName) {
     if (newUiModeName.startsWith('LAYER_')) {
       console.log('cannot switchUiMode to layer '+newUiModeName);
