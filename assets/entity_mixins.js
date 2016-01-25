@@ -642,6 +642,36 @@ Game.EntityMixin.WanderChaserActor = {
   }
 };
 
+Game.EntityMixin.Particle = {
+  META: {
+    mixinName: 'Particle',
+    mixinGroup: 'Effect',
+    stateNamespace: '_Particle_attr',
+    stateModel: {
+      duration: 250,
+      prevEnt: null
+    },
+    init: function (template) {
+      this.attr._Particle_attr.duration = template.duration || 250;
+      this.attr._Particle_attr.prevEnt = template.prevEnt || null;
+      var curEnt = this;
+      setTimeout(function() {
+        var map = curEnt.getMap();
+        curEnt.destroy();
+        if(curEnt.getPrevEnt()) {
+          map.updateEntityLocation(curEnt.getPrevEnt());
+        }
+      }, curEnt.getDuration());
+    }
+  },
+  getPrevEnt: function () {
+    return this.attr._Particle_attr.prevEnt;
+  },
+  getDuration: function () {
+    return this.attr._Particle_attr.duration;
+  }
+};
+
 Game.EntityMixin.LatchExploder = {
   META: {
     mixinName: 'LatchExploder',
@@ -725,13 +755,19 @@ Game.EntityMixin.LatchExploder = {
       },
       'explode': function (evtData) {
         var positions = Game.util.positionsOrthogonalTo(this.getPos());
+        var map = this.getMap();
         for(var i = 0; i < positions.length; i++) {
-          var ent = this.getMap().getEntity(positions[i]);
+        var ent = map.getEntity(positions[i]);
+        if(!ent && map.getTile(positions[i]).isWalkable()) {
+          map.addEntity(new Game.Entity({chr: '!', mixins: ['Particle']}), positions[i]);
+        }
           if(ent && !ent.isAllied(this)) {
             ent.raiseEntityEvent("attacked",{attacker:this,attackPower:this.getExplosionPower(),attackMethod:"violently exploded near"});
           }
         }
         this.destroy();
+        var pos= this.getPos();
+        map.addEntity(new Game.Entity({chr: '!', mixins: ['Particle']}), pos);
       },
       'detach': function (evtData) {
         if(this.isAttached()) {
@@ -746,6 +782,9 @@ Game.EntityMixin.LatchExploder = {
       }
     },
     act: function () {
+      if(this.isAttached() && !Game.DATASTORE.ENTITY[this.getAttachedTo().getId()]) {
+        this.raiseEntityEvent('detach');
+      }
       if(!this.isAttached() && this.getCanAttach()){
         var map = this.getMap();
         var ent = null;
@@ -797,15 +836,17 @@ Game.EntityMixin.LatchExploder = {
   detach: function () {
     this.raiseEntityEvent('immobilized', {immobilized:false});
     ent = this.getAttachedTo();
-    if(typeof ent.setMoveSpeed == 'function') {
-      ent.setMoveSpeed(ent.getMoveSpeed() - 50);
-    }
-    ent.removeListener(this);
-    ent.raiseEntityEvent('afflictionRemoved',{affliction:'slow', cureMessage:"released by the slime"});
-    for(var ltch = 0; ltch < ent.attr._LatchExploder_attr.latchers.length; ltch++) {
-        if(ent.attr._LatchExploder_attr.latchers[ltch] == this) {
-          ent.attr._LatchExploder_attr.latchers.splice(ltch,1);
-        }
+    if(ent) {
+      if(typeof ent.setMoveSpeed == 'function') {
+        ent.setMoveSpeed(ent.getMoveSpeed() - 50);
+      }
+      ent.removeListener(this);
+      ent.raiseEntityEvent('afflictionRemoved',{affliction:'slow', cureMessage:"released by the slime"});
+      for(var ltch = 0; ltch < ent.attr._LatchExploder_attr.latchers.length; ltch++) {
+          if(ent.attr._LatchExploder_attr.latchers[ltch] == this) {
+            ent.attr._LatchExploder_attr.latchers.splice(ltch,1);
+          }
+      }
     }
     this.attr._LatchExploder_attr.attached = false;
     this.attr._LatchExploder_attr.attachedTo = null;

@@ -6,10 +6,12 @@ Game.UIMode = {DEFAULT_COLOR_STR:""};
 Game.UIMode.gameStart = {
   enter: function () {
     console.log("Game.UIMode.gameStart enter");
+    Game.DISPLAYS.main.o.setOptions(Game.splashScreen.options);
   },
   exit: function () {
     Game.Message.clear();
     console.log("Game.UIMode.gameStart exit");
+    Game.DISPLAYS.main.o.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
   },
   handleInput: function (eventType, evt) {
     console.log("Game.UIMode.gameStart handleInput");
@@ -17,8 +19,8 @@ Game.UIMode.gameStart = {
   },
   renderOnMain: function (display) {
     display.clear();
-    display.drawText(4,4, Game.UIMode.DEFAULT_COLOR_STR+"Welcome to WSRL");
-    display.drawText(4, 6, Game.UIMode.DEFAULT_COLOR_STR+"Press any key to continue");
+    display.draw(0,0," ");
+
   }
 };
 
