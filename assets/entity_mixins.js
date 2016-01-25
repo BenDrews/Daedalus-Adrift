@@ -670,7 +670,7 @@ Game.EntityMixin.Particle = {
   getDuration: function () {
     return this.attr._Particle_attr.duration;
   }
-}
+};
 
 Game.EntityMixin.LatchExploder = {
   META: {
