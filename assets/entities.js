@@ -18,7 +18,7 @@ Game.EntityGenerator.learn({
   name: 'enemy',
   chr:'q',
   maxHp: 10,
-  mixins: [ "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker"]
+  mixins: [ "WalkerCorporeal", "HitPoints", "Chronicle", "MeleeAttacker","ClayActor"]
 });
 
 Game.EntityGenerator.learn({
