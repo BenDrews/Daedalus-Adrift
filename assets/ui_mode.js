@@ -186,8 +186,20 @@ Game.UIMode.gamePlay = {
     this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
     // end dev code
     ///////////////////////
-    for(var ecount = 0; ecount < 30; ecount++) {
-      this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
+    for(var ecount = 0; ecount < 3; ecount++) {
+      var pos = this.getMap().getRandomWalkablePosition();
+      this.getMap().addTileEntity(Game.EntityGenerator.create('Engine Leak'),pos);
+      var nextPos;
+      for(var leaksize = 0; leaksize < 2; leaksize++) {
+      var i = 0;
+      do{
+        i++;
+        nextPos = Game.util.positionsOrthogonalTo(pos).random();
+        if(i == 5) {continue;}
+      } while(!this.getMap().getTile(nextPos).isWalkable() || this.getMap().getTileEntity(nextPos));
+      pos = nextPos;
+      this.getMap().addTileEntity(Game.EntityGenerator.create('Engine Leak'),pos);
+      }
     }
      for (var ti=0; ti<3;ti++) {
        Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('rock')]);

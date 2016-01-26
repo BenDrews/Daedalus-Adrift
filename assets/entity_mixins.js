@@ -1129,3 +1129,75 @@ Game.EntityMixin.MapMemory = {
     return this.attr._MapMemory_attr.mapsHash[mapKey] || {};
   }
 };
+
+Game.EntityMixin.MobSpawner = {
+  META: {
+    mixinName: 'MobSpawner',
+    mixinGroup: 'Spawner',
+    stateNamespace: '_MobSpawner_attr',
+    stateMode: {
+      mob: '',
+      canSpawn: true,
+      spawnRange: 10,
+      savedTile: null,
+      rechargeRange: 2000,
+      rechargeBase: 5000
+    },
+    init: function (template) {
+      this.attr._MobSpawner_attr.mob = template.mob;
+      this.attr._MobSpawner_attr.spawnRange = template.spawnRange || 10;
+      this.getSpawnLocation = template.getSpawnLocation || this.getSpawnLocation;
+      this.attr._MobSpawner_attr.rechargeBase = template.rechargeBase || 5000;
+      this.attr._MobSpawner_attr.rechargeRange = template.rechargeRange || 10000;
+      this.attr._MobSpawner_attr.canSpawn = true;
+    },
+    act: function () {
+      var curEnt = this;
+        var avatar = Game.getAvatar();
+        if(this.canSpawn() && avatar && Math.abs(this.getX() - avatar.getX()) < this.getSpawnRange() && Math.abs(this.getY() - avatar.getY()) < this.getSpawnRange()) {
+            var entToSpawn = Game.EntityGenerator.create(this.getMob());
+            this.getMap().addEntity(entToSpawn, this.getSpawnLocation());
+            if(typeof entToSpawn.act == 'function') {
+              entToSpawn.act();
+            }
+            this.setCanSpawn(false);
+            setTimeout(function () {curEnt.setCanSpawn(true);}, curEnt.getSpawnRecharge());
+        }
+        this.attr._timeout = setTimeout(function () {curEnt.act();}, 1000);
+    }
+  },
+  canSpawn: function () {
+    return this.attr._MobSpawner_attr.canSpawn;
+  },
+  setCanSpawn: function (cspw) {
+    this.attr._MobSpawner_attr.canSpawn = cspw;
+  },
+  getMob: function () {
+    return this.attr._MobSpawner_attr.mob;
+  },
+  setMob: function (mob) {
+    this.attr._MobSpawner_attr.mob = mob;
+  },
+  getSpawnRange: function () {
+    return this.attr._MobSpawner_attr.spawnRange;
+  },
+  setSpawnRange: function (sr) {
+    this.attr._MobSpawner_attr.spawnRange = sr;
+  },
+  getSavedTile: function () {
+    return this.attr._MobSpawner_attr.savedTile;
+  },
+  setSavedTile: function (tile) {
+    this.attr._MobSpawner_attr.savedTile = tile;
+  },
+  getSpawnLocation: function () {
+    var spawnPos;
+    do{
+      spawnPos = Game.util.positionsOrthogonalTo(this.getPos()).random();
+    } while(!this.getMap().getTile(spawnPos).isWalkable());
+    return spawnPos;
+  },
+  getSpawnRecharge: function () {
+    return this.attr._MobSpawner_attr.rechargeRange + Math.floor(this.attr._MobSpawner_attr.rechargeRange * ROT.RNG.getUniform());
+  }
+};
