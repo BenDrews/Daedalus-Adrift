@@ -17,7 +17,7 @@ Game.EntityGenerator.learn({
   maxHp:1,
   topology:4,
   alligence:'slime',
-  mixins: ["HitPoints", "WalkerSegmented", "Sight", "WanderChaserActor","Chronicle"]
+  mixins: ["HitPoints", "WalkerSegmented", "Sight", "WanderChaserActor","Chronicle", "LatchExploder"]
 });
 
 Game.EntityGenerator.learn({
@@ -31,4 +31,11 @@ Game.EntityGenerator.learn({
   name: 'projectile',
   chr:'*',
   mixins: [ "WalkerCorporeal", "Bullet"]
+});
+
+Game.EntityGenerator.learn({
+  name: 'Engine Leak',
+  chr: '^',
+  mob: 'slime',
+  mixins: ["MobSpawner"]
 });

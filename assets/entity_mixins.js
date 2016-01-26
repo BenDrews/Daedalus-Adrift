@@ -32,38 +32,38 @@ Game.EntityMixin.PlayerMessager = {
         Game.Message.send('You were killed by the '+evtData.killedBy.getName() + '.');
       },
 
-       'noItemsToPickup': function(evtData) {
-         Game.Message.send('there is nothing to pickup');
-         Game.renderMessage();
-       },
-       'inventoryFull': function(evtData) {
-         Game.Message.send('your inventory is full');
-         Game.renderMessage();
-       },
-       'inventoryEmpty': function(evtData) {
-         Game.Message.send('you are not carrying anything');
-         Game.renderMessage();
-       },
-       'noItemsPickedUp': function(evtData) {
-         Game.Message.send('you could not pick up any items');
-         Game.renderMessage();
-       },
-       'someItemsPickedUp': function(evtData) {
-         Game.Message.send('you picked up '+evtData.numItemsPickedUp+' of the items, leaving '+evtData.numItemsNotPickedUp+' of them');
-         Game.renderMessage();
-       },
-       'allItemsPickedUp': function(evtData) {
+      'noItemsToPickup': function(evtData) {
+        Game.Message.send('there is nothing to pickup');
+        Game.renderMessage();
+      },
+      'inventoryFull': function(evtData) {
+        Game.Message.send('your inventory is full');
+        Game.renderMessage();
+      },
+      'inventoryEmpty': function(evtData) {
+        Game.Message.send('you are not carrying anything');
+        Game.renderMessage();
+      },
+      'noItemsPickedUp': function(evtData) {
+        Game.Message.send('you could not pick up any items');
+        Game.renderMessage();
+      },
+      'someItemsPickedUp': function(evtData) {
+        Game.Message.send('you picked up '+evtData.numItemsPickedUp+' of the items, leaving '+evtData.numItemsNotPickedUp+' of them');
+        Game.renderMessage();
+      },
+      'allItemsPickedUp': function(evtData) {
         if (evtData.numItemsPickedUp > 1) {
-           Game.Message.send('you picked up all '+evtData.numItemsPickedUp+' items');
-         } else {
-           Game.Message.send('you picked up the item');
-         }
-         Game.renderMessage();
-       },
-       'itemsDropped': function(evtData) {
-         Game.Message.send('you dropped '+evtData.numItemsDropped+' items');
-         Game.renderMessage();
-       }
+          Game.Message.send('you picked up all '+evtData.numItemsPickedUp+' items');
+        } else {
+          Game.Message.send('you picked up the item');
+        }
+        Game.renderMessage();
+      },
+      'itemsDropped': function(evtData) {
+        Game.Message.send('you dropped '+evtData.numItemsDropped+' items');
+        Game.renderMessage();
+      }
     }
   }
 };
@@ -75,7 +75,8 @@ Game.EntityMixin.InventoryHolder = {
     stateNamespace: '_InventoryHolder_attr',
     stateModel:  {
       containerId: '',
-      inventoryCapacity: 5
+      inventoryCapacity: 5,
+      activeItem: null
     },
     init: function (template) {
       this.attr._InventoryHolder_attr.inventoryCapacity = template.inventoryCapacity || 5;
@@ -111,6 +112,40 @@ Game.EntityMixin.InventoryHolder = {
   extractInventoryItems: function (ids_or_idxs) {
     return this._getContainer().extractItems(ids_or_idxs);
   },
+  setActiveItem: function (item) {
+    this.attr._InventoryHolder_attr.activeItem = item;
+  },
+  getActiveItem: function () {
+    return this.attr._InventoryHolder_attr.activeItem;
+  },
+  useActiveItem: function () {
+    if (this.attr._InventoryHolder_attr.activeItem !== null) {
+      if (this.attr._InventoryHolder_attr.activeItem.getDescription() === 'it delatches slimes') {
+        if (Game.getAvatar().getCurFood() >= 200) {
+          foodItem = this.attr._InventoryHolder_attr.activeItem;
+          if (Game.getAvatar().attr._LatchExploder_attr) {
+            var latchers = Game.getAvatar().attr._LatchExploder_attr.latchers;
+            for (var i = 0; i < latchers.length; i++) {
+              latchers[i].raiseEntityEvent('detach');
+            }
+          }
+          Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+        } else {
+          Game.Message.send("Not enough energy to perform this action.");
+        }
+
+      } else {
+        foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([this.attr._InventoryHolder_attr.activeItem.getId()])[0];
+        Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+      }
+      //        Game.util.cdebug(foodItem);
+
+
+      if (foodItem.getName() === 'apple') {
+        this.attr._InventoryHolder_attr.activeItem = null;
+      }
+    }
+  },
   pickupItems: function (ids_or_idxs) {
     var itemsToAdd = [];
     var fromPile = Game.UIMode.gamePlay.getMap().getItems(this.getPos());
@@ -132,7 +167,7 @@ Game.EntityMixin.InventoryHolder = {
 
     for (var i = 0; i < fromPile.length; i++) {
       if ((ids_or_idxs.indexOf(i) > -1) || (ids_or_idxs.indexOf(fromPile[i].getId()) > -1)) {
-          itemsToAdd.push(fromPile[i]);
+        itemsToAdd.push(fromPile[i]);
       }
     }
     var addResult = this._getContainer().addItems(itemsToAdd);
@@ -191,25 +226,25 @@ Game.EntityMixin.PlayerActor = {
     act: function () {
       curEntity = this;
       if(this.canMove()) {
-          var dx = 0;
-          var dy = 0;
-          if(curEntity.attr._PlayerActor_attr.direction & 1) {
-            dy--;
-          }
-          if(curEntity.attr._PlayerActor_attr.direction & 2) {
-            dx++;
-          }
-          if(curEntity.attr._PlayerActor_attr.direction & 4) {
-            dy++;
-          }
-          if(curEntity.attr._PlayerActor_attr.direction & 8) {
-            dx--;
-          }
-          if(dx !== 0 || dy !== 0) {
-            this.raiseEntityEvent('adjacentMove', {dx:dx, dy:dy});
-            curEntity.setMovable(false);
-            setTimeout(function() {curEntity.setMovable(true);}, this.getMoveSpeed() * Math.sqrt(Math.abs(dx) + Math.abs(dy)));
-          }
+        var dx = 0;
+        var dy = 0;
+        if(curEntity.attr._PlayerActor_attr.direction & 1) {
+          dy--;
+        }
+        if(curEntity.attr._PlayerActor_attr.direction & 2) {
+          dx++;
+        }
+        if(curEntity.attr._PlayerActor_attr.direction & 4) {
+          dy++;
+        }
+        if(curEntity.attr._PlayerActor_attr.direction & 8) {
+          dx--;
+        }
+        if(dx !== 0 || dy !== 0) {
+          this.raiseEntityEvent('adjacentMove', {dx:dx, dy:dy});
+          curEntity.setMovable(false);
+          setTimeout(function() {curEntity.setMovable(true);}, this.getMoveSpeed() * Math.sqrt(Math.abs(dx) + Math.abs(dy)));
+        }
       }
       curEntity.raiseSymbolActiveEvent('actionDone');
       curEntity.attr._timeout = setTimeout(function() {curEntity.act();}, 50);
@@ -219,7 +254,7 @@ Game.EntityMixin.PlayerActor = {
     },
     listeners: {
       'actionDone': function(evtData) {
-  //      Game.Scheduler.setDuration(this.getCurrentActionDuration());
+        //      Game.Scheduler.setDuration(this.getCurrentActionDuration());
         this.setCurrentActionDuration(this.getBaseActionDuration());
       },
       'killed': function(evtData) {
@@ -257,6 +292,9 @@ Game.EntityMixin.PlayerActor = {
   unsetDirection: function (dir) {
     this.attr._PlayerActor_attr.direction = this.attr._PlayerActor_attr.direction & (~dir);
   },
+  unsetAllDirections: function () {
+    this.attr._PlayerActor_attr.direction = 0;
+  },
   getMoveSpeed: function () {
     return this.attr._PlayerActor_attr.moveSpeed;
   },
@@ -271,31 +309,31 @@ Game.EntityMixin.WalkerCorporeal = {
     mixinGroup: 'Walker',
     listeners: {
       'adjacentMove': function(evtData) {
-          var map = this.getMap();
-          var dx=evtData.dx,dy=evtData.dy;
-          var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
-          var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
-          if (map.getEntity(targetX,targetY) && (!evtData.entIgnore || !evtData.entIgnore[map.getEntity(targetX,targetY).getId()])) { // can't walk into spaces occupied by other entities
-            this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
-            // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
-            return {madeAdjacentMove:false};
-          }
-          var targetTile = map.getTile(targetX,targetY);
-          if (targetTile.isWalkable()) {
-            this.setPos(targetX,targetY);
-            var myMap = this.getMap();
-            if (myMap) {
-              myMap.updateEntityLocation(this);
-            }
-            this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
-            return {madeAdjacentMove:true};
-          } else {
-            this.raiseEntityEvent('walkForbidden',{target:targetTile});
-          }
-          return {madeAdjacentMove:false};
-          }
-        }
+        var map = this.getMap();
+        var dx=evtData.dx,dy=evtData.dy;
+        var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
+        var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
+        if (map.getEntity(targetX,targetY) && (!evtData.entIgnore || !evtData.entIgnore[map.getEntity(targetX,targetY).getId()])) { // can't walk into spaces occupied by other entities
+        this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
+        // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
+        return {madeAdjacentMove:false};
       }
+      var targetTile = map.getTile(targetX,targetY);
+      if (targetTile.isWalkable()) {
+        this.setPos(targetX,targetY);
+        var myMap = this.getMap();
+        if (myMap) {
+          myMap.updateEntityLocation(this);
+        }
+        this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
+        return {madeAdjacentMove:true};
+      } else {
+        this.raiseEntityEvent('walkForbidden',{target:targetTile});
+      }
+      return {madeAdjacentMove:false};
+    }
+  }
+}
 };
 
 Game.EntityMixin.TailSegment = {
@@ -339,79 +377,79 @@ Game.EntityMixin.WalkerSegmented = {
       'adjacentMove': function(evtData) {
         if(!this.isImmobile()){
           if(!this.isExtended()) {
-              var map = this.getMap();
-              var dx=evtData.dx,dy=evtData.dy;
-              var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
-              var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
-              if (map.getEntity(targetX,targetY)) { // can't walk into spaces occupied by other entities
-                this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
-                // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
-                return {madeAdjacentMove:false};
-              }
-              var targetTile = map.getTile(targetX,targetY);
-              if (targetTile.isWalkable()) {
-                this.setPos(targetX,targetY);
-                var myMap = this.getMap();
-                if (myMap) {
-                  myMap.updateEntityLocation(this);
-                }
-                this.extend({x:dx,y:dy});
-                this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
-                return {madeAdjacentMove:true};
-              } else {
-                this.raiseEntityEvent('walkForbidden',{target:targetTile});
-              }
-              return {madeAdjacentMove:false};
-            }
-            else {
-              this.contract();
-              return {madeAdjacentMove:true};
-            }
-          } else {
-            if(this.isExtended()){
-              this.contract();
-            }
+            var map = this.getMap();
+            var dx=evtData.dx,dy=evtData.dy;
+            var targetX = Math.min(Math.max(0,this.getX() + dx),map.getWidth()-1);
+            var targetY = Math.min(Math.max(0,this.getY() + dy),map.getHeight()-1);
+            if (map.getEntity(targetX,targetY)) { // can't walk into spaces occupied by other entities
+            this.raiseEntityEvent('bumpEntity',{actor:this,recipient:map.getEntity(targetX,targetY)});
+            // NOTE: should bumping an entity always take a turn? might have to get some return data from the event (once event return data is implemented)
             return {madeAdjacentMove:false};
           }
-        },
-        'killed': function(evtData) {
-          this.getTailSegment().destroy();
-        },
-        'immobilized': function(evtData) {
-          this.setImmobile(evtData.immobilized);
+          var targetTile = map.getTile(targetX,targetY);
+          if (targetTile.isWalkable()) {
+            this.setPos(targetX,targetY);
+            var myMap = this.getMap();
+            if (myMap) {
+              myMap.updateEntityLocation(this);
+            }
+            this.extend({x:dx,y:dy});
+            this.raiseEntityEvent('movedUnit',{dx:dx, dy:dy, direction:Game.util.posToDir(dx,dy)});
+            return {madeAdjacentMove:true};
+          } else {
+            this.raiseEntityEvent('walkForbidden',{target:targetTile});
+          }
+          return {madeAdjacentMove:false};
         }
+        else {
+          this.contract();
+          return {madeAdjacentMove:true};
+        }
+      } else {
+        if(this.isExtended()){
+          this.contract();
+        }
+        return {madeAdjacentMove:false};
       }
     },
-    setImmobile: function(im) {
-      this.attr._WalkerSegmented_attr.immobilized = im;
-      if(im) {
-        this.contract();
-      }
+    'killed': function(evtData) {
+      this.getTailSegment().destroy();
     },
-    isImmobile: function() {
-      return this.attr._WalkerSegmented_attr.immobilized;
-    },
-    getTailSegment: function() {
-      return this.attr._WalkerSegmented_attr.tailSegment;
-    },
-    setTailSegment: function(seg) {
-      this.attr._WalkerSegmented_attr.tailSegment = seg;
-    },
-    isExtended: function() {
-      return this.attr._WalkerSegmented_attr.extended;
-    },
-    extend: function(pos) {
-      var dir = Game.util.posToDir(pos);
-      this.attr._WalkerSegmented_attr.extended = true;
-      this.setChar(this.attr._WalkerSegmented_attr.extChar[dir/2]);
-      this.getTailSegment().setChar(this.attr._WalkerSegmented_attr.extChar[((dir/2) + 2) % 4]);
-      this.getMap().addEntity(this.getTailSegment(),{x:this.getX() - pos.x, y:this.getY() - pos.y});
-    },
-    contract: function() {
-      this.getMap().extractEntity(this.getTailSegment());
-      this.attr._WalkerSegmented_attr.extended = false;
-      this.setChar(this.attr._WalkerSegmented_attr.baseChar);
+    'immobilized': function(evtData) {
+      this.setImmobile(evtData.immobilized);
     }
+  }
+},
+setImmobile: function(im) {
+  this.attr._WalkerSegmented_attr.immobilized = im;
+  if(im) {
+    this.contract();
+  }
+},
+isImmobile: function() {
+  return this.attr._WalkerSegmented_attr.immobilized;
+},
+getTailSegment: function() {
+  return this.attr._WalkerSegmented_attr.tailSegment;
+},
+setTailSegment: function(seg) {
+  this.attr._WalkerSegmented_attr.tailSegment = seg;
+},
+isExtended: function() {
+  return this.attr._WalkerSegmented_attr.extended;
+},
+extend: function(pos) {
+  var dir = Game.util.posToDir(pos);
+  this.attr._WalkerSegmented_attr.extended = true;
+  this.setChar(this.attr._WalkerSegmented_attr.extChar[dir/2]);
+  this.getTailSegment().setChar(this.attr._WalkerSegmented_attr.extChar[((dir/2) + 2) % 4]);
+  this.getMap().addEntity(this.getTailSegment(),{x:this.getX() - pos.x, y:this.getY() - pos.y});
+},
+contract: function() {
+  this.getMap().extractEntity(this.getTailSegment());
+  this.attr._WalkerSegmented_attr.extended = false;
+  this.setChar(this.attr._WalkerSegmented_attr.baseChar);
+}
 };
 
 Game.EntityMixin.Chronicle = {
@@ -457,7 +495,7 @@ Game.EntityMixin.Chronicle = {
     console.log('chronicle kill of '+entName);
     if (this.attr._Chronicle_attr.killLog[entName]) {
       this.attr._Chronicle_attr.killLog[entName]++;
-  } else {
+    } else {
       this.attr._Chronicle_attr.killLog[entName] = 1;
     }
   }
@@ -610,23 +648,23 @@ Game.EntityMixin.WanderChaserActor = {
       var source = this;
       var map = this.getMap();
       var path = new ROT.Path.AStar(avatar.getX(), avatar.getY(), function(x, y) {
-          // If an entity is present at the tile, can't move there.
-          var entity = map.getEntity(x, y);
-          if (entity && entity !== avatar && entity !== source) {
-              return false;
-          }
-          return map.getTile(x, y).isWalkable();
+        // If an entity is present at the tile, can't move there.
+        var entity = map.getEntity(x, y);
+        if (entity && entity !== avatar && entity !== source) {
+          return false;
+        }
+        return map.getTile(x, y).isWalkable();
       }, {topology: this.attr._WanderChaserActor_attr.topology});
 
       // compute the path from here to there
       var count = 0;
       var moveDeltas = {x:0,y:0};
       path.compute(this.getX(), this.getY(), function(x, y) {
-          if (count == 1) {
-              moveDeltas.x = x - source.getX();
-              moveDeltas.y = y - source.getY();
-          }
-          count++;
+        if (count == 1) {
+          moveDeltas.x = x - source.getX();
+          moveDeltas.y = y - source.getY();
+        }
+        count++;
       });
       if(moveDeltas.x || moveDeltas.y) {
         return moveDeltas;
@@ -985,20 +1023,20 @@ Game.EntityMixin.Bullet = {
     listeners: {
       'bumpEntity': function(evtData) {
         if (this.attr._Bullet_attr.firedBy!== evtData.recipient) {
-        console.log('Projectile bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
-        evtData.recipient.raiseSymbolActiveEvent('attacked',{attacker:evtData.actor.attr._Bullet_attr.firedBy,attackPower:this.getAttackPower()});
-        this.destroy();
+          console.log('Projectile bumpEntity' + evtData.actor.attr._name + " " + evtData.recipient.attr._name);
+          evtData.recipient.raiseSymbolActiveEvent('attacked',{attacker:evtData.actor.attr._Bullet_attr.firedBy,attackPower:this.getAttackPower()});
+          this.destroy();
         }
       }
     },
     priority: 1,
     act: function () {
-        if(!this.raiseEntityEvent('adjacentMove', {dx:this.getDirection().x, dy:this.getDirection().y}).madeAdjacentMove[0]) {
-          this.destroy();
-        } else {
-          var curObj = this;
-          this.attr._timeout = setTimeout(function () {curObj.act();}, this.getSpeed());
-        }
+      if(!this.raiseEntityEvent('adjacentMove', {dx:this.getDirection().x, dy:this.getDirection().y}).madeAdjacentMove[0]) {
+        this.destroy();
+      } else {
+        var curObj = this;
+        this.attr._timeout = setTimeout(function () {curObj.act();}, this.getSpeed());
+      }
     }
   },
   getDirection: function() {
@@ -1048,11 +1086,11 @@ Game.EntityMixin.Sight = {
     this.attr._Sight_attr.sightRadius = n;
   },
   canSeeEntity: function(entity) {
-      // If not on the same map or on different maps, then exit early
-      if (!entity || this.getMap().getId() !== entity.getMap().getId()) {
-          return false;
-      }
-      return this.canSeeCoord(entity.getX(),entity.getY());
+    // If not on the same map or on different maps, then exit early
+    if (!entity || this.getMap().getId() !== entity.getMap().getId()) {
+      return false;
+    }
+    return this.canSeeCoord(entity.getX(),entity.getY());
   },
   canSeeCoord: function(x_or_pos,y) {
     var otherX = x_or_pos,otherY=y;
@@ -1070,22 +1108,22 @@ Game.EntityMixin.Sight = {
     return inFov[otherX+','+otherY] || false;
   },
   getVisibleCells: function() {
-      var visibleCells = {'byDistance':{}};
-      for (var i=0;i<=this.getSightRadius();i++) {
-          visibleCells.byDistance[i] = {};
+    var visibleCells = {'byDistance':{}};
+    for (var i=0;i<=this.getSightRadius();i++) {
+      visibleCells.byDistance[i] = {};
+    }
+    this.getMap().getFov()['compute'+this.getSightRange()](
+      this.getX(), this.getY(),
+      this.getSightRadius(), this.getFacing(),
+      function(x, y, radius, visibility) {
+        visibleCells[x+','+y] = true;
+        visibleCells.byDistance[radius][x+','+y] = true;
       }
-      this.getMap().getFov()['compute'+this.getSightRange()](
-          this.getX(), this.getY(),
-          this.getSightRadius(), this.getFacing(),
-          function(x, y, radius, visibility) {
-              visibleCells[x+','+y] = true;
-              visibleCells.byDistance[radius][x+','+y] = true;
-          }
-      );
-      return visibleCells;
+    );
+    return visibleCells;
   },
   canSeeCoord_delta: function(dx,dy) {
-      return this.canSeeCoord(this.getX()+dx,this.getY()+dy);
+    return this.canSeeCoord(this.getX()+dx,this.getY()+dy);
   },
   getFacing: function () {
     return this.attr._Sight_attr.facing;
@@ -1181,11 +1219,83 @@ Game.EntityMixin.FoodConsumer = {
   },
   getHungerStateDescr: function () {
     var frac = this.attr._FoodConsumer_attr.currentFood/this.attr._FoodConsumer_attr.maxFood;
-    if (frac < 0.1) { return '%c{#ff2}%b{#f00}*STARVING*'; }
-    if (frac < 0.25) { return '%c{#f00}%b{#dd0}starving'; }
-    if (frac < 0.45) { return '%c{#fb0}%b{#540}hungry'; }
-    if (frac < 0.65) { return '%c{#dd0}%b{#000}peckish'; }
-    if (frac < 0.95) { return '%c{#090}%b{#000}full'; }
-    return '%c{#090}%b{#320}*stuffed*';
+    if (frac < 0.1) { return 'Energy: %c{#ff2}%b{#f00}*EMPTY*'; }
+    if (frac < 0.25) { return 'Energy: %c{#f00}%b{#dd0}low'; }
+    if (frac < 0.45) { return 'Energy: %c{#fb0}%b{#540}medium'; }
+    if (frac < 0.65) { return 'Energy: %c{#dd0}%b{#000}high'; }
+    if (frac < 0.95) { return 'Energy: %c{#090}%b{#000}full'; }
+    return '%c{#090}%b{#320}full';
+  }
+};
+
+Game.EntityMixin.MobSpawner = {
+  META: {
+    mixinName: 'MobSpawner',
+    mixinGroup: 'Spawner',
+    stateNamespace: '_MobSpawner_attr',
+    stateMode: {
+      mob: '',
+      canSpawn: true,
+      spawnRange: 10,
+      savedTile: null,
+      rechargeRange: 2000,
+      rechargeBase: 5000
+    },
+    init: function (template) {
+      this.attr._MobSpawner_attr.mob = template.mob;
+      this.attr._MobSpawner_attr.spawnRange = template.spawnRange || 10;
+      this.getSpawnLocation = template.getSpawnLocation || this.getSpawnLocation;
+      this.attr._MobSpawner_attr.rechargeBase = template.rechargeBase || 5000;
+      this.attr._MobSpawner_attr.rechargeRange = template.rechargeRange || 10000;
+      this.attr._MobSpawner_attr.canSpawn = true;
+    },
+    act: function () {
+      var curEnt = this;
+        var avatar = Game.getAvatar();
+        if(this.canSpawn() && avatar && Math.abs(this.getX() - avatar.getX()) < this.getSpawnRange() && Math.abs(this.getY() - avatar.getY()) < this.getSpawnRange()) {
+            var entToSpawn = Game.EntityGenerator.create(this.getMob());
+            this.getMap().addEntity(entToSpawn, this.getSpawnLocation());
+            if(typeof entToSpawn.act == 'function') {
+              entToSpawn.act();
+            }
+            this.setCanSpawn(false);
+            setTimeout(function () {curEnt.setCanSpawn(true);}, curEnt.getSpawnRecharge());
+        }
+        this.attr._timeout = setTimeout(function () {curEnt.act();}, 1000);
+    }
+  },
+  canSpawn: function () {
+    return this.attr._MobSpawner_attr.canSpawn;
+  },
+  setCanSpawn: function (cspw) {
+    this.attr._MobSpawner_attr.canSpawn = cspw;
+  },
+  getMob: function () {
+    return this.attr._MobSpawner_attr.mob;
+  },
+  setMob: function (mob) {
+    this.attr._MobSpawner_attr.mob = mob;
+  },
+  getSpawnRange: function () {
+    return this.attr._MobSpawner_attr.spawnRange;
+  },
+  setSpawnRange: function (sr) {
+    this.attr._MobSpawner_attr.spawnRange = sr;
+  },
+  getSavedTile: function () {
+    return this.attr._MobSpawner_attr.savedTile;
+  },
+  setSavedTile: function (tile) {
+    this.attr._MobSpawner_attr.savedTile = tile;
+  },
+  getSpawnLocation: function () {
+    var spawnPos;
+    do{
+      spawnPos = Game.util.positionsOrthogonalTo(this.getPos()).random();
+    } while(!this.getMap().getTile(spawnPos).isWalkable());
+    return spawnPos;
+  },
+  getSpawnRecharge: function () {
+    return this.attr._MobSpawner_attr.rechargeRange + Math.floor(this.attr._MobSpawner_attr.rechargeRange * ROT.RNG.getUniform());
   }
 };

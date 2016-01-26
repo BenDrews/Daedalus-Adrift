@@ -107,8 +107,8 @@ Game.KeyBinding = {
     var bindingInfo = this.Action[actionLookupKey][this._curBindingKey] || this.Action[actionLookupKey].all;
   },
   getBindingHelpText: function () {
-  return this._bindingHelpText;
-},
+    return this._bindingHelpText;
+  },
   Action: {
     PERSISTENCE      : {action_group:'meta'    ,guid:Game.util.uniqueId() ,ordering:2 ,short:'games'    ,long :'save or load or restart',
     numpad: {label:'='     ,inputMatch:'='      ,inputType:'keypress' ,inputMetaShift:false ,inputMetaCtrl:false},      waxd: {label:'='     ,inputMatch:'='      ,inputType:'keypress' ,inputMetaShift:false ,inputMetaCtrl:false}
@@ -144,7 +144,7 @@ INVENTORY : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.0 ,
   numpad: {label:'i' ,inputMatch:ROT.VK_I ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
   wasd  : {label:'i' ,inputMatch:ROT.VK_I ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
-EAT   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.3 ,short:'eat' ,long :'consume food to reduce hunger'         ,
+USE2   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.3 ,short:'use2' ,long :'use an item in the inventory'         ,
  numpad: {label:'e' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
  wasd  : {label:'E' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false},
  LAYER_inventoryListing: {label:'E' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
@@ -166,6 +166,14 @@ wasd  : {label:'g' ,inputMatch:ROT.VK_G ,inputType:'keydown' ,inputMetaShift:fal
 DROP   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.2 ,short:'drop' ,long :'drop one or more items in the current space'         ,
 numpad: {label:'d' ,inputMatch:ROT.VK_D ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
 wasd  : {label:'D' ,inputMatch:ROT.VK_D ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
+},
+ACTIVE   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.4 ,short:'active' ,long :'set an active item'         ,
+numpad: {label:'a' ,inputMatch:ROT.VK_A ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
+wasd  : {label:'A' ,inputMatch:ROT.VK_A ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
+},
+USE   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.4 ,short:'use' ,long :'uses an active item'         ,
+numpad: {label:'u' ,inputMatch:ROT.VK_U ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
+wasd  : {label:'U' ,inputMatch:ROT.VK_U ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
 },
 DATA_NAV_UP   : {action_group:'data_nav' ,guid:Game.util.uniqueId() ,ordering:8.1 ,short:'up'   ,long :'scroll content up'   ,
 LAYER_textReading: {label:'['     ,inputMatch:'['      ,inputType:'keypress' ,inputMetaShift:false ,inputMetaCtrl:false},
