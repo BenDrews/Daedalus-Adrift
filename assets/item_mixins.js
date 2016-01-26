@@ -93,7 +93,7 @@ Game.ItemMixin.Food = {
     },
     listeners: {
       'getStatsForDisplay': function(evtData) {
-        return {'food value':this.getFoodValue()};
+        return {'energy provided/used:':this.getFoodValue()};
       }
     }
   },
