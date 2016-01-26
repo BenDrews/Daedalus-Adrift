@@ -46,6 +46,8 @@ var Game = {
   TRANSIENT_RNG: null,
   _bgMusic: null,
   DATASTORE: {},
+  MouseX: 0,
+  MouseY: 0,
 
   init: function () {
     this._game = this;

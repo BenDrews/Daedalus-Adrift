@@ -6,7 +6,7 @@ Game.EntityGenerator.learn({
   description: 'our Hero!',
   maxHp: 10,
   inventoryCapacity: 30,
-  sightRange:'360',
+  sightRange:'90',
   mixins: ["PlayerActor", "Sight", "MapMemory", "WalkerCorporeal", "HitPoints", "Chronicle", "PlayerMessager", "InventoryHolder", "FoodConsumer"]
 });
 

@@ -1128,9 +1128,19 @@ Game.EntityMixin.Sight = {
   getFacing: function () {
     return this.attr._Sight_attr.facing;
   },
-  setFacing: function (dir) {
-    this.attr._Sight_attr.facing = dir;
-  },
+
+setFacing: function () {
+   var deltaY = Game.mouseY/2 - 364 / 2 + 70;
+   var deltaX = Game.mouseX/2 - 798 / 2 + 90;
+   var angle = Math.atan2(deltaY, deltaX);
+   console.log( angle, Game.mouseX/2,Game.mouseY/2, 798 /2 - 90, 364 /2 - 70);
+   result = Math.round((((angle + Math.PI) / Math.PI)) * 4) + 6;
+   console.log(result);
+   if (result > 7) {
+     result = result - 8;
+   }
+   this.attr._Sight_attr.facing = result;
+ },
   getSightRange: function () {
     return this.attr._Sight_attr.sightRange;
   },
