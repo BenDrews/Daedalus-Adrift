@@ -126,12 +126,16 @@ Game.UIMode.gamePlay = {
       //tookTurn = dropRes.numItemsDropped > 0;
     } else if (actionBinding.actionKey == 'HELP') {
       // console.log('TODO: set up help stuff for gamepersistence');
-      Game.UIMode.LAYER_textReading.setText(Game.KeyBinding.getBindingHelpText());
+      Game.UIMode.LAYER_textReading.setText("Instructions: \n Movement = UP, DOWN, LEFT, RIGHT Keys \nInventory = I \nPickup Item = G \nDrop Item = D \nPause Menu = Esc \n\nWhile in Pause Menu:\nSave Game = S\nLoad Game = L\nNew Game = N\n\nObjectives:\nDo not let the slimes get you. Slimes will latch onto you once they come near you. If four slimes latch on to you, they will explode, hurting you.");
       Game.pushUIMode('LAYER_textReading');
     } else if (actionBinding.actionKey == 'EXAMINE') {
-       Game.pushUIMode('LAYER_inventoryExamine');
-    } else if (actionBinding.actionKey == 'EAT') {
-      Game.pushUIMode('LAYER_inventoryEat');
+      Game.pushUIMode('LAYER_inventoryExamine');
+    } else if (actionBinding.actionKey == 'USE2') {
+      Game.pushUIMode('LAYER_inventoryUse');
+    } else if (actionBinding.actionKey == 'ACTIVE') {
+      Game.pushUIMode('LAYER_inventorySelectActive');
+    } else if (actionBinding.actionKey == 'USE') {
+      Game.getAvatar().useActiveItem();
     }
 
 
@@ -162,7 +166,11 @@ Game.UIMode.gamePlay = {
       display.drawText(1,4,Game.UIMode.DEFAULT_COLOR_STR+"Units moved: "+this.getAvatar().getMoves());
       display.drawText(1,8,Game.UIMode.DEFAULT_COLOR_STR+this.getAvatar().getHungerStateDescr());
       display.drawText(1,7,Game.UIMode.DEFAULT_COLOR_STR+"Hit Points: "+this.getAvatar().getCurHp());
-
+      if (this.getAvatar().attr._InventoryHolder_attr.activeItem !== null) {
+        display.drawText(1,9,Game.UIMode.DEFAULT_COLOR_STR+"Active Item: "+this.getAvatar().attr._InventoryHolder_attr.activeItem.getName());
+      } else {
+        display.drawText(1,9,Game.UIMode.DEFAULT_COLOR_STR+"Active Item: ");
+      }
     }
     if(this.getEnemy()) {
       display.drawText(1,5,Game.UIMode.DEFAULT_COLOR_STR+"Enemy X: "+this.getEnemy().getX());
@@ -195,15 +203,15 @@ Game.UIMode.gamePlay = {
     this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
     this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
     this.getMap().addItem(Game.ItemGenerator.create('apple'), itemPos);
-
+    this.getMap().addItem(Game.ItemGenerator.create('delatcher'), itemPos);
     // end dev code
     ///////////////////////
     for(var ecount = 0; ecount < 30; ecount++) {
-//      this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
+      this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
     }
-     for (var ti=0; ti<3;ti++) {
-       Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('rock')]);
-     }
+    for (var ti=0; ti<3;ti++) {
+      Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('rock')]);
+    }
   },
 
   toJSON: function() {
@@ -433,13 +441,14 @@ Game.UIMode.LAYER_textReading = {
     this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
     Game.KeyBinding.setKeyBinding('LAYER_textReading');
     var display = Game.DISPLAYS.avatar.o;
-//    var options = display.getOptions();
+    Game.getAvatar().unsetAllDirections();
+    //    var options = display.getOptions();
     console.log(display.getOptions());
-//    this._storedDisplayOptions = {};
+    //    this._storedDisplayOptions = {};
     // for (var optionKey in options) {
     //   this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
     // }
-//        display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
+    //        display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
     Game.refresh();
 
     Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
@@ -447,14 +456,17 @@ Game.UIMode.LAYER_textReading = {
   },
   exit: function() {
     Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
-//    Game.DISPLAYS.avatar.o.setOptions(this._storedDisplayOptions);
+    //    Game.DISPLAYS.avatar.o.setOptions(this._storedDisplayOptions);
     Game.refresh();
   },
-  renderOnMain: function(display) {
+  renderOnAvatar: function(display) {
     var dims = Game.util.getDisplayDim(display);
     var linesTaken = display.drawText(1,this._renderY,Game.UIMode.DEFAULT_COLOR_STR+""+this._text, dims.w-2);
     this._renderScrollLimit = dims.h - linesTaken;
     if (this._renderScrollLimit > 0) { this._renderScrolLimit=0;}
+  },
+  renderOnMain: function(display) {
+    Game.UIMode.gamePlay.renderOnMain(display);
   },
   renderOnMessage: function(display) {
 
@@ -462,8 +474,8 @@ Game.UIMode.LAYER_textReading = {
   handleInput: function(inputType, inputData) {
     var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
     if (! actionBinding) {
-  return false;
-}
+      return false;
+    }
     if (actionBinding.actionKey == 'CANCEL') {
       Game.popUIMode();
     }
@@ -513,7 +525,7 @@ Game.UIMode.LAYER_itemListing = function(template) {
   this._displayItems = [];
   this._displayMaxNum = Game.getDisplayHeight('avatar') - 3;
   this._numItemsShown = 0;
-//  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
+  //  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
 
 };
 
@@ -527,14 +539,15 @@ Game.UIMode.LAYER_itemListing.prototype._runFilterOnItemIdList = function () {
 };
 
 Game.UIMode.LAYER_itemListing.prototype.enter = function () {
-   var display = Game.DISPLAYS.avatar.o;
-   var options = display.getOptions();
+  var display = Game.DISPLAYS.avatar.o;
+  var options = display.getOptions();
+  Game.getAvatar().unsetAllDirections();
   // this._storedDisplayOptions = {};
   // for (var optionKey in options) {
   //   this._storedDisplayOptions[optionKey] = display.getOptions()[optionKey];
   // }
-//  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
-//  console.log(display.getOptions());
+  //  display.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect"});
+  //  console.log(display.getOptions());
 
   this._storedKeyBinding = Game.KeyBinding.getKeyBinding();
   Game.KeyBinding.setKeyBinding(this._keyBindingName);
@@ -542,10 +555,10 @@ Game.UIMode.LAYER_itemListing.prototype.enter = function () {
     this.doSetup();
   }
   Game.refresh();
-   Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
+  Game.specialMessage("[Esc] to exit, [ and ] for scrolling");
 };
 Game.UIMode.LAYER_itemListing.prototype.exit = function () {
-//  Game.DISPLAYS.avatar.o.setOptions(this._storedDisplayOptions);
+  //  Game.DISPLAYS.avatar.o.setOptions(this._storedDisplayOptions);
 
   Game.KeyBinding.setKeyBinding(this._storedKeyBinding);
   setTimeout(function(){
@@ -646,9 +659,9 @@ Game.UIMode.LAYER_itemListing.prototype.renderOnAvatar = function (display) {
   // Render the caption in the top row
   display.drawText(0, 0, Game.UIMode.DEFAULT_COLOR_STR + this.getCaptionText());
   if (this._displayItems.length < 1) {
-       display.drawText(0, 2, Game.UIMode.DEFAULT_COLOR_STR + 'nothing for '+ this.getCaptionText().toLowerCase());
-       return;
-     }
+    display.drawText(0, 2, Game.UIMode.DEFAULT_COLOR_STR + 'nothing for '+ this.getCaptionText().toLowerCase());
+    return;
+  }
   var row = 0;
   if (this._hasNoItemOption) {
     display.drawText(0, 1, Game.UIMode.DEFAULT_COLOR_STR + '0 - no item');
@@ -761,24 +774,24 @@ Game.UIMode.LAYER_inventoryListing.doSetup = function () {
 };
 
 Game.UIMode.LAYER_inventoryListing.handleInput = function (inputType,inputData) {
-   var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
+  var actionBinding = Game.KeyBinding.getInputBinding(inputType,inputData);
 
-   if (actionBinding) {
-     if (actionBinding.actionKey == 'EXAMINE') {
-       Game.pushUIMode('LAYER_inventoryExamine');
-       return false;
-     }
-     if (actionBinding.actionKey == 'DROP') {
-       Game.pushUIMode('LAYER_inventoryDrop');
-       return false;
-     }
-     if (actionBinding.actionKey == 'EAT') {
-       Game.pushUIMode('LAYER_inventoryEat');
-       return false;
-     }
-   }
-   return Game.UIMode.LAYER_itemListing.prototype.handleInput.call(this,inputType,inputData);
- };
+  if (actionBinding) {
+    if (actionBinding.actionKey == 'EXAMINE') {
+      Game.pushUIMode('LAYER_inventoryExamine');
+      return false;
+    }
+    if (actionBinding.actionKey == 'DROP') {
+      Game.pushUIMode('LAYER_inventoryDrop');
+      return false;
+    }
+    if (actionBinding.actionKey == 'USE2') {
+      Game.pushUIMode('LAYER_inventoryUse');
+      return false;
+    }
+  }
+  return Game.UIMode.LAYER_itemListing.prototype.handleInput.call(this,inputType,inputData);
+};
 
 //-------------------
 
@@ -801,14 +814,14 @@ Game.UIMode.LAYER_inventoryDrop.doSetup = function () {
 };
 
 Game.UIMode.LAYER_inventoryPickup = new Game.UIMode.LAYER_itemListing({
-    caption: 'Pick up',
-    canSelect: true,
-    canSelectMultipleItems: true,
-    keyBindingName: 'LAYER_inventoryPickup',
-    processingFunction: function (selectedItemIds) {
-      var pickupResult = Game.UIMode.gamePlay.getAvatar().pickupItems(selectedItemIds);
-      return pickupResult.numItemsPickedUp > 0;
-    }
+  caption: 'Pick up',
+  canSelect: true,
+  canSelectMultipleItems: true,
+  keyBindingName: 'LAYER_inventoryPickup',
+  processingFunction: function (selectedItemIds) {
+    var pickupResult = Game.UIMode.gamePlay.getAvatar().pickupItems(selectedItemIds);
+    return pickupResult.numItemsPickedUp > 0;
+  }
 });
 
 Game.UIMode.LAYER_inventoryPickup.doSetup = function () {
@@ -816,43 +829,78 @@ Game.UIMode.LAYER_inventoryPickup.doSetup = function () {
 };
 
 Game.UIMode.LAYER_inventoryExamine = new Game.UIMode.LAYER_itemListing({
-     caption: 'Examine',
-    canSelect: true,
-     keyBindingName: 'LAYER_inventoryExamine',
-     processingFunction: function (selectedItemIds) {
-       console.log('LAYER_inventoryExamine processing on '+selectedItemIds[0]);
-       if (selectedItemIds[0]) {
-         var d = Game.DATASTORE.ITEM[selectedItemIds[0]].getDetailedDescription();
-         console.log('sending special message of '+d);
-         setTimeout(function() {
-            Game.Message.send(d);
-         }, 2);
-       }
-       return false;
-     }
- });
+  caption: 'Examine',
+  canSelect: true,
+  keyBindingName: 'LAYER_inventoryExamine',
+  processingFunction: function (selectedItemIds) {
+    console.log('LAYER_inventoryExamine processing on '+selectedItemIds[0]);
+    if (selectedItemIds[0]) {
+      var d = Game.DATASTORE.ITEM[selectedItemIds[0]].getDetailedDescription();
+      console.log('sending special message of '+d);
+      setTimeout(function() {
+        Game.Message.send(d);
+      }, 2);
+    }
+    return false;
+  }
+});
 
- Game.UIMode.LAYER_inventoryExamine.doSetup = function () {
-   this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
- };
+Game.UIMode.LAYER_inventoryExamine.doSetup = function () {
+  this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
+};
 
- Game.UIMode.LAYER_inventoryEat = new Game.UIMode.LAYER_itemListing({
-     caption: 'Eat',
-     canSelect: true,
-     keyBindingName: 'LAYER_inventoryEat',
-     filterListedItemsOn: function(itemId) {
-       return  Game.DATASTORE.ITEM[itemId].hasMixin('Food');
-     },
-     processingFunction: function (selectedItemIds) {
-       if (selectedItemIds[0]) {
-         var foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([selectedItemIds[0]])[0];
- //        Game.util.cdebug(foodItem);
-         Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
-         return true;
-       }
-       return false;
-     }
- });
- Game.UIMode.LAYER_inventoryEat.doSetup = function () {
-   this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
- };
+Game.UIMode.LAYER_inventorySelectActive = new Game.UIMode.LAYER_itemListing({
+  caption: 'SelectActive',
+  canSelect: true,
+  keyBindingName: 'LAYER_inventorySelectActive',
+  processingFunction: function (selectedItemIds) {
+    console.log('LAYER_inventoryExamine processing on '+selectedItemIds[0]);
+    if (selectedItemIds[0]) {
+      Game.getAvatar().setActiveItem(Game.DATASTORE.ITEM[selectedItemIds[0]]);
+    }
+    return false;
+  }
+});
+
+Game.UIMode.LAYER_inventorySelectActive.doSetup = function () {
+  this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
+};
+
+Game.UIMode.LAYER_inventoryUse = new Game.UIMode.LAYER_itemListing({
+  caption: 'Use',
+  canSelect: true,
+  keyBindingName: 'LAYER_inventoryUse',
+  filterListedItemsOn: function(itemId) {
+    return  Game.DATASTORE.ITEM[itemId].hasMixin('Food');
+  },
+  processingFunction: function (selectedItemIds) {
+    if (selectedItemIds[0]) {
+      var foodItem;
+      console.log(Game.DATASTORE.ITEM[selectedItemIds[0]].getDescription());
+      if (Game.DATASTORE.ITEM[selectedItemIds[0]].getDescription() === 'it delatches slimes') {
+        if (Game.getAvatar().getCurFood() >= 200) {
+        foodItem = Game.DATASTORE.ITEM[selectedItemIds[0]];
+        if (Game.getAvatar().attr._LatchExploder_attr) {
+          var latchers = Game.getAvatar().attr._LatchExploder_attr.latchers;
+          for (var i = 0; i < latchers.length; i++) {
+            latchers[i].raiseEntityEvent('detach');
+          }
+        }
+        Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+      } else {
+        Game.Message.send("not enough energy to perform this action.");
+      }
+      } else {
+        foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([selectedItemIds[0]])[0];
+        Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+      }
+      //        Game.util.cdebug(foodItem);
+
+      return true;
+    }
+    return false;
+  }
+});
+Game.UIMode.LAYER_inventoryUse.doSetup = function () {
+  this.setup({itemIdList: Game.UIMode.gamePlay.getAvatar().getInventoryItemIds()});
+};
