@@ -1,5 +1,18 @@
 Game.tileSet = document.createElement("img");
 Game.tileSet.src = "assets/oryx_world_sprites.png";
+Game.splashScreen = document.createElement("img");
+Game.splashScreen.src = "assets/daedalus_adrift_splash2.png";
+Game.splashScreen.options = {
+  layout: "tile",
+  bg: "transparent",
+  tileWidth: 799,
+  tileHeight: 360,
+  tileSet: Game.splashScreen,
+  tileMap: {" ": [0,0]},
+  width:1,
+  height:1
+};
+
 Game.tileSet.options = {
     layout: "tile",
     bg: "transparent",
@@ -51,5 +64,6 @@ Game.tileSet.options = {
         "!": [158, 43],
         "*": [86,343],
         "[": [421, 19],
-        "&": [131, 19]
+        "&": [131, 19],
+        "^": [43,14]
     }, width: 57, height: 26};

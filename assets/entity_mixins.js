@@ -642,6 +642,36 @@ Game.EntityMixin.WanderChaserActor = {
   }
 };
 
+Game.EntityMixin.Particle = {
+  META: {
+    mixinName: 'Particle',
+    mixinGroup: 'Effect',
+    stateNamespace: '_Particle_attr',
+    stateModel: {
+      duration: 250,
+      prevEnt: null
+    },
+    init: function (template) {
+      this.attr._Particle_attr.duration = template.duration || 250;
+      this.attr._Particle_attr.prevEnt = template.prevEnt || null;
+      var curEnt = this;
+      setTimeout(function() {
+        var map = curEnt.getMap();
+        curEnt.destroy();
+        if(curEnt.getPrevEnt()) {
+          map.updateEntityLocation(curEnt.getPrevEnt());
+        }
+      }, curEnt.getDuration());
+    }
+  },
+  getPrevEnt: function () {
+    return this.attr._Particle_attr.prevEnt;
+  },
+  getDuration: function () {
+    return this.attr._Particle_attr.duration;
+  }
+};
+
 Game.EntityMixin.LatchExploder = {
   META: {
     mixinName: 'LatchExploder',
@@ -725,13 +755,19 @@ Game.EntityMixin.LatchExploder = {
       },
       'explode': function (evtData) {
         var positions = Game.util.positionsOrthogonalTo(this.getPos());
+        var map = this.getMap();
         for(var i = 0; i < positions.length; i++) {
-          var ent = this.getMap().getEntity(positions[i]);
+        var ent = map.getEntity(positions[i]);
+        if(!ent && map.getTile(positions[i]).isWalkable()) {
+          map.addEntity(new Game.Entity({chr: '!', mixins: ['Particle']}), positions[i]);
+        }
           if(ent && !ent.isAllied(this)) {
             ent.raiseEntityEvent("attacked",{attacker:this,attackPower:this.getExplosionPower(),attackMethod:"violently exploded near"});
           }
         }
         this.destroy();
+        var pos= this.getPos();
+        map.addEntity(new Game.Entity({chr: '!', mixins: ['Particle']}), pos);
       },
       'detach': function (evtData) {
         if(this.isAttached()) {
@@ -746,6 +782,9 @@ Game.EntityMixin.LatchExploder = {
       }
     },
     act: function () {
+      if(this.isAttached() && !Game.DATASTORE.ENTITY[this.getAttachedTo().getId()]) {
+        this.raiseEntityEvent('detach');
+      }
       if(!this.isAttached() && this.getCanAttach()){
         var map = this.getMap();
         var ent = null;
@@ -797,15 +836,17 @@ Game.EntityMixin.LatchExploder = {
   detach: function () {
     this.raiseEntityEvent('immobilized', {immobilized:false});
     ent = this.getAttachedTo();
-    if(typeof ent.setMoveSpeed == 'function') {
-      ent.setMoveSpeed(ent.getMoveSpeed() - 50);
-    }
-    ent.removeListener(this);
-    ent.raiseEntityEvent('afflictionRemoved',{affliction:'slow', cureMessage:"released by the slime"});
-    for(var ltch = 0; ltch < ent.attr._LatchExploder_attr.latchers.length; ltch++) {
-        if(ent.attr._LatchExploder_attr.latchers[ltch] == this) {
-          ent.attr._LatchExploder_attr.latchers.splice(ltch,1);
-        }
+    if(ent) {
+      if(typeof ent.setMoveSpeed == 'function') {
+        ent.setMoveSpeed(ent.getMoveSpeed() - 50);
+      }
+      ent.removeListener(this);
+      ent.raiseEntityEvent('afflictionRemoved',{affliction:'slow', cureMessage:"released by the slime"});
+      for(var ltch = 0; ltch < ent.attr._LatchExploder_attr.latchers.length; ltch++) {
+          if(ent.attr._LatchExploder_attr.latchers[ltch] == this) {
+            ent.attr._LatchExploder_attr.latchers.splice(ltch,1);
+          }
+      }
     }
     this.attr._LatchExploder_attr.attached = false;
     this.attr._LatchExploder_attr.attachedTo = null;
@@ -1146,5 +1187,77 @@ Game.EntityMixin.FoodConsumer = {
     if (frac < 0.65) { return '%c{#dd0}%b{#000}peckish'; }
     if (frac < 0.95) { return '%c{#090}%b{#000}full'; }
     return '%c{#090}%b{#320}*stuffed*';
+  }
+};
+
+Game.EntityMixin.MobSpawner = {
+  META: {
+    mixinName: 'MobSpawner',
+    mixinGroup: 'Spawner',
+    stateNamespace: '_MobSpawner_attr',
+    stateMode: {
+      mob: '',
+      canSpawn: true,
+      spawnRange: 10,
+      savedTile: null,
+      rechargeRange: 2000,
+      rechargeBase: 5000
+    },
+    init: function (template) {
+      this.attr._MobSpawner_attr.mob = template.mob;
+      this.attr._MobSpawner_attr.spawnRange = template.spawnRange || 10;
+      this.getSpawnLocation = template.getSpawnLocation || this.getSpawnLocation;
+      this.attr._MobSpawner_attr.rechargeBase = template.rechargeBase || 5000;
+      this.attr._MobSpawner_attr.rechargeRange = template.rechargeRange || 10000;
+      this.attr._MobSpawner_attr.canSpawn = true;
+    },
+    act: function () {
+      var curEnt = this;
+        var avatar = Game.getAvatar();
+        if(this.canSpawn() && avatar && Math.abs(this.getX() - avatar.getX()) < this.getSpawnRange() && Math.abs(this.getY() - avatar.getY()) < this.getSpawnRange()) {
+            var entToSpawn = Game.EntityGenerator.create(this.getMob());
+            this.getMap().addEntity(entToSpawn, this.getSpawnLocation());
+            if(typeof entToSpawn.act == 'function') {
+              entToSpawn.act();
+            }
+            this.setCanSpawn(false);
+            setTimeout(function () {curEnt.setCanSpawn(true);}, curEnt.getSpawnRecharge());
+        }
+        this.attr._timeout = setTimeout(function () {curEnt.act();}, 1000);
+    }
+  },
+  canSpawn: function () {
+    return this.attr._MobSpawner_attr.canSpawn;
+  },
+  setCanSpawn: function (cspw) {
+    this.attr._MobSpawner_attr.canSpawn = cspw;
+  },
+  getMob: function () {
+    return this.attr._MobSpawner_attr.mob;
+  },
+  setMob: function (mob) {
+    this.attr._MobSpawner_attr.mob = mob;
+  },
+  getSpawnRange: function () {
+    return this.attr._MobSpawner_attr.spawnRange;
+  },
+  setSpawnRange: function (sr) {
+    this.attr._MobSpawner_attr.spawnRange = sr;
+  },
+  getSavedTile: function () {
+    return this.attr._MobSpawner_attr.savedTile;
+  },
+  setSavedTile: function (tile) {
+    this.attr._MobSpawner_attr.savedTile = tile;
+  },
+  getSpawnLocation: function () {
+    var spawnPos;
+    do{
+      spawnPos = Game.util.positionsOrthogonalTo(this.getPos()).random();
+    } while(!this.getMap().getTile(spawnPos).isWalkable());
+    return spawnPos;
+  },
+  getSpawnRecharge: function () {
+    return this.attr._MobSpawner_attr.rechargeRange + Math.floor(this.attr._MobSpawner_attr.rechargeRange * ROT.RNG.getUniform());
   }
 };

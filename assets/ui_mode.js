@@ -6,10 +6,12 @@ Game.UIMode = {DEFAULT_COLOR_STR:""};
 Game.UIMode.gameStart = {
   enter: function () {
     console.log("Game.UIMode.gameStart enter");
+    Game.DISPLAYS.main.o.setOptions(Game.splashScreen.options);
   },
   exit: function () {
     Game.Message.clear();
     console.log("Game.UIMode.gameStart exit");
+    Game.DISPLAYS.main.o.setOptions({bg: "#000", tileWidth: 14, tileHeight: 14, tileMap: {}, tileSet: null, layout: "rect",width: 80, height: 24});
   },
   handleInput: function (eventType, evt) {
     console.log("Game.UIMode.gameStart handleInput");
@@ -17,8 +19,8 @@ Game.UIMode.gameStart = {
   },
   renderOnMain: function (display) {
     display.clear();
-    display.drawText(4,4, Game.UIMode.DEFAULT_COLOR_STR+"Welcome to WSRL");
-    display.drawText(4, 6, Game.UIMode.DEFAULT_COLOR_STR+"Press any key to continue");
+    display.draw(0,0," ");
+
   }
 };
 
@@ -198,8 +200,20 @@ Game.UIMode.gamePlay = {
 
     // end dev code
     ///////////////////////
-    for(var ecount = 0; ecount < 30; ecount++) {
-//      this.getMap().addEntity(Game.EntityGenerator.create('slime'),this.getMap().getRandomWalkablePosition());
+    for(var ecount = 0; ecount < 3; ecount++) {
+      var pos = this.getMap().getRandomWalkablePosition();
+      this.getMap().addTileEntity(Game.EntityGenerator.create('Engine Leak'),pos);
+      var nextPos;
+      for(var leaksize = 0; leaksize < 2; leaksize++) {
+      var i = 0;
+      do{
+        i++;
+        nextPos = Game.util.positionsOrthogonalTo(pos).random();
+        if(i == 5) {continue;}
+      } while(!this.getMap().getTile(nextPos).isWalkable() || this.getMap().getTileEntity(nextPos));
+      pos = nextPos;
+      this.getMap().addTileEntity(Game.EntityGenerator.create('Engine Leak'),pos);
+      }
     }
      for (var ti=0; ti<3;ti++) {
        Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('rock')]);

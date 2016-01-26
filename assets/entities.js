@@ -32,3 +32,10 @@ Game.EntityGenerator.learn({
   chr:'*',
   mixins: [ "WalkerCorporeal", "Bullet"]
 });
+
+Game.EntityGenerator.learn({
+  name: 'Engine Leak',
+  chr: '^',
+  mob: 'slime',
+  mixins: ["MobSpawner"]
+});

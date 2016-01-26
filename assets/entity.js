@@ -128,6 +128,9 @@ Game.Entity.prototype.raiseEntityEvent = function(evtLabel,evtData) {
 Game.Entity.prototype.destroy = function() {
     //remove from map
     this.getMap().extractEntity(this);
+    if(typeof this.getSavedTile == 'function') {
+      this.getMap().setTile(this.getSavedTile(), this.getPos());
+    }
     if(this.hasOwnProperty('_actions')) {
       this.pauseAction();
     }
