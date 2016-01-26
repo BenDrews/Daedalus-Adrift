@@ -126,7 +126,7 @@ Game.UIMode.gamePlay = {
       //tookTurn = dropRes.numItemsDropped > 0;
     } else if (actionBinding.actionKey == 'HELP') {
       // console.log('TODO: set up help stuff for gamepersistence');
-      Game.UIMode.LAYER_textReading.setText("Instructions: \n Movement = UP, DOWN, LEFT, RIGHT Keys \nInventory = I \nPickup Item = G \nDrop Item = D \nPause Menu = Esc \n\nWhile in Pause Menu:\nSave Game = S\nLoad Game = L\nNew Game = N\n\nObjectives:\nDo not let the slimes get you. Slimes will latch onto you once they come near you. If four slimes latch on to you, they will explode, hurting you.");
+      Game.UIMode.LAYER_textReading.setText("Instructions: \n\n Movement = UP, DOWN, LEFT, RIGHT Keys \nInventory = I \nPickup Item = G \nDrop Item = D \nSet Active = A\nUse Active = U\nPause Menu/Cancel = Esc \n\nWhile in Pause Menu:\nSave Game = S\nLoad Game = L\nNew Game = N");
       Game.pushUIMode('LAYER_textReading');
     } else if (actionBinding.actionKey == 'EXAMINE') {
       Game.pushUIMode('LAYER_inventoryExamine');
