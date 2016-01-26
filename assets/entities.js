@@ -3,10 +3,11 @@ Game.EntityGenerator = new Game.Generator('entities', Game.Entity);
 Game.EntityGenerator.learn({
   name: 'avatar',
   chr:'@',
+  description: 'our Hero!',
   maxHp: 10,
   inventoryCapacity: 30,
   sightRange:'360',
-  mixins: ["PlayerActor", "Sight", "MapMemory", "WalkerCorporeal", "HitPoints", "Chronicle", "PlayerMessager", "InventoryHolder"]
+  mixins: ["PlayerActor", "Sight", "MapMemory", "WalkerCorporeal", "HitPoints", "Chronicle", "PlayerMessager", "InventoryHolder", "FoodConsumer"]
 });
 
 Game.EntityGenerator.learn({
@@ -16,7 +17,7 @@ Game.EntityGenerator.learn({
   maxHp:1,
   topology:4,
   alligence:'slime',
-  mixins: ["HitPoints", "WalkerSegmented", "Sight", "WanderChaserActor","Chronicle","LatchExploder"]
+  mixins: ["HitPoints", "WalkerSegmented", "Sight", "WanderChaserActor","Chronicle"]
 });
 
 Game.EntityGenerator.learn({

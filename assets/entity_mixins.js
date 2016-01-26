@@ -1129,3 +1129,63 @@ Game.EntityMixin.MapMemory = {
     return this.attr._MapMemory_attr.mapsHash[mapKey] || {};
   }
 };
+
+Game.EntityMixin.FoodConsumer = {
+  META: {
+    mixinName: 'FoodConsumer',
+    mixinGroup: 'FoodConsumer',
+    stateNamespace: '_FoodConsumer_attr',
+    stateModel:  {
+      currentFood: 2000,
+      maxFood: 2000,
+      foodConsumedPer1000Ticks: 1
+    },
+    init: function (template) {
+      this.attr._FoodConsumer_attr.maxFood = template.maxFood || 2000;
+      this.attr._FoodConsumer_attr.currentFood = template.currentFood || (this.attr._FoodConsumer_attr.maxFood*0.9);
+      this.attr._FoodConsumer_attr.foodConsumedPer1000Ticks = template.foodConsumedPer1000Ticks || 1;
+    },
+    listeners: {
+      'getHungrier': function(evtData) {
+        this.getHungrierBy(this.attr._FoodConsumer_attr.foodConsumedPer1000Ticks * evtData.duration/1000);
+      }
+    }
+  },
+  getMaxFood: function () {
+    return this.attr._FoodConsumer_attr.maxFood;
+  },
+  setMaxFood: function (n) {
+    this.attr._FoodConsumer_attr.maxFood = n;
+  },
+  getCurFood: function () {
+    return this.attr._FoodConsumer_attr.currentFood;
+  },
+  setCurFood: function (n) {
+    this.attr._FoodConsumer_attr.currentFood = n;
+  },
+  getFoodConsumedPer1000: function () {
+    return this.attr._FoodConsumer_attr.foodConsumedPer1000Ticks;
+  },
+  setFoodConsumedPer1000: function (n) {
+    this.attr._FoodConsumer_attr.foodConsumedPer1000Ticks = n;
+  },
+  eatFood: function (foodAmt) {
+    this.attr._FoodConsumer_attr.currentFood += foodAmt;
+    if (this.attr._FoodConsumer_attr.currentFood > this.attr._FoodConsumer_attr.maxFood) {this.attr._FoodConsumer_attr.currentFood = this.attr._FoodConsumer_attr.maxFood;}
+  },
+  getHungrierBy: function (foodAmt) {
+    this.attr._FoodConsumer_attr.currentFood -= foodAmt;
+    if (this.attr._FoodConsumer_attr.currentFood < 0) {
+      this.raiseSymbolActiveEvent('killed',{killedBy: 'starvation'});
+    }
+  },
+  getHungerStateDescr: function () {
+    var frac = this.attr._FoodConsumer_attr.currentFood/this.attr._FoodConsumer_attr.maxFood;
+    if (frac < 0.1) { return '%c{#ff2}%b{#f00}*STARVING*'; }
+    if (frac < 0.25) { return '%c{#f00}%b{#dd0}starving'; }
+    if (frac < 0.45) { return '%c{#fb0}%b{#540}hungry'; }
+    if (frac < 0.65) { return '%c{#dd0}%b{#000}peckish'; }
+    if (frac < 0.95) { return '%c{#090}%b{#000}full'; }
+    return '%c{#090}%b{#320}*stuffed*';
+  }
+};

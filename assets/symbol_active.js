@@ -2,6 +2,7 @@ Game.SymbolActive = function(template) {
   template = template || {};
   Game.Symbol.call(this, template);
   this.attr._name = template.name || '';
+  this.attr._description = template.description || 'completely uninteresting';
   this.attr._id = template.presetId || Game.util.uniqueId();
   // mixin sutff
   // track mixins and groups, copy over non-META properties, and run the mixin init if it exists
@@ -79,6 +80,14 @@ Game.SymbolActive.prototype.setName = function(name) {
   this.attr._name = name;
 };
 
+Game.SymbolActive.prototype.getDescription = function() {
+     return this.attr._description;
+ };
+Game.SymbolActive.prototype.setDescription = function(descr) {
+     this.attr._description = descr;
+ };
+
+
 Game.SymbolActive.prototype.hasMixin = function(checkThis) {
   if (typeof checkThis == 'object') {
     return this._mixinTracker.hasOwnProperty(checkThis.META.mixinName);
@@ -86,6 +95,12 @@ Game.SymbolActive.prototype.hasMixin = function(checkThis) {
     return this._mixinTracker.hasOwnProperty(checkThis);
   }
 };
+
+ Game.SymbolActive.prototype.getDetailedDescription = function () {
+     var descr = this.getRepresentation()+' '+Game.UIMode.DEFAULT_COLOR_STR + this.getName() + ' - '+this.getDescription();
+   console.log('description is '+descr);
+   return descr;
+ };
 
 Game.SymbolActive.prototype.raiseSymbolActiveEvent = function(evtLabel,evtData) {
   // console.log('raiseSymbolActiveEvent '+evtLabel);
