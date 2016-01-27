@@ -128,7 +128,7 @@ Game.UIMode.gamePlay = {
       //tookTurn = dropRes.numItemsDropped > 0;
     } else if (actionBinding.actionKey == 'HELP') {
       // console.log('TODO: set up help stuff for gamepersistence');
-      Game.UIMode.LAYER_textReading.setText("Instructions: \n\n Movement = UP, DOWN, LEFT, RIGHT Keys \nInventory = I \nPickup Item = G \nDrop Item = D \nSet Active = A\nUse Active = U\nPause Menu/Cancel = Esc \n\nWhile in Pause Menu:\nSave Game = S\nLoad Game = L\nNew Game = N");
+      Game.UIMode.LAYER_textReading.setText("Instructions: \n\n[WASD] Movement \n[I] Inventory\n[F] Pickup Item\n[V] Drop Item\n[Q] Set Active\n[E] Use Active\n[X] Examine Item\n[ESC] Pause Menu/Cancel\n\n");
       Game.pushUIMode('LAYER_textReading');
     } else if (actionBinding.actionKey == 'EXAMINE') {
       Game.pushUIMode('LAYER_inventoryExamine');
@@ -296,7 +296,9 @@ Game.UIMode.gamePersistence = {
   },
   renderOnMain: function (display) {
     display.clear();
-    display.drawText(1,3,Game.UIMode.DEFAULT_COLOR_STR+"Press S to save the current game, L to load the saved game, or N start a new one");
+    display.drawText(1,3,Game.UIMode.DEFAULT_COLOR_STR+"[S] Save");
+    display.drawText(1,4,Game.UIMode.DEFAULT_COLOR_STR + "[L] Load");
+    display.drawText(1,5,Game.UIMode.DEFAULT_COLOR_STR + "[N] New Game");
     //   console.log('TODO: check whether local storage has a game before offering restore');
     //   console.log('TODO: check whether a game is in progress before offering restore');
   },

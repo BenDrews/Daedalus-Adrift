@@ -121,7 +121,7 @@ Game.EntityMixin.InventoryHolder = {
   useActiveItem: function () {
     var foodItem;
     if (this.attr._InventoryHolder_attr.activeItem !== null) {
-      if (this.attr._InventoryHolder_attr.activeItem.getDescription() === 'it delatches slimes') {
+      if (this.attr._InventoryHolder_attr.activeItem.getName() === 'delatcher') {
         if (Game.getAvatar().getCurFood() >= 200) {
           foodItem = this.attr._InventoryHolder_attr.activeItem;
           if (Game.getAvatar().attr._LatchExploder_attr) {

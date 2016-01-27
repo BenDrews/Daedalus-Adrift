@@ -124,19 +124,19 @@ persist: {label:'n' ,inputMatch:ROT.VK_N ,inputType:'keydown'  ,inputMetaShift:f
 },
 
 SET_MOVE_U    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight up',
-numpad: {label:'8' ,inputMatch:ROT.VK_UP ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'w' ,inputMatch:ROT.VK_W ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'w' ,inputMatch:ROT.VK_W       ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 SET_MOVE_L    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight left',
-numpad: {label:'4' ,inputMatch:ROT.VK_LEFT ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'a' ,inputMatch:ROT.VK_A ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'a' ,inputMatch:ROT.VK_A       ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 SET_MOVE_R    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight right',
-numpad: {label:'6' ,inputMatch:ROT.VK_RIGHT ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'d' ,inputMatch:ROT.VK_D ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'d' ,inputMatch:ROT.VK_D       ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 SET_MOVE_D    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight down',
-numpad: {label:'2' ,inputMatch:ROT.VK_DOWN ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'s' ,inputMatch:ROT.VK_S ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'x' ,inputMatch:ROT.VK_S       ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 
@@ -145,7 +145,7 @@ INVENTORY : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.0 ,
   wasd  : {label:'i' ,inputMatch:ROT.VK_I ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 USE2   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.3 ,short:'use2' ,long :'use an item in the inventory'         ,
- numpad: {label:'e' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
+ numpad: {label:'r' ,inputMatch:ROT.VK_R ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
  wasd  : {label:'E' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false},
  LAYER_inventoryListing: {label:'E' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
 },
@@ -160,19 +160,19 @@ PROCESS_SELECTIONS  : {action_group:'inventory' ,guid:Game.util.uniqueId() ,orde
   LAYER_inventoryExamine: {label:'[Enter]' ,inputMatch:ROT.VK_RETURN ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false}
 },
 PICKUP : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.1 ,short:'get'  ,long :'get / pickup one or more items in the current space' ,
-numpad: {label:'g' ,inputMatch:ROT.VK_G ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'f' ,inputMatch:ROT.VK_F ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'g' ,inputMatch:ROT.VK_G ,inputType:'keydown' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 DROP   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.2 ,short:'drop' ,long :'drop one or more items in the current space'         ,
-numpad: {label:'d' ,inputMatch:ROT.VK_D ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
+numpad: {label:'v' ,inputMatch:ROT.VK_V ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
 wasd  : {label:'D' ,inputMatch:ROT.VK_D ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
 },
 ACTIVE   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.4 ,short:'active' ,long :'set an active item'         ,
-numpad: {label:'a' ,inputMatch:ROT.VK_A ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
+numpad: {label:'q' ,inputMatch:ROT.VK_Q ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
 wasd  : {label:'A' ,inputMatch:ROT.VK_A ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
 },
 USE   : {action_group:'inventory' ,guid:Game.util.uniqueId() ,ordering:5.4 ,short:'use' ,long :'uses an active item'         ,
-numpad: {label:'u' ,inputMatch:ROT.VK_U ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
+numpad: {label:'e' ,inputMatch:ROT.VK_E ,inputType:'keydown' ,inputMetaShift:false  ,inputMetaCtrl:false} ,
 wasd  : {label:'U' ,inputMatch:ROT.VK_U ,inputType:'keydown' ,inputMetaShift:true  ,inputMetaCtrl:false}
 },
 DATA_NAV_UP   : {action_group:'data_nav' ,guid:Game.util.uniqueId() ,ordering:8.1 ,short:'up'   ,long :'scroll content up'   ,
@@ -186,22 +186,22 @@ LAYER_inventoryListing: {label:']'     ,inputMatch:']'      ,inputType:'keypress
 LAYER_inventoryDrop: {label:']'     ,inputMatch:']'      ,inputType:'keypress' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 UNSET_MOVE_U    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight up',
-numpad: {label:'8' ,inputMatch:ROT.VK_UP ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'w' ,inputMatch:ROT.VK_W ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'w' ,inputMatch:ROT.VK_W       ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 UNSET_MOVE_L    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight left',
-numpad: {label:'4' ,inputMatch:ROT.VK_LEFT ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'a' ,inputMatch:ROT.VK_A ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'a' ,inputMatch:ROT.VK_A       ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 HELP            : {action_group:'meta' ,guid :Game.util.uniqueId() ,ordering:1 ,short:'help'     ,long:'show which keys do which commands'      ,
       all: {label:'?'     ,inputMatch:'?'      ,inputType:'keypress' ,inputMetaShift:true ,inputMetaCtrl:false}
     },
 UNSET_MOVE_R    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight right',
-numpad: {label:'6' ,inputMatch:ROT.VK_RIGHT ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'d' ,inputMatch:ROT.VK_D ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'d' ,inputMatch:ROT.VK_D       ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 UNSET_MOVE_D    : {action_group:'movement' ,guid:Game.util.uniqueId() ,ordering:3 ,short:'move' ,long :'move straight down',
-numpad: {label:'2' ,inputMatch:ROT.VK_DOWN ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
+numpad: {label:'s' ,inputMatch:ROT.VK_S ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false} ,
 wasd  : {label:'x' ,inputMatch:ROT.VK_S       ,inputType:'keyup' ,inputMetaShift:false ,inputMetaCtrl:false}
 },
 
