@@ -37,5 +37,5 @@ Game.EntityGenerator.learn({
   name: 'Engine Leak',
   chr: '^',
   mob: 'slime',
-  mixins: ["MobSpawner"]
+  mixins: ["MobSpawner","Chronicle"]
 });

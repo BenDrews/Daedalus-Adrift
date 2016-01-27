@@ -206,6 +206,7 @@ Game.UIMode.gamePlay = {
     this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
     this.getMap().addItem(Game.ItemGenerator.create('apple'), itemPos);
     this.getMap().addItem(Game.ItemGenerator.create('delatcher'), itemPos);
+    this.getMap().addItem(Game.ItemGenerator.create('repair kit'), itemPos);
     // end dev code
     ///////////////////////
     for(var ecount = 0; ecount < 3; ecount++) {
@@ -225,6 +226,7 @@ Game.UIMode.gamePlay = {
     }
     for (var ti=0; ti<3;ti++) {
       Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('rock')]);
+            Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('repair kit')]);
     }
 
   },
@@ -905,7 +907,46 @@ Game.UIMode.LAYER_inventoryUse = new Game.UIMode.LAYER_itemListing({
       } else {
         Game.Message.send("not enough energy to perform this action.");
       }
-      } else {
+      }else if (Game.DATASTORE.ITEM[selectedItemIds[0]].getDescription() === 'it repairs engines') {
+        var facing = Game.getAvatar().attr._Sight_attr.facing;
+        var numberX, numberY;
+        if (facing == 0) {
+          numberX = 0;
+          numberY = 1;
+        } else if (facing == 1) {
+          numberX = 1;
+          numberY = 1;
+        } else if (facing == 2) {
+          numberX = 1;
+          numberY = 0;
+        } else if (facing == 3) {
+          numberX = 1;
+          numberY = -1;
+        } else if (facing == 4) {
+          numberX = 0;
+          numberY = -1;
+        } else if (facing == 5) {
+          numberX = -1;
+          numberY = -1;
+        } else if (facing == 6) {
+          numberX = -1;
+          numberY = 0;
+        } else if (facing == 7) {
+          numberX = -1;
+          numberY = 1;
+        }
+        var entity = Game.getAvatar().getMap().getTileEntity(Game.getAvatar().getX() +numberX, Game.getAvatar().getY() +numberY);
+        console.log(entity);
+        if (entity) {
+          var someEntity = Game.DATASTORE.ENTITY[entity]
+            console.log(someEntity.getName());
+        if (someEntity.getName() == 'Engine Leak') {
+            foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([selectedItemIds[0]])[0];
+            Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+            someEntity.destroy();
+        }
+      }
+    } else {
         foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([selectedItemIds[0]])[0];
         Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
       }

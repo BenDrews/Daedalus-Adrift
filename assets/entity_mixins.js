@@ -119,6 +119,7 @@ Game.EntityMixin.InventoryHolder = {
     return this.attr._InventoryHolder_attr.activeItem;
   },
   useActiveItem: function () {
+    var foodItem;
     if (this.attr._InventoryHolder_attr.activeItem !== null) {
       if (this.attr._InventoryHolder_attr.activeItem.getDescription() === 'it delatches slimes') {
         if (Game.getAvatar().getCurFood() >= 200) {
@@ -134,16 +135,60 @@ Game.EntityMixin.InventoryHolder = {
           Game.Message.send("Not enough energy to perform this action.");
         }
 
+      } else if (this.attr._InventoryHolder_attr.activeItem.getDescription() === 'it repairs engines') {
+        var facing = this.attr._Sight_attr.facing;
+        var numberX, numberY;
+        if (facing == 0) {
+          numberX = 0;
+          numberY = 1;
+        } else if (facing == 1) {
+          numberX = 1;
+          numberY = 1;
+        } else if (facing == 2) {
+          numberX = 1;
+          numberY = 0;
+        } else if (facing == 3) {
+          numberX = 1;
+          numberY = -1;
+        } else if (facing == 4) {
+          numberX = 0;
+          numberY = -1;
+        } else if (facing == 5) {
+          numberX = -1;
+          numberY = -1;
+        } else if (facing == 6) {
+          numberX = -1;
+          numberY = 0;
+        } else if (facing == 7) {
+          numberX = -1;
+          numberY = 1;
+        }
+        console.log (Game.getAvatar().getX() + numberX, Game.getAvatar().getY() + numberY);
+        var entity = this.getMap().getTileEntity(Game.getAvatar().getX() +numberX, Game.getAvatar().getY() +numberY);
+        console.log(entity);
+        console.log("something");
+        if (entity) {
+          var someEntity = Game.DATASTORE.ENTITY[entity]
+            console.log(someEntity.getName());
+        if (someEntity.getName() == 'Engine Leak') {
+            foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([this.attr._InventoryHolder_attr.activeItem.getId()])[0];
+            Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+            someEntity.destroy();
+            this.attr._InventoryHolder_attr.activeItem = null;
+        }
+      }
       } else {
+        if (foodItem.getName() === 'apple') {
+          this.attr._InventoryHolder_attr.activeItem = null;
+        }
         foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([this.attr._InventoryHolder_attr.activeItem.getId()])[0];
         Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
       }
+
       //        Game.util.cdebug(foodItem);
 
 
-      if (foodItem.getName() === 'apple') {
-        this.attr._InventoryHolder_attr.activeItem = null;
-      }
+
     }
   },
   pickupItems: function (ids_or_idxs) {

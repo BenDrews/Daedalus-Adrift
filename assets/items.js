@@ -35,6 +35,6 @@ Game.ItemGenerator.learn({
   chr:String.fromCharCode(174),
   fg:'#f32',
   bg: '#000',
-  foodValue: -200,
+  foodValue: 0,
   mixins: ['Food']
 });

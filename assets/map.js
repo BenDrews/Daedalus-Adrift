@@ -73,8 +73,8 @@ Game.Map.prototype.addTileEntity = function (ent,pos) {
   ent.setPos(pos);
 };
 
-Game.Map.prototype.getTileEntity = function (pos) {
-  return this.attr._tileEntitiesByLocation[pos.x+","+pos.y];
+Game.Map.prototype.getTileEntity = function (x,y) {
+  return this.attr._tileEntitiesByLocation[x+","+y];
 };
 
 Game.Map.prototype.addEntity = function (ent,pos) {
