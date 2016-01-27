@@ -178,7 +178,7 @@ Game.EntityMixin.InventoryHolder = {
         }
       }
       } else {
-        if (foodItem.getName() === 'apple') {
+        if (foodItem.getName() === 'battery') {
           this.attr._InventoryHolder_attr.activeItem = null;
         }
         foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([this.attr._InventoryHolder_attr.activeItem.getId()])[0];

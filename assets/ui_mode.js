@@ -202,11 +202,11 @@ Game.UIMode.gamePlay = {
 
     // TODO: delete dev code
     var itemPos = this.getMap().getRandomWalkablePosition();
-    this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
-    this.getMap().addItem(Game.ItemGenerator.create('rock'), itemPos);
-    this.getMap().addItem(Game.ItemGenerator.create('apple'), itemPos);
-    this.getMap().addItem(Game.ItemGenerator.create('delatcher'), itemPos);
-    this.getMap().addItem(Game.ItemGenerator.create('repair kit'), itemPos);
+    for (var i = 0; i < 8; i++ ) {
+      this.getMap().addItem(Game.ItemGenerator.create('battery'), this.getMap().getRandomWalkablePosition());
+      this.getMap().addItem(Game.ItemGenerator.create('repair kit'), this.getMap().getRandomWalkablePosition());
+          this.getMap().addEntity(Game.EntityGenerator.create('enemy'), this.getMap().getRandomWalkablePosition());
+    }
     // end dev code
     ///////////////////////
     for(var ecount = 0; ecount < 3; ecount++) {
@@ -224,10 +224,8 @@ Game.UIMode.gamePlay = {
       this.getMap().addTileEntity(Game.EntityGenerator.create('Engine Leak'),pos);
       }
     }
-    for (var ti=0; ti<3;ti++) {
-      Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('rock')]);
             Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('repair kit')]);
-    }
+            Game.UIMode.gamePlay.getAvatar().addInventoryItems([Game.ItemGenerator.create('delatcher')]);
 
   },
 
