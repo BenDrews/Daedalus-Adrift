@@ -34,7 +34,17 @@
   </head>
   <body>
     <div id="wsrl-avatar-display" class="wsrl-display"></div>
-    <div id="wsrl-main-display" class="wsrl-display"></div>
+    <div id="wsrl-main-display" onmousemove="showCoords(event)" class="wsrl-display"></div>
     <div id="wsrl-message-display" class="wsrl-display"></div>
   </body>
+
+  <script>
+   function showCoords(event) {
+       Game.mouseX = event.clientX;
+       Game.mouseY = event.clientY;
+       if (Game.getAvatar()) {
+       Game.getAvatar().setFacing();
+     }
+     }
+       </script>
 </html>
