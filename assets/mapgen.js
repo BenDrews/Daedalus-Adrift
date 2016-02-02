@@ -1,7 +1,7 @@
 Game.mapgen = {
   attr: {
-    _mapWidth: 4,
-    _mapHeight: 4,
+    _mapWidth: 8,
+    _mapHeight: 8,
     _roomWidth: 13,
     _roomHeight: 13,
     _startX: 2,
