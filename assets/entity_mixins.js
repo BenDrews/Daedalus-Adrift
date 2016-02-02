@@ -179,10 +179,10 @@ Game.EntityMixin.InventoryHolder = {
       }
       } else {
         if (this.attr._InventoryHolder_attr.activeItem.getName() === 'battery') {
-          this.attr._InventoryHolder_attr.activeItem = null;
-        }
         foodItem = Game.UIMode.gamePlay.getAvatar().extractInventoryItems([this.attr._InventoryHolder_attr.activeItem.getId()])[0];
         Game.UIMode.gamePlay.getAvatar().eatFood(foodItem.getFoodValue());
+          this.attr._InventoryHolder_attr.activeItem = null;
+        }
       }
 
       //        Game.util.cdebug(foodItem);
